@@ -9,9 +9,10 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 
-//import org.kordamp.ikonli.javafx.FontIcon;
-
 public class SideBar extends VBox {
+    
+    private TrangChu trangChu; // Tham chiếu đến TrangChu để gọi phương thức chuyển giao diện
+    private HBox selectedItem; // Lưu mục đang được chọn
 
     // Danh sách các mục menu chính
     private final String[] menuItems = {
@@ -33,8 +34,7 @@ public class SideBar extends VBox {
         "Check-in"
     };
     
-    // Tên file icon (ví dụ: home.png). Bạn sẽ thêm icon vào thư mục 'resources/icons'
-    // Lưu ý: Bạn cần thay thế bằng tên file icon thực tế.
+    // Tên file icon
     private final String[] iconNames = {
         "home.png", 
         "booking.png", 
@@ -46,20 +46,20 @@ public class SideBar extends VBox {
         "stats.png"
     };
 
+    public SideBar(TrangChu trangChu) {
+        this.trangChu = trangChu; // Lưu tham chiếu
 
-    public SideBar() {
         // Cấu hình VBox chính (SideBar)
-        this.setPrefWidth(250); // Chiều rộng cố định
-        this.getStyleClass().add("sidebar"); // Class CSS cho VBox chính
-        this.setSpacing(5); // Khoảng cách giữa các mục menu
-        this.setPadding(new Insets(20, 0, 20, 0)); // Padding trên và dưới
-//        scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+        this.setPrefWidth(250);
+        this.getStyleClass().add("sidebar");
+        this.setSpacing(5);
+        this.setPadding(new Insets(20, 0, 20, 0));
+
         // 1. Thêm Logo
-        // Tạo một ImageView cho Logo (Bạn cần đảm bảo file Logo.png nằm trong classpath)
         ImageView logoView = createImageView("/img/Logo.png", 50, 50); 
         HBox logoContainer = new HBox(logoView);
         logoContainer.setAlignment(Pos.CENTER);
-        logoContainer.setPadding(new Insets(0, 0, 20, 0)); // Khoảng cách sau logo
+        logoContainer.setPadding(new Insets(0, 0, 20, 0));
         this.getChildren().add(logoContainer);
 
         // 2. Thêm các mục Menu chính
@@ -72,11 +72,16 @@ public class SideBar extends VBox {
                 // Tạo mục menu thông thường
                 HBox menuItemBox = createMenuItem(menuItems[i], iconNames[i]);
                 this.getChildren().add(menuItemBox);
+                
+                // Đánh dấu "Màn hình chính" là mục được chọn ban đầu
+                if (menuItems[i].equals("Màn hình chính")) {
+                    selectedItem = menuItemBox;
+                    menuItemBox.getStyleClass().add("selected");
+                }
             }
         }
         
-        // Thêm khoảng trống giữa Menu và nút Đăng Xuất (Sử dụng Region/Spacer nếu cần thiết, 
-        // nhưng tạm thời dùng VBox để dễ quản lý)
+        // Thêm khoảng trống
         VBox spacer = new VBox();
         VBox.setVgrow(spacer, javafx.scene.layout.Priority.ALWAYS);
         this.getChildren().add(spacer);
@@ -88,17 +93,26 @@ public class SideBar extends VBox {
 
     /** Tạo HBox chứa Icon và Label cho một mục menu thông thường. */
     private HBox createMenuItem(String text, String iconFileName) {
-        ImageView icon = createImageView("/icons/" + iconFileName, 20, 20); // Giả định icon nằm trong /icons/
+        ImageView icon = createImageView("/icons/" + iconFileName, 20, 20);
         Label label = new Label(text);
         
-        HBox item = new HBox(10, icon, label); // Khoảng cách 10 giữa icon và text
+        HBox item = new HBox(10, icon, label);
         item.getStyleClass().add("menu-item");
         item.setAlignment(Pos.CENTER_LEFT);
-        item.setPadding(new Insets(10, 0, 10, 20)); // Padding bên trái để icon/text không sát mép
-        item.setPrefWidth(Double.MAX_VALUE); // Choán hết chiều rộng VBox
-        
-        // Thêm một ID nếu bạn muốn tô màu mục đang chọn
+        item.setPadding(new Insets(10, 0, 10, 20));
+        item.setPrefWidth(Double.MAX_VALUE);
         item.setId(text.toLowerCase().replaceAll(" ", "-")); 
+        
+        // THÊM SỰ KIỆN CLICK
+        item.setOnMouseClicked(event -> handleMenuClick(text, item));
+        
+        // Thêm hiệu ứng hover
+        item.setOnMouseEntered(e -> {
+            if (item != selectedItem) {
+                item.getStyleClass().add("menu-item-hover");
+            }
+        });
+        item.setOnMouseExited(e -> item.getStyleClass().remove("menu-item-hover"));
         
         return item;
     }
@@ -112,24 +126,6 @@ public class SideBar extends VBox {
         // Các mục con
         VBox subMenuContainer = new VBox();
         subMenuContainer.getStyleClass().add("sub-menu-container");
-        
-//        for (String subItemText : subMenuItems) {
-//            Label subLabel = new Label(subItemText);
-//            
-//            // HBox chỉ chứa Label, dùng cho hiệu ứng lề
-//            HBox subItemBox = new HBox(subLabel);
-//            subItemBox.getStyleClass().add("sub-menu-item");
-//            
-//            // Mục "Hủy bàn" được tô màu làm ví dụ
-//            if (subItemText.equals("Hủy bàn")) {
-//                subItemBox.getStyleClass().add("selected");
-//            }
-//            
-//            // Thiết lập lề cho mục con
-//            subItemBox.setPadding(new Insets(5, 0, 5, 50)); // Lề sâu hơn mục cha
-//            
-//            subMenuContainer.getChildren().add(subItemBox);
-//        }
 
         VBox fullMenu = new VBox(parentItem, subMenuContainer);
         fullMenu.getStyleClass().add("booking-menu-group");
@@ -138,14 +134,17 @@ public class SideBar extends VBox {
 
     /** Tạo nút Đăng Xuất */
     private HBox createLogoutButton() {
-        ImageView icon = createImageView("/icons/logout.png", 20, 20); // Giả định icon logout
+        ImageView icon = createImageView("/icons/logout.png", 20, 20);
         Label label = new Label("Đăng xuất");
         
         HBox item = new HBox(10, icon, label);
-        item.getStyleClass().add("logout-button"); // Class CSS riêng cho nút Đăng Xuất
+        item.getStyleClass().add("logout-button");
         item.setAlignment(Pos.CENTER_LEFT);
         item.setPadding(new Insets(10, 0, 10, 20));
         item.setPrefWidth(Double.MAX_VALUE);
+        
+        // Thêm sự kiện logout
+        item.setOnMouseClicked(event -> handleLogout());
         
         return item;
     }
@@ -153,7 +152,6 @@ public class SideBar extends VBox {
     /** Hàm tiện ích để tạo ImageView */
     private ImageView createImageView(String path, double fitWidth, double fitHeight) {
         try {
-            // Sử dụng getClass().getResourceAsStream() để tải tài nguyên từ classpath
             Image image = new Image(getClass().getResourceAsStream(path));
             ImageView imageView = new ImageView(image);
             imageView.setFitWidth(fitWidth);
@@ -161,8 +159,63 @@ public class SideBar extends VBox {
             return imageView;
         } catch (Exception e) {
             System.err.println("Không tìm thấy tài nguyên: " + path);
-            // Trả về một ImageView rỗng nếu không tìm thấy
             return new ImageView(); 
         }
+    }
+    
+    // --- XỬ LÝ SỰ KIỆN ---
+    
+    /**
+     * Xử lý sự kiện khi click vào mục menu
+     */
+    private void handleMenuClick(String menuText, HBox clickedItem) {
+        // Bỏ chọn mục cũ
+        if (selectedItem != null) {
+            selectedItem.getStyleClass().remove("selected");
+        }
+        
+        // Chọn mục mới
+        selectedItem = clickedItem;
+        clickedItem.getStyleClass().add("selected");
+        
+        // Chuyển giao diện dựa trên tên menu
+        switch (menuText) {
+            case "Màn hình chính":
+                trangChu.showDashboard();
+                break;
+            case "Quản lí đặt bàn":
+                trangChu.setMainContent(new Label("Giao diện Quản lí đặt bàn - Coming soon"));
+                break;
+            case "Quản lí món ăn":
+                trangChu.setMainContent(new Label("Giao diện Quản lí món ăn - Coming soon"));
+                break;
+            case "Quản lí khách hàng":
+                trangChu.setMainContent(new Label("Giao diện Quản lí khách hàng - Coming soon"));
+                break;
+            case "Quản lí nhân viên":
+                trangChu.setMainContent(new Label("Giao diện Quản lí nhân viên - Coming soon"));
+                break;
+            case "Quản lí khuyến mãi":
+                trangChu.setMainContent(new Label("Giao diện Quản lí khuyến mãi - Coming soon"));
+                break;
+            case "Quản lí hóa đơn":
+                trangChu.setMainContent(new Label("Giao diện Quản lí hóa đơn - Coming soon"));
+                break;
+            case "Thống kê":
+                // Giả sử bạn đã có lớp ThongKe như trong document
+                trangChu.setMainContent(new ThongKe());
+                break;
+            default:
+                trangChu.setMainContent(new Label("Giao diện chưa được triển khai"));
+        }
+    }
+    
+    /**
+     * Xử lý sự kiện đăng xuất
+     */
+    private void handleLogout() {
+        System.out.println("Đăng xuất được click!");
+        // TODO: Thêm logic đăng xuất ở đây
+        // Ví dụ: Hiển thị dialog xác nhận, sau đó chuyển về màn hình đăng nhập
     }
 }
