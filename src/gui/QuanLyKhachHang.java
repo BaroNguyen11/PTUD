@@ -23,7 +23,10 @@ public class QuanLyKhachHang extends Application {
     @Override
     public void start(Stage primaryStage) {
     	
-    	
+    	 SideBar sidebar = new SideBar(null);
+
+    	 
+    	 
         // --- Thanh tìm kiếm + Lọc + Thêm khách hàng ---
     	Label lblSearchTitle = new Label("Tìm kiếm khách hàng");
     	lblSearchTitle.setStyle("""
@@ -215,14 +218,36 @@ public class QuanLyKhachHang extends Application {
         table.widthProperty().addListener((obs, oldW, newW) -> {
             table.lookupAll(".column-header-background").forEach(node -> node.setStyle("-fx-background-color: #f2f2f2;"));
         });
+//        VBox searchSection = new VBox(5, lblSearchTitle, searchBar);
+//        VBox root = new VBox(12, searchSection, lblTitle, table);
+//        root.setPadding(new Insets(20));
+//        root.setStyle("-fx-background-color: #fdfdfd;");
+//
+//        Scene scene = new Scene(root, 950, 600);
+//        primaryStage.setTitle("Quản lý khách hàng");
+//        primaryStage.setScene(scene);
+//        primaryStage.show();
         VBox searchSection = new VBox(5, lblSearchTitle, searchBar);
-        VBox root = new VBox(12, searchSection, lblTitle, table);
-        root.setPadding(new Insets(20));
-        root.setStyle("-fx-background-color: #fdfdfd;");
+        VBox content = new VBox(12, searchSection, lblTitle, table);
+        content.setPadding(new Insets(20));
+        content.setStyle("-fx-background-color: #fdfdfd;");
+        
+        //  Bố cục chính
+        BorderPane root = new BorderPane();
+        root.setLeft(sidebar);
+        root.setCenter(content);
 
-        Scene scene = new Scene(root, 950, 600);
-        primaryStage.setTitle("Quản lý khách hàng");
+        // Căn chỉnh sidebar và nội dung
+        BorderPane.setMargin(content, new Insets(10, 10, 10, 10));
+
+        // Tùy chỉnh kích thước sidebar
+        sidebar.setPrefWidth(230);
+
+        // Tạo scene
+        Scene scene = new Scene(root, 1200, 700);
+        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
         primaryStage.setScene(scene);
+        primaryStage.setTitle("Quản lý khách hàng");
         primaryStage.show();
     }
 
