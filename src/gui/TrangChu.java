@@ -4,10 +4,15 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
-// import application/application.css; // Giả sử bạn có một file CSS để định dạng
-// Lớp TrangChu nên kế thừa từ một Layout Container như BorderPane
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+// Đã loại bỏ import Ikonli vì chưa thêm thư viện
+
+// Lớp TrangChu kế thừa từ BorderPane, bố cục chuẩn cho Sidebar và Header
 public class TrangChu extends BorderPane {
 
     private SideBar sideBar;

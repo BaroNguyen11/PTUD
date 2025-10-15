@@ -1,4 +1,3 @@
-
 package gui;
 
 import javafx.geometry.Insets;
@@ -6,7 +5,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -15,9 +13,6 @@ public class SideBar extends VBox {
     
     private TrangChu trangChu; // Tham chiếu đến TrangChu để gọi phương thức chuyển giao diện
     private HBox selectedItem; // Lưu mục đang được chọn
-
-    // Tham chiếu đến lớp TrangChu để gọi hàm chuyển đổi nội dung
-    private final TrangChu trangChuParent; 
 
     // Danh sách các mục menu chính
     private final String[] menuItems = {
@@ -28,7 +23,7 @@ public class SideBar extends VBox {
         "Quản lí nhân viên",
         "Quản lí khuyến mãi",
         "Quản lí hóa đơn",
-        "Thống kê" // Index 7
+        "Thống kê"
     };
 
     // Danh sách các mục con của "Quản lí đặt bàn"
@@ -75,7 +70,7 @@ public class SideBar extends VBox {
                 this.getChildren().add(bookingMenu);
             } else {
                 // Tạo mục menu thông thường
-                HBox menuItemBox = createMenuItem(menuItems[i], iconNames[i], i);
+                HBox menuItemBox = createMenuItem(menuItems[i], iconNames[i]);
                 this.getChildren().add(menuItemBox);
                 
                 // Đánh dấu "Màn hình chính" là mục được chọn ban đầu
@@ -121,36 +116,11 @@ public class SideBar extends VBox {
         
         return item;
     }
-    
-    /** Xử lý sự kiện khi click vào một mục menu */
-    private void handleMenuItemClick(String menuText) {
-        // Xóa class 'selected' khỏi tất cả các mục menu để reset trạng thái
-        // (Đây là logic cần thiết nếu bạn muốn highlight mục đang chọn)
-
-        switch (menuText) {
-            case "Thống kê":
-                // Khi click vào Thống kê, gọi hàm chuyển đổi nội dung
-                trangChuParent.setMainContent(new ThongKe());
-                break;
-            case "Màn hình chính":
-                // Trở về Dashboard mặc định
-                trangChuParent.showDashboard();
-                break;
-            // Thêm các case cho các màn hình khác tại đây
-            default:
-                // Tạm thời hiển thị màn hình mặc định cho các mục khác
-                Label defaultLabel = new Label("Nội dung của " + menuText + " đang phát triển.");
-                VBox defaultView = new VBox(defaultLabel);
-                defaultView.setAlignment(Pos.CENTER);
-                trangChuParent.setMainContent(defaultView);
-                break;
-        }
-    }
 
     /** Tạo cấu trúc cho mục "Quản lí đặt bàn" và các mục con. */
     private VBox createBookingMenu(String iconFileName) {
         // Mục chính
-        HBox parentItem = createMenuItem("Quản lí đặt bàn", iconFileName, 1);
+        HBox parentItem = createMenuItem("Quản lí đặt bàn", iconFileName);
         parentItem.getStyleClass().add("menu-item-parent");
 
         // Các mục con
@@ -188,7 +158,6 @@ public class SideBar extends VBox {
             imageView.setFitHeight(fitHeight);
             return imageView;
         } catch (Exception e) {
-            // Sử dụng System.err.println để in lỗi tìm tài nguyên
             System.err.println("Không tìm thấy tài nguyên: " + path);
             return new ImageView(); 
         }
