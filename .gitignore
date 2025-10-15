@@ -2,4 +2,8 @@
 bin/
 .classpath
 .project
+<<<<<<< HEAD
 build.fxbuild
+=======
+build.fxbuild 
+>>>>>>> 8e80d3c55b42fc9b159e5587615d29dccc54442e
