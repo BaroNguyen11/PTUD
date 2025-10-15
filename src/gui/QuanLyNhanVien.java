@@ -1,6 +1,9 @@
 package gui;
 
+import java.util.Date;
+
 import entity.KhachHang;
+import entity.NhanVien;
 import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -9,19 +12,33 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
-import javafx.scene.control.*;
+import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TableCell;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.*;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.ColumnConstraints;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class QuanLyKhachHang extends Application {
+public class QuanLyNhanVien extends Application{
 
     // =============================================================
     // 🧩 THUỘC TÍNH
     // =============================================================
-    private final ObservableList<KhachHang> data = FXCollections.observableArrayList();
+    private final ObservableList<NhanVien> data = FXCollections.observableArrayList();
 
     // =============================================================
     // 🚀 HÀM MAIN
@@ -72,7 +89,7 @@ public class QuanLyKhachHang extends Application {
     // 🔍 TẠO THANH TÌM KIẾM + LỌC + THÊM
     // =============================================================
     private VBox createSearchSection(Stage primaryStage) {
-        Label lblSearchTitle = new Label("Tìm kiếm khách hàng");
+        Label lblSearchTitle = new Label("Tìm kiếm nhân viên");
         lblSearchTitle.setStyle("""
             -fx-font-size: 13px;
             -fx-font-weight: bold;
@@ -86,7 +103,7 @@ public class QuanLyKhachHang extends Application {
         iconSearch.setFitHeight(16);
 
         TextField txtSearch = new TextField();
-        txtSearch.setPromptText("Tìm theo Tên/SĐT...");
+        txtSearch.setPromptText("Nhập mã nhân viên vd: NV00001");
         txtSearch.setPrefWidth(500);
         txtSearch.setStyle("""
             -fx-background-color: white;
@@ -102,7 +119,7 @@ public class QuanLyKhachHang extends Application {
 
         // ComboBox lọc
         ComboBox<String> cbSort = new ComboBox<>();
-        cbSort.getItems().addAll("Tất cả xếp loại", "Khách thường", "Khách VIP");
+        cbSort.getItems().addAll("Tất cả chức vụ", "Quản lý", "Nhân viên");
         cbSort.getSelectionModel().selectFirst();
         cbSort.setStyle("-fx-padding: 6; -fx-background-radius: 8;");
 
@@ -111,7 +128,7 @@ public class QuanLyKhachHang extends Application {
         sep.setPrefHeight(30);
 
         // Nút thêm
-        Button btnAdd = new Button("➕ Thêm khách hàng mới");
+        Button btnAdd = new Button("➕ Thêm nhân viên mới");
         stylePrimaryButton(btnAdd);
         btnAdd.setOnAction(e -> openAddModal(primaryStage));
 
@@ -126,23 +143,30 @@ public class QuanLyKhachHang extends Application {
     // =============================================================
     // 📋 TẠO BẢNG KHÁCH HÀNG
     // =============================================================
-    private TableView<KhachHang> createCustomerTable(Stage primaryStage) {
-        TableView<KhachHang> table = new TableView<>();
+    private TableView<NhanVien> createCustomerTable(Stage primaryStage) {
+        TableView<NhanVien> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
-        TableColumn<KhachHang, Number> colSTT = new TableColumn<>("STT");
-        TableColumn<KhachHang, String> colID = new TableColumn<>("Mã khách hàng");
-        TableColumn<KhachHang, String> colName = new TableColumn<>("Tên khách hàng");
-        TableColumn<KhachHang, String> colPhone = new TableColumn<>("Số điện thoại");
-        TableColumn<KhachHang, Double> colPoints = new TableColumn<>("Điểm tích lũy");
+        TableColumn<NhanVien, Number> colSTT = new TableColumn<>("STT");
+        TableColumn<NhanVien, String> colID = new TableColumn<>("Mã nhân viên");
+        TableColumn<NhanVien, String> colName = new TableColumn<>("Tên nhân viên");
+        TableColumn<NhanVien, String> colPhone = new TableColumn<>("Số điện thoại");
+        TableColumn<NhanVien, String> colCCCD = new TableColumn<>("CCCD");
+        TableColumn<NhanVien, String> colRoll = new TableColumn<>("Chức vụ");
+        TableColumn<NhanVien, Date> colDate = new TableColumn<>("Ngày sinh");
+        TableColumn<NhanVien, Date> colDateWork = new TableColumn<>("Giờ vào làm");
+        TableColumn<NhanVien, Date> colDatWorkOff = new TableColumn<>("Ngày thôi việc");
         TableColumn<KhachHang, Void> colAction = new TableColumn<>("Hành động");
 
         colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(table.getItems().indexOf(col.getValue()) + 1));
-        colID.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getMaKhachHang()));
-        colName.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTenKhachHang()));
+        colID.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getMaNhanVien()));
+        colName.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTenNhanVien()));
         colPhone.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getSoDienThoai()));
-        colPoints.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getDiemTichLuy()));
-
+        colCCCD.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getCCCD()));
+        colRoll.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getChucVu()));
+        colDate.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getNgaySinh()));
+        colDateWork.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getGioVaoLam()));
+        colDateWorkOff.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getNgayThoiViec()));
         // Cột hành động (chỉnh sửa)
         colAction.setCellFactory(param -> new TableCell<>() {
             private final Button btnEdit = new Button();
