@@ -1,3 +1,4 @@
+
 package gui;
 
 import javafx.geometry.Insets;
@@ -5,13 +6,15 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 
-//import org.kordamp.ikonli.javafx.FontIcon;
-
 public class SideBar extends VBox {
+
+    // Tham chiếu đến lớp TrangChu để gọi hàm chuyển đổi nội dung
+    private final TrangChu trangChuParent; 
 
     // Danh sách các mục menu chính
     private final String[] menuItems = {
@@ -49,12 +52,15 @@ public class SideBar extends VBox {
     };
 
 
-    public SideBar() {
+    // Sửa đổi constructor để nhận tham chiếu TrangChu
+    public SideBar(TrangChu trangChuParent) {
+        this.trangChuParent = trangChuParent; 
+        
         // Cấu hình VBox chính (SideBar)
         this.setPrefWidth(250); // Chiều rộng cố định
         this.setStyle("-fx-background-color: #082744;-fx-padding: 15;-fx-spacing: 10px;"); // Class CSS cho VBox chính
         this.setSpacing(5); // Khoảng cách giữa các mục menu
-        this.setPadding(new Insets(20, 0, 20, 0)); // Padding trên và dưới
+        this.setPadding(new Insets(20, 0, 0, 0)); // Padding trên và dưới
 //        scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
         // 1. Thêm Logo
         // Tạo một ImageView cho Logo (Bạn cần đảm bảo file Logo.png nằm trong classpath)
@@ -101,36 +107,66 @@ public class SideBar extends VBox {
         
         // Thêm một ID nếu bạn muốn tô màu mục đang chọn
         item.setId(text.toLowerCase().replaceAll(" ", "-")); 
+
+        
+        // THÊM EVENT CLICK
+        item.setOnMouseClicked(e -> handleMenuItemClick(text));
+
         return item;
+    }
+    
+    /** Xử lý sự kiện khi click vào một mục menu */
+    private void handleMenuItemClick(String menuText) {
+        // Xóa class 'selected' khỏi tất cả các mục menu để reset trạng thái
+        // (Đây là logic cần thiết nếu bạn muốn highlight mục đang chọn)
+
+        switch (menuText) {
+            case "Thống kê":
+                // Khi click vào Thống kê, gọi hàm chuyển đổi nội dung
+                trangChuParent.setMainContent(new ThongKe());
+                break;
+            case "Màn hình chính":
+                // Trở về Dashboard mặc định
+                trangChuParent.showDashboard();
+                break;
+            // Thêm các case cho các màn hình khác tại đây
+            default:
+                // Tạm thời hiển thị màn hình mặc định cho các mục khác
+                Label defaultLabel = new Label("Nội dung của " + menuText + " đang phát triển.");
+                VBox defaultView = new VBox(defaultLabel);
+                defaultView.setAlignment(Pos.CENTER);
+                trangChuParent.setMainContent(defaultView);
+                break;
+        }
     }
 
     /** Tạo cấu trúc cho mục "Quản lí đặt bàn" và các mục con. */
     private VBox createBookingMenu(String iconFileName) {
         // Mục chính
-        HBox parentItem = createMenuItem("Quản lí đặt bàn", iconFileName);
+        HBox parentItem = createMenuItem("Quản lí đặt bàn", iconFileName, 1);
         parentItem.getStyleClass().add("menu-item-parent");
 
         // Các mục con
         VBox subMenuContainer = new VBox();
         subMenuContainer.getStyleClass().add("sub-menu-container");
         
-//        for (String subItemText : subMenuItems) {
-//            Label subLabel = new Label(subItemText);
-//            
-//            // HBox chỉ chứa Label, dùng cho hiệu ứng lề
-//            HBox subItemBox = new HBox(subLabel);
-//            subItemBox.getStyleClass().add("sub-menu-item");
-//            
-//            // Mục "Hủy bàn" được tô màu làm ví dụ
-//            if (subItemText.equals("Hủy bàn")) {
-//                subItemBox.getStyleClass().add("selected");
-//            }
-//            
-//            // Thiết lập lề cho mục con
-//            subItemBox.setPadding(new Insets(5, 0, 5, 50)); // Lề sâu hơn mục cha
-//            
-//            subMenuContainer.getChildren().add(subItemBox);
-//        }
+        for (String subItemText : subMenuItems) {
+            Label subLabel = new Label(subItemText);
+            
+            // HBox chỉ chứa Label, dùng cho hiệu ứng lề
+            HBox subItemBox = new HBox(subLabel);
+            subItemBox.getStyleClass().add("sub-menu-item");
+            
+            // Mục "Hủy bàn" được tô màu làm ví dụ
+            if (subItemText.equals("Hủy bàn")) {
+                subItemBox.getStyleClass().add("selected");
+            }
+            
+            // Thiết lập lề cho mục con
+            subItemBox.setPadding(new Insets(5, 0, 5, 50)); // Lề sâu hơn mục cha
+            
+            subMenuContainer.getChildren().add(subItemBox);
+        }
 
         VBox fullMenu = new VBox(parentItem, subMenuContainer);
         fullMenu.getStyleClass().add("booking-menu-group");
@@ -161,6 +197,7 @@ public class SideBar extends VBox {
             imageView.setFitHeight(fitHeight);            
             return imageView;
         } catch (Exception e) {
+            // Sử dụng System.err.println để in lỗi tìm tài nguyên
             System.err.println("Không tìm thấy tài nguyên: " + path);
             // Trả về một ImageView rỗng nếu không tìm thấy
             return new ImageView(); 
