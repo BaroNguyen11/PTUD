@@ -206,7 +206,7 @@ public class SideBar extends VBox {
                 break;
             case "Thống kê":
                 // Giả sử bạn đã có lớp ThongKe như trong document
-                trangChu.setMainContent(new ThongKe());
+                trangChu.setMainContent(new Label("Giao diện Thống kê - Coming soon"));
                 break;
             default:
                 trangChu.setMainContent(new Label("Giao diện chưa được triển khai"));
