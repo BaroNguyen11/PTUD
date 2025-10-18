@@ -51,6 +51,9 @@ public class SideBar extends VBox {
 
         // Cấu hình VBox chính (SideBar)
         this.setPrefWidth(250);
+        this.setMinWidth(250);
+        this.setMaxWidth(250);
+
         this.getStyleClass().add("sidebar");
         this.setSpacing(5);
         this.setPadding(new Insets(20, 0, 20, 0));
