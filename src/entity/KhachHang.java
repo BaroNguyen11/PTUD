@@ -4,11 +4,11 @@ public class KhachHang {
     private String maKhachHang;
     private String tenKhachHang;
     private String soDienThoai;
-    private int diemTichLuy;
+    private double diemTichLuy;
 
     public KhachHang() {}
 
-    public KhachHang(String maKhachHang, String tenKhachHang, String soDienThoai, int diemTichLuy) {
+    public KhachHang(String maKhachHang, String tenKhachHang, String soDienThoai, double diemTichLuy) {
         this.maKhachHang = maKhachHang;
         this.tenKhachHang = tenKhachHang;
         this.soDienThoai = soDienThoai;
@@ -39,7 +39,7 @@ public class KhachHang {
         this.soDienThoai = soDienThoai;
     }
 
-    public int getDiemTichLuy() {
+    public double getDiemTichLuy() {
         return diemTichLuy;
     }
 

@@ -33,6 +33,7 @@
 	/* Con trỏ chuột khi hover */
 }
 
+
 .fontTieuDeNho {
 	-fx-font-family: "Tai Heritage Pro";
 	-fx-text-fill: gray;
@@ -223,4 +224,150 @@
 .button-checkin:hover{
 	-fx-opacity: 0.9;
 }
+
+
+.hbox-shadow {
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 3, 3);
+    -fx-cursor: hand;
+}
+
+.hbox-shadow:hover{
+	-fx-opacity: 0.9;
+}
+
+
+.button-chonMon{
+	-fx-background-color: #0F1F1F1; 
+	-fx-text-fill: black; 
+	-fx-font-weight: bold; 
+	-fx-background-radius: 5; 
+	-fx-cursor: hand;
+	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-size: 20;
+}
+
+.button-chonMon:hover{
+	-fx-opacity: 0.9
+}
+
+.textField-guiKhuyenMai{
+	-fx-text-fill: black; 
+	-fx-font-family: 'Tai Heritage Pro';  
+	-fx-background-color: white; 
+	-fx-font-size: 15; 
+	-fx-border-weight: 1; 
+	-fx-border-color: #D9D9D9;
+}
+
+.textField-guiKhuyenMai:hover{
+	-fx-border-color: blue;
+}
+
+
+
+
+.date-picker, .date-picker .text-field {
+    -fx-background-color: white;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-effect: none;
+    -fx-border-weight: 1;
+    -fx-border-color: #D9D9D9;
+    -fx-font-size: 15; 
+}
+
+
+.date-picker:hover{
+	-fx-border-color: blue;
+}
+
+.date-picker > .arrow-button {
+    -fx-background-image: url("/img/lichDen.png");
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: center;
+    -fx-background-size: 20px;
+    -fx-background-color: white;
+    -fx-effect: none;  
+    -fx-border-color: #D9D9D9; 
+}
+
+/* Nếu muốn ẩn luôn icon lịch (nếu còn hiện) */
+.date-picker .arrow-button .arrow {
+    -fx-background-color: transparent;
+    -fx-background-image: none;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+    -fx-alignment: CENTER;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-alignment: CENTER;
+}
+
+.btn-them {
+	-fx-background-radius: 5; 
+	-fx-background-color: #2FB129; 
+	-fx-font-size: 20; 
+	-fx-text-fill: white;
+	-fx-pref-width: 150px;
+	-fx-cursor: hand;
+	-fx-font-weight: bold;
+}
+
+.btn-luu{
+	-fx-background-radius: 5; 
+	-fx-background-color: #082744; 
+	-fx-font-size: 20; 
+	-fx-text-fill: white;
+	-fx-pref-width: 150px;
+	-fx-cursor: hand;
+	-fx-font-weight: bold;
+}
+
+.btn-luu:hover {
+	-fx-opacity: 0.9;
+}
+.btn-them:hover {
+	-fx-opacity: 0.9;
+}
+
+.monAnTrai{
+	-fx-background-color: white;
+	-fx-border-color: #D5B009;
+	-fx-border-weight: 1;
+	-fx-border-radius: 5;
+}
+.monAn:hover{
+	-fx-opacity: 0.9
+}
+
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: black;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-font-size: 15px;
+    -fx-font-family:	'Tai Heritage Pro' ;
+}
+
+.list-view .list-cell:selected {
+    -fx-background-color: transparent;
+    -fx-text-fill: inherit;  /* Giữ màu text bình thường */
+}
+.list-view .list-cell:focused {
+    -fx-background-color: transparent;
+}
+
+
+
+
 
