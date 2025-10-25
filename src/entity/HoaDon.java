@@ -1,9 +1,10 @@
 package entity;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 public class HoaDon {
     private String maHoaDon;
-    private LocalDateTime ngayTao;
+    private LocalDate ngayTao;
     private String trangThai;
     private String phuongThuc;
     private String ghiChu;
@@ -13,10 +14,10 @@ public class HoaDon {
 
     public HoaDon() {}
 
-    public HoaDon(String maHoaDon, LocalDateTime ngayTao, String trangThai, String phuongThuc,
+    public HoaDon(String maHoaDon, LocalDate localDate, String trangThai, String phuongThuc,
                   String ghiChu, NhanVien nhanVien, KhachHang khachHang) {
         this.maHoaDon = maHoaDon;
-        this.ngayTao = ngayTao;
+        this.ngayTao = localDate;
         this.trangThai = trangThai;
         this.phuongThuc = phuongThuc;
         this.ghiChu = ghiChu;
@@ -32,11 +33,11 @@ public class HoaDon {
         this.maHoaDon = maHoaDon;
     }
 
-    public LocalDateTime getNgayTao() {
+    public LocalDate getNgayTao() {
         return ngayTao;
     }
 
-    public void setNgayTao(LocalDateTime ngayTao) {
+    public void setNgayTao(LocalDate ngayTao) {
         this.ngayTao = ngayTao;
     }
 
