@@ -2,4 +2,7 @@
 bin/
 .classpath
 .project
-build.fxbuild 
+build.fxbuild
+PTUD.iml
+.idea
+out
