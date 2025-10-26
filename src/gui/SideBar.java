@@ -36,14 +36,14 @@ public class SideBar extends VBox {
     
     // Tên file icon
     private final String[] iconNames = {
-        "Home.png", 
-        "BanAnIcon.png", 
-        "MonAnIcon.png", 
-        "KhachHangIcon.png", 
-        "NhanVienIcon.png", 
-        "GiamGiaIcon.png", 
-        "HoaDonIcon.png", 
-        "ThongKeIcon.png"
+        "home.png", 
+        "booking.png", 
+        "food.png", 
+        "customer.png", 
+        "employee.png", 
+        "promotion.png", 
+        "invoice.png", 
+        "stats.png"
     };
 
     public SideBar(TrangChu trangChu) {
@@ -96,7 +96,7 @@ public class SideBar extends VBox {
 
     /** Tạo HBox chứa Icon và Label cho một mục menu thông thường. */
     private HBox createMenuItem(String text, String iconFileName) {
-        ImageView icon = createImageView("/img/" + iconFileName, 20, 20);
+        ImageView icon = createImageView("/icons/" + iconFileName, 20, 20);
         Label label = new Label(text);
         
         HBox item = new HBox(10, icon, label);
@@ -206,7 +206,7 @@ public class SideBar extends VBox {
                 break;
             case "Thống kê":
                 // Giả sử bạn đã có lớp ThongKe như trong document
-                trangChu.setMainContent(new ThongKe());
+                trangChu.setMainContent(new Label("Giao diện Thống kê - Coming soon"));
                 break;
             default:
                 trangChu.setMainContent(new Label("Giao diện chưa được triển khai"));
