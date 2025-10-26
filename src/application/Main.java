@@ -23,7 +23,7 @@ public class Main extends Application {
             primaryStage.setTitle("Ứng Dụng Quản Lý Nhà Hàng");
 
             // --- THIẾT LẬP TOÀN MÀN HÌNH ---
-            primaryStage.setFullScreen(true);
+            primaryStage.setMaximized(true);
             // -------------------------------
 
             primaryStage.setScene(scene);

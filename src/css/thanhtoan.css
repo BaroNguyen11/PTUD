@@ -1,0 +1,94 @@
+/* CSS THANH TOÁN */
+.btn-thanhToan-guiThanhToan{
+    -fx-background-color: #4E558C;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-radius: 8;
+    -fx-cursor: hand;
+    -fx-font-size: 15px;
+}
+
+.btn-thanhToan-guiThanhToan:hover{
+    -fx-opacity: 0.9;
+}
+
+.font-lblThanhToan{
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-font-family:    'Tai Heritage Pro';
+    -fx-font-color: black;
+}
+
+.font-txtThanhToan{
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-font-family:    'Tai Heritage Pro';
+    -fx-font-color: black;
+    -fx-background-color: white;
+}
+
+.btn-banPhim{
+    -fx-font-size: 30px;
+    -fx-text-fill: #082744;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+    -fx-border-color: #908C8C;
+    -fx-background-color: white;
+    -fx-pref-width: 70;
+    -fx-pref-height: 70;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-banPhim:hover{
+    -fx-background-color: #CED0D1;
+    -fx-text-fill: white;
+}
+
+.btn-banPhimTien{
+    -fx-font-size: 20px;
+    -fx-text-fill: white;
+    -fx-border-radius: 10;
+    -fx-background-color: #082744;
+    -fx-backround-radius: 10;
+    -fx-pref-width: 170;
+    -fx-pref-height: 70;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-background-radius: 10;
+}
+
+.btn-banPhimTien:hover{
+    -fx-opacity: 0.9;
+}
+
+.btn-ThanhToan{
+    -fx-background-color: green;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 20px;
+    -fx-pref-width: 160;
+    -fx-pref-height: 50;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-ThanhToan:hover{
+    -fx-opacity: 0.9;
+}
+
+.toggle-thanhToan:selected {
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: black;
+}
+
+.toggle-thanhToan:hover {
+    -fx-opacity: 0.9;
+}
+
+.toggle-thanhToan{
+    -fx-background-color: white;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
