@@ -1,0 +1,608 @@
+package gui;
+
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javafx.application.Application;
+import javafx.geometry.Insets;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
+import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.StringConverter;
+
+public class Gui_HuyBan extends BorderPane {
+
+	private boolean daXacNhan = false;
+
+	public Gui_HuyBan() {
+
+		this.setStyle("-fx-background-color: white;");
+
+		HBox phanTren = taoPhanTren();
+		HBox phanGiua = taoPhanGiua();
+		VBox phanGiuaAll = new VBox();
+		phanGiuaAll.getChildren().addAll(phanTren, phanGiua);
+		phanGiuaAll.setMinWidth(750);
+		this.setCenter(phanGiuaAll);
+
+		VBox phanBenPhai = taoPhanBenPhai(this); 
+		this.setRight(phanBenPhai); 
+
+	}
+
+	private HBox taoPhanTren() {
+		VBox top = new VBox(5);
+		top.setPadding(new Insets(10));
+		
+		Label lblChonTang = new Label("Khu vực");
+		lblChonTang.getStyleClass().add("fontTieuDeNho");
+
+		HBox nutTang = new HBox(5);
+		nutTang.setAlignment(Pos.TOP_LEFT);
+		nutTang.setMinWidth(400);
+		ToggleButton tang1 = new ToggleButton("Tầng 1");
+		tang1.setPrefSize(70, 40);
+		ToggleButton tang2 = new ToggleButton("Tầng 2");
+		tang2.setPrefSize(70, 40);
+		ToggleGroup buttonGroup = new ToggleGroup();
+		tang1.setToggleGroup(buttonGroup);
+		tang2.setToggleGroup(buttonGroup);
+		tang1.getStyleClass().add("nutTang");
+		tang2.getStyleClass().add("nutTang");
+		nutTang.getChildren().addAll(tang1, tang2);
+
+		// Ô tìm kiếm
+		Label lblTiemKiem = new Label("Tìm kiếm");
+		lblTiemKiem.getStyleClass().add("fontTieuDeNho");
+		TextField timKiem = new TextField();
+		timKiem.setPromptText("Tìm kiếm bàn số điện thoại khách hàng");
+		timKiem.getStyleClass().add("timKiem");
+		Button nutTimKiem = new Button("Tìm kiếm");
+		nutTimKiem.getStyleClass().add("button-timKiem");
+		HBox oTimKiem = new HBox(10, timKiem, nutTimKiem);
+		oTimKiem.setAlignment(Pos.CENTER_LEFT);
+
+		// Trạng thái chức vụ
+		VBox trangThai = new VBox(2);
+		trangThai.setPrefWidth(150);
+		trangThai.setPadding(new Insets(10));
+		Label chucVu = new Label("Chú thích");
+		chucVu.getStyleClass().add("fontTieuDeNho");
+
+		// Chú thích VIP
+		Label vip = new Label("Bàn VIP");
+		vip.setStyle("-fx-text-fill: #ed8936; -fx-font-weight: bold; -fx-font-size: 11;");
+		HBox chuThich1 = new HBox(5);
+		ImageView iconVIP = new ImageView();
+		try {
+			iconVIP.setImage(new Image("img/vipicon.png"));
+		} catch (Exception e) {
+		}
+		iconVIP.setFitWidth(15);
+		iconVIP.setFitHeight(15);
+		chuThich1.getChildren().addAll(iconVIP, vip);
+
+		// Chú thích Đang chọn
+		Label dangChon = new Label("Đang chọn");
+		dangChon.setStyle("-fx-text-fill: gray; -fx-font-weight: bold; -fx-font-size: 11;");
+		HBox chuThich2 = new HBox(5);
+		Circle dotGray = new Circle(5, Color.web("#BDBDBD"));
+		chuThich2.getChildren().addAll(dotGray, dangChon);
+
+		// Chú thích Đang sử dụng
+		Label dangSuDung = new Label("Đang sử dụng");
+		dangSuDung.setStyle("-fx-text-fill: #38A169; -fx-font-weight: bold; -fx-font-size: 11;");
+		HBox chuThich4 = new HBox(5);
+		Circle dotGreen = new Circle(5, Color.web("#38A169"));
+		chuThich4.getChildren().addAll(dotGreen, dangSuDung);
+
+		// Chú thích Đã đặt bàn
+		Label daBan = new Label("Đã đặt bàn");
+		daBan.setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-font-size: 11;");
+		HBox chuThich3 = new HBox(5);
+		Circle dotRed = new Circle(5, Color.RED);
+		chuThich3.getChildren().addAll(dotRed, daBan);
+
+		trangThai.getChildren().addAll(chucVu, chuThich1, chuThich2, chuThich4, chuThich3);
+
+		top.getChildren().addAll(lblChonTang, nutTang, lblTiemKiem, oTimKiem);
+		top.setStyle("-fx-border-width: 0 1 0 0; -fx-border-color: #D9D9D9");
+
+		HBox topALL = new HBox(40);
+		topALL.getChildren().addAll(top, trangThai);
+
+		return topALL;
+	}
+
+	// Tạo phần giữa với phần trái 
+	private HBox taoPhanGiua() {
+		HBox giua = new HBox(20);
+		giua.setPadding(new Insets(10));
+
+		// Phần trái: Khu vực tìm kiếm và danh sách bàn
+		VBox trai = new VBox(10);
+		trai.setPrefWidth(750);
+
+		// Tiêu đề danh sách
+		Label danhSach = new Label("Danh sách bàn");
+		danhSach.getStyleClass().add("fontTieuDeNho");
+
+		// Lưới bàn
+		GridPane luoiBan = taoLuoiBan();
+		ScrollPane cuonLuoi = new ScrollPane(luoiBan);
+		cuonLuoi.setFitToWidth(true);
+		cuonLuoi.setPrefHeight(620);
+		cuonLuoi.getStyleClass().add("scroll-pane");
+
+		trai.getChildren().addAll(danhSach, cuonLuoi);
+
+		// Phần phải: Thông tin khách hàng
+		VBox phai = new VBox(8);
+		phai.setPrefWidth(500);
+		Label tieuDe = new Label("Thông tin khách hàng");
+		tieuDe.setStyle("-fx-font-weight: bold; -fx-font-size: 14; -fx-text-fill: #2d3748;");
+		GridPane luoiThongTin = new GridPane();
+		luoiThongTin.setHgap(5);
+		luoiThongTin.setVgap(4);
+
+		// Các trường thông tin
+		Label nhanMaKH = new Label("Mã khách hàng:");
+		TextField maKH = new TextField("KH000001");
+		maKH.setEditable(false);
+		maKH.setPrefWidth(200);
+		luoiThongTin.addRow(0, nhanMaKH, maKH);
+
+		Label nhanTenKH = new Label("Tên khách hàng:");
+		TextField tenKH = new TextField("Hồ Vạn Thương");
+		tenKH.setEditable(false);
+		tenKH.setPrefWidth(200);
+		luoiThongTin.addRow(1, nhanTenKH, tenKH);
+
+		Label nhanSDT = new Label("SĐT:");
+		TextField sdt = new TextField("089398872");
+		sdt.setEditable(false);
+		sdt.setPrefWidth(200);
+		luoiThongTin.addRow(2, nhanSDT, sdt);
+
+		Label nhanDiem = new Label("Điểm lịch sử:");
+		TextField diem = new TextField("1236");
+		diem.setEditable(false);
+		diem.setPrefWidth(200);
+		luoiThongTin.addRow(3, nhanDiem, diem);
+
+		phai.getChildren().addAll(tieuDe, luoiThongTin);
+
+		giua.getChildren().addAll(trai);
+
+		return giua;
+	}
+
+	// Tạo lưới các bàn
+	private GridPane taoLuoiBan() {
+		GridPane grid = new GridPane();
+		grid.setHgap(15);
+		grid.setVgap(15);
+		grid.setPadding(new Insets(20));
+		grid.setStyle("-fx-background-color: white");
+
+		String[] tenBan = { "Bàn 1", "Bàn 2", "Bàn 3", "Bàn 6", "Bàn 7", "Bàn 8", "Bàn 11", "Bàn 12", "Bàn 13",
+				"Bàn 16", "Bàn 17", "Bàn 18", "Bàn 19", "Bàn 20", "Bàn 21" };
+		String tenKhach = "Hồ Vạn Thương";
+		String thoiGian = "(19h 22/10/25)";
+
+		List<StackPane> danhSachBan = new ArrayList<>();
+
+		for (int i = 0; i < tenBan.length; i++) {
+			StackPane theBan = taoTheBan(tenBan[i], tenKhach, thoiGian);
+			int hang = i / 3;
+			int cot = i % 3;
+			danhSachBan.add(theBan);
+
+			final int indexBan = i;
+			theBan.setOnMouseClicked(e -> {
+				for (int j = 0; j < danhSachBan.size(); j++) {
+					StackPane khungReset = danhSachBan.get(j);
+					VBox theReset = (VBox) khungReset.getChildren().get(1);
+
+					theReset.getStyleClass().remove("theBan-selected");
+					if (!theReset.getStyleClass().contains("theBan")) {
+						theReset.getStyleClass().add("theBan");
+					}
+				}
+
+				// Đổi màu thẻ được click thành xám (selected)
+				StackPane khungChon = danhSachBan.get(indexBan);
+				VBox theChon = (VBox) khungChon.getChildren().get(1); // Lấy VBox the
+				theChon.getStyleClass().add("theBan-selected");
+			});
+			GridPane.setRowIndex(theBan, hang);
+			GridPane.setColumnIndex(theBan, cot);
+			grid.getChildren().add(theBan);
+		}
+
+		return grid;
+	}
+
+	// Tạo thẻ bàn
+	private StackPane taoTheBan(String tenBan, String khach, String thoiGian) {
+		// StackPane chứa cả thẻ
+		StackPane khung = new StackPane();
+		khung.setPrefSize(220, 130);
+
+		// Nền đỏ bên trái 
+		Region mauDo = new Region();
+		mauDo.setPrefSize(15, 130);
+		mauDo.setStyle("-fx-background-color: red; -fx-background-radius: 20;");
+
+		// ----- Thẻ chính màu xanh -----
+		VBox the = new VBox(10);
+		the.setPrefSize(210, 130);
+		the.setAlignment(Pos.CENTER);
+		the.setPadding(new Insets(0, 10, 0, 10));
+		the.getStyleClass().add("theBan");
+
+		Label nhanBan = new Label(tenBan);
+		nhanBan.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+		nhanBan.setTextFill(Color.WHITE);
+
+		Label nhanKhach = new Label(khach);
+		nhanKhach.setFont(Font.font("Arial", FontWeight.BOLD, 13));
+		nhanKhach.setTextFill(Color.BLACK);
+
+		Label nhanThoiGian = new Label(thoiGian);
+		ImageView iconClock = new ImageView();
+		try {
+			iconClock.setImage(new Image(getClass().getResourceAsStream("/img/clock.png")));
+		} catch (Exception e) {
+		}
+		iconClock.setFitHeight(20);
+		iconClock.setFitWidth(20);
+		nhanThoiGian.setFont(Font.font("Arial", 11));
+		nhanThoiGian.setTextFill(Color.BLACK);
+		HBox hboxThoiGian = new HBox(iconClock, nhanThoiGian);
+		hboxThoiGian.setAlignment(Pos.CENTER);
+		hboxThoiGian.setSpacing(10);
+
+		VBox vboxThongTinKhach = new VBox(nhanKhach, hboxThoiGian);
+		vboxThongTinKhach.setPadding(new Insets(8));
+		vboxThongTinKhach.setStyle("-fx-background-color: white; -fx-background-radius: 5");
+		vboxThongTinKhach.setPrefWidth(80);
+		vboxThongTinKhach.setAlignment(Pos.CENTER);
+
+		ImageView iconVip = new ImageView();
+		try {
+			iconVip.setImage(new Image(getClass().getResourceAsStream("/img/vipicon.png")));
+		} catch (Exception e) {
+		}
+		iconVip.setFitHeight(20);
+		iconVip.setFitWidth(20);
+		HBox hboxVip = new HBox(iconVip);
+		hboxVip.setAlignment(Pos.TOP_RIGHT);
+		hboxVip.setMinHeight(20);
+
+		the.getChildren().addAll(hboxVip, nhanBan, vboxThongTinKhach);
+
+
+		khung.getChildren().addAll(mauDo, the);
+		StackPane.setAlignment(mauDo, Pos.CENTER_LEFT);
+		StackPane.setMargin(the, new Insets(0, 0, 0, 5));
+
+		return khung;
+	}
+
+	private VBox taoPhanBenPhai(Node node) {
+		// Spacer
+		Region spacer1 = new Region();
+		HBox.setHgrow(spacer1, Priority.ALWAYS);
+		Region spacer2 = new Region();
+		HBox.setHgrow(spacer2, Priority.ALWAYS);
+		Region spacer3 = new Region();
+		HBox.setHgrow(spacer3, Priority.ALWAYS);
+		Region spacer4 = new Region();
+		HBox.setHgrow(spacer4, Priority.ALWAYS);
+		Region spacer5 = new Region();
+		HBox.setHgrow(spacer5, Priority.ALWAYS);
+		Region spacer6 = new Region();
+		HBox.setHgrow(spacer6, Priority.ALWAYS);
+		Region spacer8 = new Region();
+		HBox.setHgrow(spacer8, Priority.ALWAYS);
+		Region spacer7 = new Region();
+		HBox.setHgrow(spacer7, Priority.ALWAYS);
+		Region spacer9 = new Region();
+		HBox.setHgrow(spacer9, Priority.ALWAYS);
+		Region spacer10 = new Region();
+		HBox.setHgrow(spacer10, Priority.ALWAYS);
+
+		// Tiêu đề - 1
+		Label tieuDeKH = new Label("Thông Tin Khách Hàng");
+		tieuDeKH.setStyle("-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: gray");
+
+		// Ma kh
+		Label lblMaKH = new Label("Mã khách hàng:");
+		lblMaKH.getStyleClass().add("fontTieuDeNho");
+		TextField txtMaKh = new TextField("KH000001");
+		txtMaKh.setEditable(false);
+		txtMaKh.setPrefWidth(250);
+		txtMaKh.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12; -fx-background-color: #D9D9D9; -fx-font-size: 15");
+		HBox hbox1 = new HBox(lblMaKH, spacer1, txtMaKh);
+		hbox1.setPadding(new Insets(5));
+
+		// Ten kh
+		Label lblTenKH = new Label("Tên khách hàng:");
+		lblTenKH.getStyleClass().add("fontTieuDeNho");
+		TextField txtTenKH = new TextField();
+		txtTenKH.setText("Hồ Vạn Thương");
+		txtTenKH.setEditable(false);
+		txtTenKH.setPrefWidth(250);
+		txtTenKH.setPrefWidth(250);
+		txtTenKH.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+		HBox hbox2 = new HBox(lblTenKH, spacer2, txtTenKH);
+		hbox2.setPadding(new Insets(5));
+
+		// So dien Thoai
+		Label lblSdt = new Label("Số điện thoại:");
+		lblSdt.getStyleClass().add("fontTieuDeNho");
+		TextField txtSdt = new TextField("0839298272");
+		txtSdt.setPrefWidth(250);
+		txtSdt.setEditable(false);
+		txtSdt.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+		HBox hbox3 = new HBox(lblSdt, spacer3, txtSdt);
+		hbox3.setPadding(new Insets(5));
+
+		// Diem tich luy
+		Label lblDiem = new Label("Điểm tích lũy:");
+		lblDiem.getStyleClass().add("fontTieuDeNho");
+		TextField txtDiem = new TextField("1236");
+		txtDiem.setPrefWidth(250);
+		txtDiem.setEditable(false);
+		txtDiem.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+		HBox hbox4 = new HBox(lblDiem, spacer4, txtDiem);
+		hbox4.setPadding(new Insets(5));
+
+		/// VBOX ALL - 1
+		VBox vboxAll1 = new VBox(5);
+		vboxAll1.getChildren().addAll(tieuDeKH, hbox1, hbox2, hbox3, hbox4);
+
+		// Tieu de - 2
+		Label lblThongTinDatBan = new Label("Thông Tin Đặt Bàn");
+		lblThongTinDatBan.setStyle("-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: gray");
+
+		// Ngay gio den
+		Label lblNgayGio = new Label("Ngày giờ đến:");
+		lblNgayGio.getStyleClass().add("fontTieuDeNho");
+		TextField txtGioDen = new TextField();
+		TextField txtNgayDen = new TextField();
+		txtGioDen.setEditable(false);
+		txtNgayDen.setEditable(false);
+		txtGioDen.setText("19:00");
+		txtNgayDen.setText("23/10/2025");
+		txtGioDen.setPrefWidth(80);
+		txtGioDen.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
+		txtNgayDen.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 0 3 3 0");
+		txtNgayDen.setPrefWidth(170);
+		ImageView iconGio = new ImageView(new Image("/img/clock.png"));
+		iconGio.setFitHeight(25);
+		iconGio.setFitWidth(25);
+		ImageView iconNgay = new ImageView(new Image("/img/calendar.png"));
+		iconNgay.setFitHeight(25);
+		iconNgay.setFitWidth(25);
+
+		StackPane stackGio = new StackPane(txtGioDen, iconGio);
+		StackPane stackNgay = new StackPane(txtNgayDen, iconNgay);
+		StackPane.setAlignment(iconGio, Pos.CENTER_RIGHT);
+		StackPane.setAlignment(iconNgay, Pos.CENTER_RIGHT);
+		StackPane.setMargin(iconNgay, new Insets(0, 4, 0, 0));
+
+		HBox hboxNgayGio = new HBox(stackGio, stackNgay);
+
+		HBox hbox5 = new HBox(lblNgayGio, spacer5, hboxNgayGio);
+		hbox5.setPadding(new Insets(5));
+
+		// So nguoi
+		Label lblSoNguoi = new Label("Số người:");
+		lblSoNguoi.getStyleClass().add("fontTieuDeNho");
+		TextField txtSoNguoi = new TextField("4");
+		txtSoNguoi.setEditable(false);
+		txtSoNguoi.setPrefWidth(250);
+		txtSoNguoi.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; ");
+		HBox hbox6 = new HBox(lblSoNguoi, spacer6, txtSoNguoi);
+		hbox6.setPadding(new Insets(5));
+
+		// Kiểu đặt bàn
+		Label lblKieuDatBan = new Label("Kiểu đặt bàn");
+		lblKieuDatBan.getStyleClass().add("fontTieuDeNho");
+		RadioButton radioDatTruoc = new RadioButton("Đặt trước");
+		RadioButton radioDungNgay = new RadioButton("Dùng ngay");
+		ToggleGroup radioGroup = new ToggleGroup();
+		radioDatTruoc.setToggleGroup(radioGroup);
+		radioDungNgay.setToggleGroup(radioGroup);
+		radioDatTruoc.getStyleClass().add("radio-button");
+		radioDungNgay.getStyleClass().add("radio-button");
+
+		radioDatTruoc.setSelected(true);
+
+		HBox hboxRadio = new HBox(5);
+		hboxRadio.setPrefWidth(250);
+		Region spaceRadio = new Region();
+		HBox.setHgrow(spaceRadio, Priority.ALWAYS);
+		hboxRadio.getChildren().addAll(radioDatTruoc, spaceRadio, radioDungNgay);
+		HBox hbox7 = new HBox(lblKieuDatBan, spacer7, hboxRadio);
+		hbox7.setPadding(new Insets(5));
+
+		// Vbox all - 2
+		VBox vboxAll2 = new VBox(5);
+		vboxAll2.getChildren().addAll(lblThongTinDatBan, hbox5, hbox6, hbox7);
+
+		// Tieu de - 3
+		Label lblTienCocTieuDe = new Label("Tiền đặt cọc");
+		lblTienCocTieuDe.setStyle("-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: gray");
+
+		// Tien coc
+		Label lblTienCoc = new Label("Tiền cọc:");
+		lblTienCoc.getStyleClass().add("fontTieuDeNho");
+		TextField txtTienCoc = new TextField("450.000đ"); // Dữ liệu mới
+		txtTienCoc.setEditable(false);
+		txtTienCoc.setPrefWidth(250);
+		txtTienCoc.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; ");
+		HBox hbox8 = new HBox(lblTienCoc, spacer8, txtTienCoc);
+		hbox8.setPadding(new Insets(5));
+		hbox8.setAlignment(Pos.CENTER_LEFT);
+
+		// --- MỤC MỚI: Hoàn trả ---
+		Label lblHoanTra = new Label("Hoàn trả:");
+		lblHoanTra.getStyleClass().add("fontTieuDeNho");
+		TextField txtHoanTra = new TextField("200.000đ");
+		txtHoanTra.setEditable(false);
+		txtHoanTra.setPrefWidth(250);
+		txtHoanTra.setStyle(
+				"-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; ");
+		HBox hbox_hoanTra = new HBox(lblHoanTra, spacer9, txtHoanTra);
+		hbox_hoanTra.setPadding(new Insets(5));
+		hbox_hoanTra.setAlignment(Pos.CENTER_LEFT);
+
+		// --- MỤC MỚI: Lí do hủy bàn ---
+		Label lblLyDo = new Label("Lí do hủy bàn:");
+		lblLyDo.getStyleClass().add("fontTieuDeNho");
+		TextArea txtLyDo = new TextArea();
+		txtLyDo.setPrefWidth(250);
+		txtLyDo.setPrefHeight(400);
+		txtLyDo.setWrapText(true);
+		txtLyDo.setStyle(
+				"-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 15px; -fx-background-color: white; -fx-border-color: #A0AEC0; -fx-border-width: 1; -fx-background-radius: 5; -fx-border-radius: 5;");
+		HBox hbox_lyDo = new HBox(lblLyDo, spacer10, txtLyDo);
+		hbox_lyDo.setPadding(new Insets(5));
+		hbox_lyDo.setAlignment(Pos.TOP_LEFT); // Để label căn lề trên
+
+		// Vebox All - 3 (Bao gồm cả 3 mục)
+		VBox vboxAll3 = new VBox(5);
+		vboxAll3.getChildren().addAll(lblTienCocTieuDe, hbox8, hbox_hoanTra, hbox_lyDo);
+
+		// Nút bấm (vẫn là hbox9)
+		Button nutHuyBan = new Button("Xác nhận hủy bàn");
+		nutHuyBan.setPrefSize(200, 40);
+		nutHuyBan.getStyleClass().add("button-checkin");
+
+		nutHuyBan.setOnAction(e -> {
+			Stage ownerStage = (Stage) node.getScene().getWindow();
+			hienThiDialogXacNhanHuy(ownerStage, "Bạn có chắc chắn muốn hủy bàn không?");
+
+			if (daXacNhan == true) {
+				System.out.println("Đã xác nhận HỦY BÀN.");
+//				Alert info = new Alert(Alert.AlertType.INFORMATION);
+//				info.showAndWait();
+
+			} else {
+				System.out.println("Đã chọn Quay lại.");
+
+			}
+		});
+
+		HBox hbox9 = new HBox(nutHuyBan); // Thêm nút mới vào HBox
+
+		hbox9.setPadding(new Insets(20));
+		hbox9.setPrefHeight(200);
+		hbox9.setAlignment(Pos.BOTTOM_RIGHT);
+
+		/// Vbox All
+		VBox vboxALL = new VBox(25);
+		vboxALL.getChildren().addAll(vboxAll1, vboxAll2, vboxAll3, hbox9);
+		vboxALL.setAlignment(Pos.TOP_LEFT);
+		vboxALL.setPadding(new Insets(10, 20, 0, 20));
+		vboxALL.setMinWidth(500);
+
+		return vboxALL;
+	}
+
+	private void hienThiDialogXacNhanHuy(Stage owner, String message) {
+		daXacNhan = false; 
+
+		Stage dialog = new Stage();
+		dialog.initModality(Modality.WINDOW_MODAL);
+		dialog.initOwner(owner);
+		dialog.initStyle(StageStyle.TRANSPARENT); // Nền trong suốt
+
+		// ----- VBox gốc (tạo bo góc và đổ bóng) -----
+		VBox root = new VBox(20); // Tăng khoảng cách
+		root.setPadding(new Insets(25));
+		root.setAlignment(Pos.CENTER);
+		// Style này tạo ra hộp thoại bo góc, nền trắng, có bóng mờ
+		root.setStyle("-fx-background-color: white;" + "-fx-background-radius: 12;"
+				+ "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 20, 0, 0, 5);");
+		root.setPrefWidth(400); // Đặt chiều rộng cố định
+
+		// ----- Icon (Dùng 1 Label với emoji) -----
+		ImageView iconLabel = new ImageView("/img/check.png"); // Biểu tượng câu hỏi
+		iconLabel.setFitHeight(36);
+		iconLabel.setFitWidth(36);
+
+		// ----- Nội dung text -----
+		Label messageLabel = new Label(message);
+		messageLabel.setWrapText(true);
+		messageLabel.setStyle("-fx-font-size: 16px; -fx-font-family: 'Arial'; -fx-text-fill: #374151;");
+		messageLabel.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
+
+		// ----- Dải nút bấm -----
+		// Nút "Hủy" (Hành động chính, màu đỏ)
+		Button btnHuy = new Button("Hủy bàn");
+		btnHuy.getStyleClass().add("button-checkin"); // Dùng style .button-checkin
+		btnHuy.setPrefHeight(40);
+		btnHuy.setPrefWidth(130);
+		// Ghi đè màu nền thành màu đỏ cảnh báo
+		btnHuy.getStyleClass().add("button-checkin");
+		btnHuy.setOnAction(e -> {
+			daXacNhan = true; // Đặt kết quả là true
+			dialog.close();
+		});
+
+		Button btnQuayLai = new Button("Quay lại");
+		btnQuayLai.getStyleClass().add("button-timKiem"); 
+		btnQuayLai.setPrefHeight(40);
+		btnQuayLai.setPrefWidth(130);
+		btnQuayLai.setStyle("-fx-font-size: 14px;");
+		btnQuayLai.setOnAction(e -> {
+			daXacNhan = false; 
+			dialog.close();
+		});
+
+		HBox buttonBar = new HBox(15, btnHuy, btnQuayLai);
+		buttonBar.setAlignment(Pos.CENTER);
+
+		// ----- Ghép lại -----
+		root.getChildren().addAll(iconLabel, messageLabel, buttonBar);
+
+		Scene scene = new Scene(root);
+		scene.setFill(Color.TRANSPARENT);
+
+		scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+
+		dialog.setScene(scene);
+		dialog.showAndWait();
+
+	}
+
+}
