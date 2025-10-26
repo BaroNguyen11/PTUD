@@ -187,7 +187,7 @@ public class SideBar extends VBox {
                 trangChu.showDashboard();
                 break;
             case "Quản lí đặt bàn":
-                trangChu.setMainContent(new Label("Giao diện Quản lí đặt bàn - Coming soon"));
+                trangChu.setMainContent(new Gui_DanhSachBan());
                 break;
             case "Quản lí món ăn":
                 trangChu.setMainContent(new Label("Giao diện Quản lí món ăn - Coming soon"));
