@@ -31,9 +31,11 @@ import javafx.stage.Stage;
 public class Gui_ThanhToan extends BorderPane {
 
     private List<BanAn> dsBan = new ArrayList<>();
-    private Scene scene;
+//    private Scene scene;
 
     public Gui_ThanhToan() {
+    		this.getStylesheets().add(getClass().getResource("/css/thanhtoan.css").toExternalForm());
+        this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
         // Khởi tạo bàn mẫu
         for (int i = 1; i <= 30; i++) {
             dsBan.add(new BanAn("Bàn " + i, LoaiBan.THUONG, TrangThai.DANG_SU_DUNG, ViTri.LAU_1));
@@ -45,10 +47,7 @@ public class Gui_ThanhToan extends BorderPane {
         // Màn hiển thị danh sách bàn
         BorderPane manHienThiBan = taoManHinhDanhSachBan(dsBan);
         this.setCenter(manHienThiBan);
-        this.getStylesheets().add(getClass().getResource("/css/thanhtoan.css").toExternalForm());
-        ///Màn hình thanh toán ////////
-//        BorderPane manHinhThanhToan = taoManHinhThanhToan();
-//        rootAll.setCenter(manHinhThanhToan);
+        
     }
 
     // Tạo màn danh sách bàn
@@ -256,7 +255,7 @@ public class Gui_ThanhToan extends BorderPane {
 
         Label lblDanhSach = new Label("Danh sách món sử dụng");
         TableView<MonAn> tableMon = new TableView<MonAn>();
-        tableMon.setPrefHeight(450);
+        tableMon.setPrefHeight(380);
 
         Label lblTamTinh  = new Label("Tạm tính:");
         TextField txtTamTinh = new TextField();
@@ -711,9 +710,9 @@ public class Gui_ThanhToan extends BorderPane {
 
         vboxAll.getChildren().addAll(lblPhuongThuc, hboxGroup,paneTienMat, paneMa, btnThanhToan);
         vboxAll.setPrefWidth(550);
-        vboxAll.setPadding(new Insets(20, 30, 20, 10));
+        vboxAll.setPadding(new Insets(10, 30, 5, 10));
         vboxAll.setMargin(gridNhapNhanh, new Insets(0,0,0,10));
-        vboxAll.setMargin(btnThanhToan, new Insets(20, 10, 0,350));
+        vboxAll.setMargin(btnThanhToan, new Insets(0, 10, 0,350));
 //    		vboxAll.setStyle("-fx-background-color: black");
 
 
