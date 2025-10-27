@@ -1,5 +1,6 @@
 package gui;
 
+import dao.ThongKe_DAO;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -21,8 +22,10 @@ import javafx.geometry.Side;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
 
-public class ThongKe extends VBox {
+import java.util.Map;
 
+public class ThongKe extends VBox {
+    ThongKe_DAO thongKeDao = new ThongKe_DAO();
     public ThongKe() {
         // Container chính với animation
         VBox rootContent = new VBox(40);
@@ -186,10 +189,21 @@ public class ThongKe extends VBox {
         statGrid.setVgap(20);
         statGrid.setPadding(new Insets(15, 0, 25, 0));
 
-        statGrid.add(createModernStatCard("Tổng Doanh thu", "150M", "VND", "↑ 12%", "So với tháng trước", "#667eea", "💰"), 0, 0);
-        statGrid.add(createModernStatCard("DT TB/Bàn", "525K", "VND", "↑ 8%", "Cao điểm: 650K", "#764ba2", "💸"), 1, 0);
-        statGrid.add(createModernStatCard("TT Tiền mặt", "35", "%", "↓ 5%", "Thẻ/Ví: 65%", "#f093fb", "💵"), 2, 0);
-        statGrid.add(createModernStatCard("DT Ca Tối", "75M", "VND", "↑ 15%", "Chiếm 50% tổng", "#4facfe", "🌙"), 3, 0);
+        double tongDoanhThu = thongKeDao.getTongDoanhThu();
+        double dtTrungBinhBan = thongKeDao.getDoanhThuTrungBinhBan();
+        double tiLeTienMat = thongKeDao.getTiLeTienMat();
+        double doanhThuCaToi = thongKeDao.getDoanhThuCaToi();
+
+        // Định dạng số
+        String tongDTFormatted = String.format("%.0fM", tongDoanhThu / 1_000_000);
+        String tbBanFormatted = String.format("%.0fK", dtTrungBinhBan / 1_000);
+        String tileFormatted = String.format("%.0f", tiLeTienMat);
+        String caToiFormatted = String.format("%.0fM", doanhThuCaToi / 1_000_000);
+
+        statGrid.add(createModernStatCard("Tổng Doanh thu", tongDTFormatted, "VND", "↑ 12%", "So với tháng trước", "#667eea", "💰"), 0, 0);
+        statGrid.add(createModernStatCard("DT TB/Bàn", tbBanFormatted, "VND", "↑ 8%", "Cao điểm: 650K", "#764ba2", "💸"), 1, 0);
+        statGrid.add(createModernStatCard("TT Tiền mặt", tileFormatted, "%", "↓ 5%", "Thẻ/Ví: " + (100 - tiLeTienMat) + "%", "#f093fb", "💵"), 2, 0);
+        statGrid.add(createModernStatCard("DT Ca Tối", caToiFormatted, "VND", "↑ 15%", "Chiếm 50% tổng", "#4facfe", "🌙"), 3, 0);
 
         GridPane chartGrid = new GridPane();
         chartGrid.setHgap(25);
@@ -477,20 +491,23 @@ public class ThongKe extends VBox {
         LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
         chart.setTitle("Xu hướng Doanh thu");
         chart.setLegendVisible(false);
-        chart.setStyle("-fx-background-color: transparent;");
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().add(new XYChart.Data<>("T5", 50));
-        series.getData().add(new XYChart.Data<>("T6", 80));
-        series.getData().add(new XYChart.Data<>("T7", 120));
-        series.getData().add(new XYChart.Data<>("T8", 150));
-        series.getData().add(new XYChart.Data<>("T9", 95));
-        series.getData().add(new XYChart.Data<>("T10", 110));
-
-        chart.getData().add(series);
-        chart.setPrefHeight(320);
+        series.getData().add(new XYChart.Data<>("1", 50));
+        series.getData().add(new XYChart.Data<>("2", 120));
+        series.getData().add(new XYChart.Data<>("3", 80));
+        series.getData().add(new XYChart.Data<>("4", 150));
+//        XYChart.Series<String, Number> series = new XYChart.Series<>();
+//        Map<String, Double> data = thongKeDao.getDoanhThuTheoThang();
+//
+//        for (Map.Entry<String, Double> entry : data.entrySet()) {
+//            series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+//        }
+//
+//        chart.getData().add(series);
         return new VBox(chart);
     }
+
 
     private VBox createRevenueByShiftChart() {
         PieChart chart = new PieChart(FXCollections.observableArrayList(
