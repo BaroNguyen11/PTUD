@@ -209,7 +209,7 @@ public class Gui_CheckIn extends BorderPane {
     
     // Tạo phần giữa với phần trái (tìm kiếm và danh sách bàn) và phần phải (thông tin khách hàng)
     private HBox taoPhanGiua() {
-    		dsBanDat = control.layThongTinDatBan(LocalDate.now());
+    		dsBanDat = control.layThongTinDatBan(LocalDate.of(2025, 10, 23));
     		//
         HBox giua = new HBox(20);
         giua.setPadding(new Insets(10));
