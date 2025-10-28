@@ -1,11 +1,14 @@
 package control;
 
+import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
 import dao.Dao_ThanhToan;
 import entity.BanAn;
+import entity.HoaDon;
+import entity.PhieuDatBan;
 import entity.ViTri;
 
 public class Crl_ThanhToan {
@@ -39,4 +42,24 @@ public class Crl_ThanhToan {
 	public List<String> layDanhSachCTHD(String maHoaDon){
 		return dao.getChiTietHoaDonTheoMa(maHoaDon);
 	}
+	
+	public HoaDon layHoaDonTheoMaBan(String maBan) {
+		return dao.getHoaDonTheoMaBan(maBan);
+	}
+	
+	public PhieuDatBan timPhieuTheoMaBan(String maBan) {
+		return dao.timPhieuDatTheoMaBan(maBan);
+	}
+	
+	public double soTienGiamGia(String maHoaDon) {
+		return dao.getSoTienGiamCaoNhatTheoHoaDon(maHoaDon);
+	}
+	
+	public boolean xuLyThanhToan(String maHoaDon, String maPhieu, String maBan) throws SQLException {
+        boolean hd = dao.capNhatTrangThaiThanhToan(maHoaDon);
+        boolean pd =	dao.capNhatTrangThaiHoanTat(maPhieu);
+        boolean ba = dao.capNhatTrangThaiTrong(maBan);
+
+        return hd && pd && ba;
+    }
 }

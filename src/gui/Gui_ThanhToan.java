@@ -2,15 +2,21 @@ package gui;
 
 
 
+import java.awt.DefaultKeyboardFocusManager;
+import java.sql.SQLException;
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
 import control.Crl_ThanhToan;
 import entity.BanAn;
+import entity.HoaDon;
 import entity.LoaiBan;
 import entity.MonAn;
+import entity.PhieuDatBan;
 import entity.TrangThai;
 import entity.ViTri;
 import javafx.application.Application;
@@ -42,10 +48,13 @@ public class Gui_ThanhToan extends BorderPane {
     private Scene scene;
 	private ScrollPane scroll;
 	private BanAn banChon;
+	private TextField txtTienNhan = new TextField();
+	private TextField txtTienThua = new TextField();
+	private TextField txtTongTien;
 
     public Gui_ThanhToan() {
     		
-    	 	dsBan = control.layDanhSachBanThanhToan(LocalDate.of(2024, 10, 23));
+    	 	dsBan = control.layDanhSachBanThanhToan(LocalDate.now());
     	 	banChon = new BanAn();
         // Root chính
         this.setStyle("-fx-background-color: white");
@@ -250,7 +259,7 @@ public class Gui_ThanhToan extends BorderPane {
     		rootAll.setLeft(vboxPhanTrai);
     		
     		//Tạo phần phải
-    		VBox vboxPhanPhai = taoPhanPhai();
+    		VBox vboxPhanPhai = taoPhanPhai(banAn);
     		rootAll.setRight(vboxPhanPhai);
     		
     		return rootAll;
@@ -278,7 +287,7 @@ public class Gui_ThanhToan extends BorderPane {
     		HBox hbox1 = new HBox(5);
     		
     		Label lblDanhSach = new Label("Danh sách món sử dụng");
-    		List<String> dsChiTietRaw = control.layDanhSachCTHD(banAn.getMaBan());
+    		List<String> dsChiTietRaw = control.layDanhSachCTHD(control.layHoaDonTheoMaBan(banAn.getMaBan()).getMaHoaDon());
     		ObservableList<String> dsChiTiet = FXCollections.observableArrayList(dsChiTietRaw);
     		TableView<String> tableMon = new TableView<>(dsChiTiet);  
     		tableMon.setPrefHeight(380);
@@ -296,7 +305,7 @@ public class Gui_ThanhToan extends BorderPane {
     		TextField txtTienCoc = new TextField();
     		HBox hbox5 = new HBox();
     		Label lblTongTien = new Label("Tổng tiền:");
-    		TextField txtTongTien = new TextField();
+    		txtTongTien = new TextField();
     		HBox hbox6 = new HBox();
     		
     		///
@@ -446,19 +455,36 @@ public class Gui_ThanhToan extends BorderPane {
         txtTienCoc.setAlignment(Pos.CENTER_RIGHT);
         
         DecimalFormat format = new DecimalFormat("#,### VND");
-        txtTamTinh.setText(format.format(100000000));
-        txtThue.setText(format.format(100000000));
-        txtGiamGia.setText(format.format(100000000));
-        txtTienCoc.setText(format.format(100000000));
-        txtTongTien.setText(format.format(100000000));
+        PhieuDatBan phieu = control.timPhieuTheoMaBan(banAn.getMaBan());
+        txtTamTinh.setText(format.format(Double.parseDouble(dsChiTiet.get(0).split(",")[3])));
+        double thue = (5.0/100) * Double.parseDouble(dsChiTiet.get(0).split(",")[3]);
+        txtThue.setText(format.format(thue));
+        double giamGia = control.soTienGiamGia(phieu.getHoaDon().getMaHoaDon());
+        txtGiamGia.setText(format.format(giamGia));
+        double tienCoc =  phieu.getGhiChu().equals("Dùng ngay") ? 0.0 : banAn.getLoai().equals(LoaiBan.VIP) ? 450000.0 : 350000.0 ;
+        txtTienCoc.setText(format.format(tienCoc));
+        double tongTien = Double.parseDouble(dsChiTiet.get(0).split(",")[3]) + thue - tienCoc - giamGia;
+        
         txtTamTinh.setEditable(false);
         txtThue.setEditable(false);
         txtGiamGia.setEditable(false);
         txtTienCoc.setEditable(false);
         txtTongTien.setEditable(false);
     		
-        lblTongTien.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white");
-        txtTongTien.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-color: transparent");
+        if(tongTien > 0) {
+        		lblTongTien.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white");
+        		txtTongTien.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-color: transparent");
+        }else {
+        		tongTien *= -1;
+        		txtTienNhan.setText(format.format(tienCoc));
+        		txtTienNhan.setEditable(false);
+        		txtTienThua.setText(format.format(tongTien));
+        		lblTongTien.setText("Tiền hoàn lại cho khách:");
+        		lblTongTien.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white");
+        		txtTongTien.setStyle("-fx-font-size: 18; -fx-font-weight: bold; -fx-text-fill: white; -fx-background-color: transparent");
+        }
+        txtTongTien.setText(format.format(tongTien));	
+        
         txtTongTien.setAlignment(Pos.CENTER_RIGHT);
         
         hbox2.getChildren().addAll(lblTamTinh, spacer1, txtTamTinh);
@@ -487,7 +513,7 @@ public class Gui_ThanhToan extends BorderPane {
     		return vboxAll;
     }
     
-    private VBox taoPhanPhai() {
+    private VBox taoPhanPhai(BanAn banAn) {
     		//VBox all
     		VBox vboxAll = new VBox(5);
     		
@@ -500,9 +526,7 @@ public class Gui_ThanhToan extends BorderPane {
     		btnTienMat.setToggleGroup(btnGroup);
     		btnMa.setToggleGroup(btnGroup);
     		Label lblTienNhan = new Label("Tiền nhận:");
-    		TextField txtTienNhan = new TextField();
     		Label lblTienThua = new Label("Tiền thừa:");
-    		TextField txtTienThua = new TextField();
     		Label lblNhapNhanh = new Label("Nhập nhanh");
     		
     		
@@ -712,6 +736,54 @@ public class Gui_ThanhToan extends BorderPane {
     			this.setCenter(taoManHinhDanhSachBan(dsBan));
     		});
     		
+    		btnThanhToan.setOnAction(e -> {
+    			String chuoiTienNhan = txtTienNhan.getText().trim();
+    			double tienNhan = 0.0;
+    			try {
+    				tienNhan = Double.parseDouble(chuoiTienNhan);
+    			}catch (Exception er) {
+					JOptionPane.showMessageDialog(null, "Tiền nhận không hợp lệ !");
+					txtTienNhan.requestFocus();
+					txtTienNhan.selectAll();
+					return;
+				}
+    			String maHoaDon = control.layHoaDonTheoMaBan(banAn.getMaBan()).getMaHoaDon();
+    			String maPhieu = control.timPhieuTheoMaBan(banAn.getMaBan()).getMaPhieu();
+    			try {
+					if(control.xuLyThanhToan(maHoaDon, maPhieu, banAn.getMaBan()));
+				} catch (SQLException e1) {
+					e1.printStackTrace();
+					JOptionPane.showMessageDialog(null, "Thanh toán thất bại !!");
+					return;
+				}
+    			JOptionPane.showMessageDialog(null, "Thanh toán thành công !!");
+    			btnQuayLai.fire();
+    			loadLaiDanhSach();
+    		});
+    		
+    		txtTienNhan.setOnAction(e -> {
+    			String chuoiTienNhan = txtTienNhan.getText().trim();
+    			double tienNhan = 0.0;
+    			try {
+    				tienNhan = Double.parseDouble(chuoiTienNhan);
+    			}catch (Exception er) {
+					JOptionPane.showMessageDialog(null, "Tiền nhận không hợp lệ !");
+					txtTienNhan.requestFocus();
+					txtTienNhan.selectAll();
+					return;
+				}
+    			DecimalFormat format = new DecimalFormat("#,##0.0 đ");
+    			String text = txtTongTien.getText().replace("VND", "").trim(); 
+    			text = text.replace(",", ""); 
+    			double tienThua = tienNhan - Double.parseDouble(text);
+    			if(tienThua < 0) {
+    				JOptionPane.showMessageDialog(null, "Tiền nhận không hợp lệ !");
+				txtTienNhan.requestFocus();
+				txtTienNhan.selectAll();
+    			}else {
+    				txtTienThua.setText(format.format(tienThua));
+    			}
+    		});
     		maQR.setFitHeight(300);
     		maQR.setFitWidth(300);
     		
@@ -765,40 +837,8 @@ public class Gui_ThanhToan extends BorderPane {
     		
     		return vboxAll;
     }
-
-//    private void addMonAnTestData(ObservableList<MonAn> items) {
-//    	items.addAll(
-//    		    new MonAn("MA001", "Cơm gà xào sả ớt", "Món chính", 50000.0, "Món ngon, cay nồng"),
-//    		    new MonAn("MA002", "Bò nướng lá lốt", "Món chính", 120000.0, "Thịt bò mềm, thơm"),
-//    		    new MonAn("MA003", "Cá kho tộ", "Món chính", 80000.0, "Cá tươi, kho đậm đà"),
-//    		    new MonAn("MA004", "Rau củ xào", "Món phụ", 30000.0, "Rau tươi, xào nhanh"),
-//    		    new MonAn("MA005", "Nước cam tươi", "Đồ uống", 40000.0, "Cam tươi, ép tại chỗ"),
-//    		    new MonAn("MA006", "Canh chua cá lóc", "Món chính", 70000.0, "Vị chua thanh mát"),
-//    		    new MonAn("MA007", "Cơm chiên dương châu", "Món chính", 60000.0, "Cơm chiên trứng và xúc xích"),
-//    		    new MonAn("MA008", "Mì xào hải sản", "Món chính", 85000.0, "Hải sản tươi, xào đậm vị"),
-//    		    new MonAn("MA009", "Gỏi cuốn tôm thịt", "Món khai vị", 45000.0, "Cuốn tươi, chấm nước mắm chua ngọt"),
-//    		    new MonAn("MA010", "Chè khúc bạch", "Tráng miệng", 35000.0, "Mát lạnh, ngọt dịu"),
-//    		    new MonAn("MA011", "Cà phê sữa đá", "Đồ uống", 30000.0, "Đậm đà, truyền thống Việt"),
-//    		    new MonAn("MA012", "Bánh flan caramel", "Tráng miệng", 25000.0, "Béo ngậy, thơm ngon"),
-//    		    new MonAn("MA013", "Phở bò tái", "Món chính", 70000.0, "Nước lèo trong, thịt bò mềm"),
-//    		    new MonAn("MA014", "Bún chả Hà Nội", "Món chính", 65000.0, "Chả nướng thơm lừng"),
-//    		    new MonAn("MA015", "Gà hấp muối", "Món đặc biệt", 150000.0, "Gà ta hấp muối nguyên con"),
-//    		    new MonAn("MA016", "Nước ép dưa hấu", "Đồ uống", 35000.0, "Giải khát, tự nhiên"),
-//    		    new MonAn("MA017", "Trà đào cam sả", "Đồ uống", 40000.0, "Hương vị tươi mát"),
-//    		    new MonAn("MA018", "Bánh mì thịt nướng", "Món phụ", 30000.0, "Thịt nướng thơm, pate béo"),
-//    		    new MonAn("MA019", "Khoai tây chiên", "Món phụ", 25000.0, "Giòn tan, ăn kèm tương ớt"),
-//    		    new MonAn("MA020", "Súp cua", "Món khai vị", 40000.0, "Sánh mịn, thơm vị cua"),
-//    		    new MonAn("MA021", "Lẩu thái hải sản", "Món đặc biệt", 250000.0, "Cay nồng, hải sản tươi"),
-//    		    new MonAn("MA022", "Lẩu gà lá giang", "Món đặc biệt", 180000.0, "Chua thanh, vị quê"),
-//    		    new MonAn("MA023", "Bánh xèo miền Tây", "Món chính", 50000.0, "Giòn rụm, tôm thịt đầy đặn"),
-//    		    new MonAn("MA024", "Gà rán giòn", "Món chính", 60000.0, "Giòn tan, thơm ngon"),
-//    		    new MonAn("MA025", "Cá hồi nướng bơ tỏi", "Món đặc biệt", 220000.0, "Thơm béo, thịt cá mềm"),
-//    		    new MonAn("MA026", "Sinh tố bơ", "Đồ uống", 35000.0, "Béo mịn, mát lạnh"),
-//    		    new MonAn("MA027", "Soda chanh", "Đồ uống", 30000.0, "Có gas, chua nhẹ"),
-//    		    new MonAn("MA028", "Bánh ngọt socola", "Tráng miệng", 40000.0, "Ngọt ngào, tan chảy"),
-//    		    new MonAn("MA029", "Cơm tấm sườn bì chả", "Món chính", 65000.0, "Đặc sản Sài Gòn"),
-//    		    new MonAn("MA030", "Nước suối", "Đồ uống", 15000.0, "Tinh khiết, không gas")
-//    		);
-//
-//    }
+    
+    public void loadLaiDanhSach() {
+    		dsBan = control.layDanhSachBanThanhToan(LocalDate.now());
+    }
 }

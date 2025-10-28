@@ -18,6 +18,7 @@ import entity.HoaDon;
 import entity.KhachHang;
 import entity.LoaiBan;
 import entity.NhanVien;
+import entity.PhieuDatBan;
 import entity.TrangThai;
 import entity.ViTri;
 
@@ -32,7 +33,7 @@ public class Dao_ThanhToan {
 	        FROM BanAn b
 	        JOIN PhieuDatBan p ON b.maBan = p.maBan
 	        JOIN HoaDon h ON h.maHoaDon = p.maHoaDon
-	        WHERE p.trangThai = N'Đang dùng'
+	        WHERE b.trangThai = N'Đang dùng'
 	          AND h.trangThai = N'Chưa thanh toán'
 	          AND CAST(p.thoiGianBatDau AS DATE) = ?
 	    """;
@@ -102,15 +103,12 @@ public class Dao_ThanhToan {
 	    }
 
 	    String sql = """
-	        SELECT h.maHoaDon, h.ngayTao, h.trangThai, h.phuongThuc, h.ghiChu,
+	         SELECT h.maHoaDon, h.ngayTao, h.trangThai, h.phuongThuc, h.ghiChu,
 	               h.maNhanVien, h.maKhachHang
 	        FROM HoaDon h
 	        JOIN PhieuDatBan p ON h.maHoaDon = p.maHoaDon
 	        WHERE p.maBan = ?
-	          AND p.trangThai = N'Đang dùng'  -- Chỉ lấy phiếu đang dùng (thường chỉ 1 HD đang mở)
-	          AND h.trangThai = N'Chưa thanh toán'  -- HD chưa thanh toán
-	        ORDER BY h.ngayTao DESC  -- Lấy cái mới nhất nếu có nhiều (nhưng thường chỉ 1)
-	        OFFSET 0 ROWS FETCH NEXT 1 ROW ONLY  -- Giới hạn 1 row (SQL Server syntax)
+	         AND h.trangThai = N'Chưa thanh toán'  
 	    """;
 
 	    try (Connection con = ConnectDB.getConnection();
@@ -268,6 +266,108 @@ public class Dao_ThanhToan {
         }
 
         return dsChiTiet;
+    }
+	
+	public PhieuDatBan timPhieuDatTheoMaBan(String maBan) {
+	    if (maBan == null || maBan.trim().isEmpty()) {
+	        return null;
+	    }
+
+	    String sql = "SELECT * FROM PhieuDatBan WHERE maBan = ?";
+
+	    try (Connection con = ConnectDB.getConnection();
+	         PreparedStatement stmt = con.prepareStatement(sql)) {
+
+	        stmt.setString(1, maBan.trim());
+	        ResultSet rs = stmt.executeQuery();
+
+	        if (rs.next()) {
+	            // Lấy thông tin các khóa ngoại
+	            String maKhachHang = rs.getString("maKhachHang");
+	            String maNhanVien = rs.getString("maNhanVien");
+	            String maHoaDon = rs.getString("maHoaDon");
+
+	            // Dùng lại các hàm bạn đã viết để lấy entity đầy đủ
+	            KhachHang kh = getKhachHangByMa(maKhachHang);
+	            NhanVien nv = getNhanVienByMa(maNhanVien);
+	            HoaDon hd = getHoaDonTheoMaBan(maBan); // hoặc tạo getHoaDonByMa nếu muốn chính xác hơn
+
+	            BanAn ban = new BanAn();
+	            ban.setMaBan(maBan);
+
+	            // Tạo đối tượng phiếu đặt
+	            return new PhieuDatBan(
+	                rs.getString("maPhieu"),
+	                rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
+	                rs.getString("trangThai"),
+	                rs.getInt("soNguoi"),
+	                rs.getString("ghiChu"),
+	                kh, ban, nv, hd
+	            );
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return null; // Không tìm thấy
+	}
+	
+	public double getSoTienGiamCaoNhatTheoHoaDon(String maHoaDon) {
+	    String sql = "SELECT MAX(soTienGiam) AS soTienGiamCaoNhat FROM ChiTietKMHD WHERE maHoaDon = ?";
+	    double soTienGiam = 0.0;
+
+	    try (Connection con = ConnectDB.getConnection();
+	         PreparedStatement stmt = con.prepareStatement(sql)) {
+
+	        stmt.setString(1, maHoaDon);
+	        ResultSet rs = stmt.executeQuery();
+
+	        if (rs.next()) {
+	            soTienGiam = rs.getDouble("soTienGiamCaoNhat");
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return soTienGiam;
+	}
+
+	public boolean capNhatTrangThaiThanhToan(String maHoaDon) throws SQLException {
+		Connection con = ConnectDB.getConnection();
+        String sql = "UPDATE HoaDon SET trangThai = N'Đã thanh toán' WHERE maHoaDon = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maHoaDon);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+	
+	public boolean capNhatTrangThaiHoanTat(String maPhieu) throws SQLException {
+		Connection con = ConnectDB.getConnection();
+        String sql = "UPDATE PhieuDatBan SET trangThai = N'Đã dùng' WHERE maPhieu = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maPhieu);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+	
+	public boolean capNhatTrangThaiTrong(String maBan) throws SQLException {
+		Connection con = ConnectDB.getConnection();
+        String sql = "UPDATE BanAn SET trangThai = N'Trống' WHERE maBan = ?";
+        try (PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, maBan);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 	
 	

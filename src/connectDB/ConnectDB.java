@@ -8,7 +8,7 @@ import javax.swing.JOptionPane;
 
 public class ConnectDB {
 
-	static final String JDBC_URL = "jdbc:sqlserver://localhost:1433;databaseName=QLNhaHang2BTCHECK;encrypt=false";
+	static final String JDBC_URL = "jdbc:sqlserver://localhost:1433;databaseName=QLNhaHang2BT;encrypt=false";
 	static final String USER = "sa";
 	static final String PASSWORD = "thuongho@2005";
 
