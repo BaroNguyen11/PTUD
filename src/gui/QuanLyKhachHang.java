@@ -1,7 +1,7 @@
 package gui;
 
+import dao.KhachHang_DAO;
 import entity.KhachHang;
-import javafx.application.Application;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,53 +16,34 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class QuanLyKhachHang extends Application {
+public class QuanLyKhachHang extends BorderPane {
     private final ObservableList<KhachHang> data = FXCollections.observableArrayList();
-    public static void main(String[] args) {
-        launch(args);
-    }
+    private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
+    private TableView<KhachHang> table;
+    private ComboBox<String> cbSort;
+    private TextField txtSearch;
 
-    @Override
-    public void start(Stage primaryStage) {
-        SideBar sidebar = new SideBar(null);
+    // ====================== ✅ CONSTRUCTOR ======================
+    public QuanLyKhachHang() {
+        // Tạo layout
+        VBox searchSection = createSearchSection();
+        table = createCustomerTable();
 
-        // --- Thanh tìm kiếm ---
-        VBox searchSection = createSearchSection(primaryStage);
+        // Gán vào BorderPane
+        setTop(searchSection);
+        setCenter(table);
 
-        // --- Tiêu đề ---
-        Label lblTitle = new Label("Danh sách khách hàng");
-        lblTitle.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+        setPadding(new Insets(20));
+        setStyle("-fx-background-color: #f7f9fc;");
 
-        // --- Bảng dữ liệu ---
-        TableView<KhachHang> table = createCustomerTable(primaryStage);
-        table.setItems(data);
-
-        // --- Kết hợp layout chính ---
-        VBox content = new VBox(12, searchSection, lblTitle, table);
-        content.setPadding(new Insets(20));
-        content.setStyle("-fx-background-color: #fdfdfd;");
-
-        BorderPane root = new BorderPane();
-        root.setLeft(sidebar);
-        root.setCenter(content);
-        BorderPane.setMargin(content, new Insets(10));
-
-        sidebar.setPrefWidth(230);
-        VBox.setVgrow(table, Priority.ALWAYS);
-
-        Scene scene = new Scene(root, 1200, 700);
-        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
-
-        primaryStage.setScene(scene);
-        primaryStage.setTitle("Quản lý khách hàng");
-        primaryStage.setMaximized(true); // 🌟 Full màn hình khi chạy
-        primaryStage.show();
+        // 🔹 Load dữ liệu từ database sau khi tạo giao diện
+        loadDataFromDatabase();
     }
 
     // =============================================================
-    // 🔍 TẠO THANH TÌM KIẾM + LỌC + THÊM
+    // 🔍 THANH TÌM KIẾM + THÊM
     // =============================================================
-    private VBox createSearchSection(Stage primaryStage) {
+    private VBox createSearchSection() {
         Label lblSearchTitle = new Label("Tìm kiếm khách hàng");
         lblSearchTitle.setStyle("""
                 -fx-font-size: 13px;
@@ -76,7 +57,7 @@ public class QuanLyKhachHang extends Application {
         iconSearch.setFitWidth(16);
         iconSearch.setFitHeight(16);
 
-        TextField txtSearch = new TextField();
+        txtSearch = new TextField();
         txtSearch.setPromptText("Tìm theo Tên/SĐT...");
         txtSearch.setPrefWidth(500);
         txtSearch.setStyle("""
@@ -92,11 +73,11 @@ public class QuanLyKhachHang extends Application {
         StackPane.setMargin(iconSearch, new Insets(0, 0, 0, 8));
 
         // ComboBox lọc
-        ComboBox<String> cbSort = new ComboBox<>();
+        cbSort = new ComboBox<>();
         cbSort.getItems().addAll("Tất cả xếp loại", "Khách thường", "Khách VIP");
         cbSort.getSelectionModel().selectFirst();
         cbSort.setStyle("-fx-padding: 6; -fx-background-radius: 8;");
-        cbSort.setPrefWidth(180); // Giãn chiều dài ComboBox
+        cbSort.setPrefWidth(180);
 
         // Separator
         Separator sep = new Separator();
@@ -106,7 +87,7 @@ public class QuanLyKhachHang extends Application {
         // Nút thêm
         Button btnAdd = new Button("➕ Thêm khách hàng mới");
         stylePrimaryButton(btnAdd);
-        btnAdd.setOnAction(e -> openAddModal(primaryStage));
+        btnAdd.setOnAction(e -> openAddModal());
 
         // Gộp toàn bộ phần trên
         HBox searchBar = new HBox(20, searchBox, cbSort, sep, btnAdd);
@@ -116,13 +97,23 @@ public class QuanLyKhachHang extends Application {
         txtSearch.setMaxWidth(Double.MAX_VALUE);
         searchBar.setPadding(new Insets(0, 0, 5, 0));
 
+        // 🔹 Thêm sự kiện tìm kiếm
+        txtSearch.textProperty().addListener((obs, oldValue, newValue) -> {
+            applyFilters();
+        });
+
+        // 🔹 Thêm sự kiện lọc
+        cbSort.valueProperty().addListener((obs, oldValue, newValue) -> {
+            applyFilters();
+        });
+
         return new VBox(5, lblSearchTitle, searchBar);
     }
 
     // =============================================================
     // 📋 TẠO BẢNG KHÁCH HÀNG
     // =============================================================
-    private TableView<KhachHang> createCustomerTable(Stage primaryStage) {
+    private TableView<KhachHang> createCustomerTable() {
         TableView<KhachHang> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
 
@@ -131,13 +122,37 @@ public class QuanLyKhachHang extends Application {
         TableColumn<KhachHang, String> colName = new TableColumn<>("Tên khách hàng");
         TableColumn<KhachHang, String> colPhone = new TableColumn<>("Số điện thoại");
         TableColumn<KhachHang, Double> colPoints = new TableColumn<>("Điểm tích lũy");
+        TableColumn<KhachHang, String> colType = new TableColumn<>("Xếp loại");
         TableColumn<KhachHang, Void> colAction = new TableColumn<>("Hành động");
 
         colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(table.getItems().indexOf(col.getValue()) + 1));
+        colSTT.setStyle("-fx-alignment: CENTER;");
+        
         colID.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getMaKhachHang()));
         colName.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTenKhachHang()));
         colPhone.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getSoDienThoai()));
         colPoints.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getDiemTichLuy()));
+        colPoints.setStyle("-fx-alignment: CENTER_LEFT;");
+        
+        // Cột xếp loại
+        colType.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(getXepLoaiKhachHang(cell.getValue().getDiemTichLuy())));
+        colType.setCellFactory(column -> new TableCell<KhachHang, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    if ("VIP".equals(item)) {
+                        setStyle("-fx-text-fill: #d4af37; -fx-font-weight: bold; -fx-alignment: CENTER;");
+                    } else {
+                        setStyle("-fx-text-fill: #666; -fx-font-weight: bold; -fx-alignment: CENTER;");
+                    }
+                }
+            }
+        });
 
         // Cột hành động
         colAction.setCellFactory(param -> new TableCell<>() {
@@ -157,7 +172,7 @@ public class QuanLyKhachHang extends Application {
                 btnEdit.setCursor(Cursor.HAND);
                 btnEdit.setOnAction(e -> {
                     KhachHang c = getTableView().getItems().get(getIndex());
-                    openEditModal(primaryStage, c);
+                    openEditModal(c);
                 });
                 box.getChildren().add(btnEdit);
             }
@@ -169,12 +184,8 @@ public class QuanLyKhachHang extends Application {
             }
         });
 
-        table.getColumns().addAll(colSTT, colID, colName, colPhone, colPoints, colAction);
-
-        // Dữ liệu mẫu
-        for (int i = 1; i <= 15; i++) {
-            data.add(new KhachHang("KH0000" + i, "HAPPY", "0928737722", 1.36));
-        }
+        table.getColumns().addAll(colSTT, colID, colName, colPhone, colPoints, colType, colAction);
+        table.setItems(data);
 
         table.setStyle("""
                 -fx-background-color: white;
@@ -183,28 +194,72 @@ public class QuanLyKhachHang extends Application {
                 -fx-font-size: 14px;
                 """);
 
-        table.widthProperty().addListener((obs, oldW, newW) ->
-                table.lookupAll(".column-header-background")
-                        .forEach(node -> node.setStyle("-fx-background-color: #f2f2f2;"))
-        );
-
         return table;
+    }
+
+    // =============================================================
+    // 🔄 HÀM LOAD DỮ LIỆU VÀ LỌC
+    // =============================================================
+    private void loadDataFromDatabase() {
+        data.clear();
+        data.addAll(khachHangDAO.getAllKhachHang());
+    }
+
+    private void applyFilters() {
+        String searchKeyword = txtSearch.getText().trim();
+        String filterType = cbSort.getValue();
+        
+        // Lấy toàn bộ dữ liệu từ database
+        java.util.List<KhachHang> allCustomers = khachHangDAO.getAllKhachHang();
+        
+        // Lọc theo từ khóa tìm kiếm
+        if (!searchKeyword.isEmpty()) {
+            allCustomers = allCustomers.stream()
+                .filter(kh -> 
+                    kh.getTenKhachHang().toLowerCase().contains(searchKeyword.toLowerCase()) ||
+                    kh.getSoDienThoai().contains(searchKeyword)
+                )
+                .toList();
+        }
+        
+        // Lọc theo xếp loại
+        if (filterType != null && !filterType.equals("Tất cả xếp loại")) {
+            allCustomers = allCustomers.stream()
+                .filter(kh -> {
+                    String xepLoai = getXepLoaiKhachHang(kh.getDiemTichLuy());
+                    if ("Khách VIP".equals(filterType)) {
+                        return "VIP".equals(xepLoai);
+                    } else if ("Khách thường".equals(filterType)) {
+                        return "Thường".equals(xepLoai);
+                    }
+                    return true;
+                })
+                .toList();
+        }
+        
+        data.setAll(allCustomers);
+    }
+
+    // =============================================================
+    // 🏷️ HÀM XẾP LOẠI KHÁCH HÀNG
+    // =============================================================
+    private String getXepLoaiKhachHang(double diemTichLuy) {
+        return diemTichLuy >= 200 ? "VIP" : "Thường";
     }
 
     // =============================================================
     // 🧰 MODAL THÊM / SỬA KHÁCH HÀNG
     // =============================================================
-    private void openAddModal(Stage owner) {
-        openModal(owner, "Thêm khách hàng mới", null);
+    private void openAddModal() { 
+        openModal("Thêm khách hàng mới", null); 
     }
 
-    private void openEditModal(Stage owner, KhachHang kh) {
-        openModal(owner, "Chỉnh sửa thông tin khách hàng", kh);
+    private void openEditModal(KhachHang kh) { 
+        openModal("Chỉnh sửa thông tin khách hàng", kh); 
     }
 
-    private void openModal(Stage owner, String title, KhachHang kh) {
+    private void openModal(String title, KhachHang kh) {
         Stage modal = new Stage();
-        modal.initOwner(owner);
         modal.initModality(Modality.APPLICATION_MODAL);
         modal.setTitle(title);
 
@@ -217,8 +272,6 @@ public class QuanLyKhachHang extends Application {
         lblTitle.setAlignment(Pos.CENTER);
 
         Separator line = new Separator();
-        line.setStyle("-fx-background-color: #14274e;");
-
         GridPane form = createCustomerForm(kh);
         HBox buttons = createModalButtons(modal, kh, form);
 
@@ -237,60 +290,62 @@ public class QuanLyKhachHang extends Application {
         modal.showAndWait();
     }
 
-    // =============================================================
-    // 📑 FORM KHÁCH HÀNG TRONG MODAL
-    // =============================================================
     private GridPane createCustomerForm(KhachHang kh) {
         Label lblMa = new Label("Mã khách hàng:");
         Label lblTen = new Label("Họ tên khách hàng:");
         Label lblSDT = new Label("Số điện thoại:");
         Label lblDiem = new Label("Điểm tích lũy:");
+        Label lblXepLoai = new Label("Xếp loại:");
 
-        for (Label lbl : new Label[]{lblMa, lblTen, lblSDT, lblDiem})
+        for (Label lbl : new Label[]{lblMa, lblTen, lblSDT, lblDiem, lblXepLoai})
             lbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #333;");
 
-        TextField txtMa = new TextField(kh == null ? "KH0000000199" : kh.getMaKhachHang());
+        // Tạo mã tự động nếu thêm mới
+        String maKhachHang = kh == null ? khachHangDAO.generateMaKhachHang() : kh.getMaKhachHang();
+        
+        TextField txtMa = new TextField(maKhachHang);
         txtMa.setEditable(false);
         styleReadonlyField(txtMa);
 
         TextField txtTen = new TextField(kh == null ? "" : kh.getTenKhachHang());
         TextField txtSDT = new TextField(kh == null ? "" : kh.getSoDienThoai());
-        TextField txtDiem = new TextField(kh == null ? "0" : String.valueOf(kh.getDiemTichLuy()));
+        
+        double diemTichLuy = kh == null ? 0 : kh.getDiemTichLuy();
+        TextField txtDiem = new TextField(String.valueOf(diemTichLuy));
         txtDiem.setEditable(false);
         styleReadonlyField(txtDiem);
 
-        for (TextField tf : new TextField[]{txtTen, txtSDT}) {
-            tf.setStyle("""
-                    -fx-background-color: #ffffff;
-                    -fx-border-color: #bbb;
-                    -fx-border-radius: 5;
-                    -fx-background-radius: 5;
-                    -fx-padding: 6 10;
-                    """);
+        // Hiển thị xếp loại
+        String xepLoai = getXepLoaiKhachHang(diemTichLuy);
+        TextField txtXepLoai = new TextField(xepLoai);
+        txtXepLoai.setEditable(false);
+        if ("VIP".equals(xepLoai)) {
+            txtXepLoai.setStyle("""
+                -fx-opacity: 0.8;
+                -fx-background-color: #fff8e1;
+                -fx-border-color: #d4af37;
+                -fx-border-radius: 5;
+                -fx-background-radius: 5;
+                -fx-padding: 6 10;
+                -fx-text-fill: #d4af37;
+                -fx-font-weight: bold;
+                """);
+        } else {
+            styleReadonlyField(txtXepLoai);
         }
 
         GridPane form = new GridPane();
         form.setVgap(18);
         form.setHgap(20);
         form.setPadding(new Insets(10, 40, 10, 40));
-
         form.addRow(0, lblMa, txtMa);
         form.addRow(1, lblTen, txtTen);
         form.addRow(2, lblSDT, txtSDT);
         form.addRow(3, lblDiem, txtDiem);
-
-        ColumnConstraints c1 = new ColumnConstraints();
-        c1.setPercentWidth(35);
-        ColumnConstraints c2 = new ColumnConstraints();
-        c2.setPercentWidth(65);
-        form.getColumnConstraints().addAll(c1, c2);
-
+        form.addRow(4, lblXepLoai, txtXepLoai);
         return form;
     }
 
-    // =============================================================
-    // 🎛️ NÚT TRONG MODAL
-    // =============================================================
     private HBox createModalButtons(Stage modal, KhachHang kh, GridPane form) {
         Button btnClose = new Button("Đóng");
         Button btnSave = new Button("Lưu");
@@ -299,31 +354,64 @@ public class QuanLyKhachHang extends Application {
         stylePrimaryDarkButton(btnSave);
 
         btnClose.setOnAction(e -> modal.close());
-
+        
         btnSave.setOnAction(e -> {
-            TextField txtMa = (TextField) form.getChildren().get(1);
-            TextField txtTen = (TextField) form.getChildren().get(3);
-            TextField txtSDT = (TextField) form.getChildren().get(5);
-            TextField txtDiem = (TextField) form.getChildren().get(7);
+            // Lấy các control từ form
+            TextField txtMa = (TextField) form.getChildren().get(1); // cột thứ 2 của dòng 0
+            TextField txtTen = (TextField) form.getChildren().get(3); // cột thứ 2 của dòng 1
+            TextField txtSDT = (TextField) form.getChildren().get(5); // cột thứ 2 của dòng 2
 
-            if (kh == null) {
-                data.add(new KhachHang(
-                        txtMa.getText(),
-                        txtTen.getText(),
-                        txtSDT.getText(),
-                        Double.parseDouble(txtDiem.getText())
-                ));
-            } else {
-                kh.setTenKhachHang(txtTen.getText());
-                kh.setSoDienThoai(txtSDT.getText());
+            String ma = txtMa.getText();
+            String ten = txtTen.getText().trim();
+            String sdt = txtSDT.getText().trim();
+
+            // Validation
+            if (ten.isEmpty() || sdt.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Vui lòng nhập đầy đủ thông tin!");
+                return;
             }
-            modal.close();
+
+            if (!sdt.matches("\\d{10,11}")) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại phải có 10-11 chữ số!");
+                return;
+            }
+
+            try {
+                if (kh == null) {
+                    // Thêm mới
+                    if (khachHangDAO.isSoDienThoaiExists(sdt)) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại đã tồn tại!");
+                        return;
+                    }
+                    
+                    KhachHang newKh = new KhachHang(ma, ten, sdt, 0);
+                    if (khachHangDAO.addKhachHang(newKh)) {
+                        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Thêm khách hàng thành công!");
+                        loadDataFromDatabase();
+                        modal.close();
+                    }
+                } else {
+                    // Cập nhật
+                    if (khachHangDAO.isSoDienThoaiExistsForOther(sdt, ma)) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại đã tồn tại cho khách hàng khác!");
+                        return;
+                    }
+                    
+                    kh.setTenKhachHang(ten);
+                    kh.setSoDienThoai(sdt);
+                    if (khachHangDAO.updateKhachHang(kh)) {
+                        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật khách hàng thành công!");
+                        loadDataFromDatabase();
+                        modal.close();
+                    }
+                }
+            } catch (Exception ex) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Có lỗi xảy ra: " + ex.getMessage());
+                ex.printStackTrace();
+            }
         });
 
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        HBox buttons = new HBox(15, btnClose, spacer, btnSave);
+        HBox buttons = new HBox(15, btnClose, btnSave);
         buttons.setAlignment(Pos.CENTER);
         buttons.setPadding(new Insets(15, 40, 25, 40));
         return buttons;
@@ -342,15 +430,6 @@ public class QuanLyKhachHang extends Application {
                 -fx-padding: 8 18;
                 -fx-cursor: hand;
                 """);
-        btn.setOnMouseEntered(e -> btn.setStyle("""
-                -fx-background-color: #1e90ff;
-                -fx-text-fill: white;
-                -fx-font-weight: bold;
-                -fx-border-radius: 8;
-                -fx-background-radius: 8;
-                -fx-padding: 8 18;
-                """));
-        btn.setOnMouseExited(e -> stylePrimaryButton(btn));
     }
 
     private void styleReadonlyField(TextField tf) {
@@ -382,5 +461,16 @@ public class QuanLyKhachHang extends Application {
                 -fx-padding: 8 25;
                 -fx-background-radius: 6;
                 """);
+    }
+
+    // =============================================================
+    // 🔔 HÀM HIỂN THỊ THÔNG BÁO
+    // =============================================================
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
