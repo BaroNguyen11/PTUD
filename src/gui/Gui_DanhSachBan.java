@@ -1,5 +1,11 @@
 package gui;
 
+import dao.BanAn_DAO;
+import entity.BanAn;
+import entity.LoaiBan;
+import entity.TrangThai;
+import entity.ViTri;
+
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -22,23 +28,31 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle; // --- IMPORT ĐÃ THÊM ---
-import javafx.scene.control.Dialog; // --- IMPORT ĐÃ THÊM ---
-import javafx.scene.control.ButtonType; // --- IMPORT ĐÃ THÊM ---
-import javafx.scene.control.Separator; // --- IMPORT ĐÃ THÊM ---
+import javafx.stage.StageStyle;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Separator;
 import javafx.util.StringConverter;
 
 public class Gui_DanhSachBan extends BorderPane {
 
-	public enum TrangThaiBan {
-		TRONG, DANG_SU_DUNG, DA_DAT_BAN
-	}
-
-	// Để cho pop-up biết cửa sổ cha của nó là gì
 	private GridPane luoiBan;
+	private BanAn_DAO banAn_DAO;
 
-	public Gui_DanhSachBan() {
-		
+	private BorderPane mainLayout;
+	private List<BanAn> danhSachBanDaChon = new ArrayList<>();
+
+	private TextField timKiem;
+	private ComboBox<String> cmbTatCa;
+	private ToggleButton tang1;
+	private ToggleButton tang2;
+	private ViTri viTriHienTai = ViTri.LAU_1;
+
+	public Gui_DanhSachBan(BorderPane mainLayout) {
+
+		this.mainLayout = mainLayout;
+		banAn_DAO = new BanAn_DAO();
+
 		this.setStyle("-fx-background-color: white;");
 
 		// Phần giữa
@@ -49,11 +63,11 @@ public class Gui_DanhSachBan extends BorderPane {
 
 		this.setCenter(phanGiuaAll);
 
-
+		loadDataToGrid();
 
 	}
 
-	// Tạo phần trên với nút tầng và trạng thái (Giữ nguyên code của bạn)
+	// Tạo phần trên với nút tầng và trạng thái
 	private HBox taoPhanTren() {
 		VBox top = new VBox(5);
 		top.setPadding(new Insets(10));
@@ -65,35 +79,50 @@ public class Gui_DanhSachBan extends BorderPane {
 		HBox nutTang = new HBox(5);
 		nutTang.setAlignment(Pos.TOP_LEFT);
 		nutTang.setMinWidth(400);
-		ToggleButton tang1 = new ToggleButton("Tầng 1");
+		tang1 = new ToggleButton("Tầng 1");
 		tang1.setPrefSize(70, 40);
-		ToggleButton tang2 = new ToggleButton("Tầng 2");
+		tang2 = new ToggleButton("Tầng 2");
 		tang2.setPrefSize(70, 40);
 		ToggleGroup buttonGroup = new ToggleGroup();
 		tang1.setToggleGroup(buttonGroup);
 		tang2.setToggleGroup(buttonGroup);
 		tang1.getStyleClass().add("nutTang");
 		tang2.getStyleClass().add("nutTang");
+
 		nutTang.getChildren().addAll(tang1, tang2);
 		tang1.setSelected(true);
+
+		tang1.setOnAction(e -> {
+			viTriHienTai = ViTri.LAU_1;
+			loadDataToGrid();
+		});
+		tang2.setOnAction(e -> {
+			viTriHienTai = ViTri.LAU_2;
+			loadDataToGrid();
+		});
 
 		// Ô tìm kiếm
 		Label lblTiemKiem = new Label("Tìm kiếm bàn");
 		lblTiemKiem.getStyleClass().add("fontTieuDeNho");
-		TextField timKiem = new TextField();
+
+		// biến toàn cục
+		timKiem = new TextField();
 		timKiem.setPromptText("Tìm kiếm bằng mã bàn");
 		timKiem.getStyleClass().add("timKiem");
 		Button nutTimKiem = new Button("Tìm kiếm");
 		nutTimKiem.getStyleClass().add("button-timKiem");
 
-		// ComboBox
-		ComboBox<String> cmbTatCa = new ComboBox<>();
+		// SỬA: Dùng biến toàn cục
+		cmbTatCa = new ComboBox<>();
 		cmbTatCa.getItems().addAll("Tất cả", "Bàn trống", "Đang sử dụng", "Đã đặt bàn", "Bàn VIP");
 		cmbTatCa.setValue("Tất cả");
 		cmbTatCa.setPrefWidth(100);
 
 		HBox oTimKiem = new HBox(10, timKiem, nutTimKiem, cmbTatCa);
 		oTimKiem.setAlignment(Pos.CENTER_LEFT);
+
+		nutTimKiem.setOnAction(e -> loadDataToGrid());
+		cmbTatCa.setOnAction(e -> loadDataToGrid());
 
 		// Trạng thái chức vụ
 		VBox trangThai = new VBox(2);
@@ -112,7 +141,7 @@ public class Gui_DanhSachBan extends BorderPane {
 		chuThich1.getChildren().addAll(iconVIP, vip);
 
 		// Chú thích Đang chọn
-		Label dangChon = new Label("Đang chọn");
+		Label dangChon = new Label("Đang trống");
 		dangChon.setStyle("-fx-text-fill: gray; -fx-font-weight: bold; -fx-font-size: 11;");
 		HBox chuThich2 = new HBox(5);
 		Circle dotGray = new Circle(5, Color.web("#BDBDBD"));
@@ -163,6 +192,12 @@ public class Gui_DanhSachBan extends BorderPane {
 		Button btnDatBan = new Button("Đặt bàn");
 		btnDatBan.getStyleClass().add("button-checkin");
 		btnDatBan.setPrefSize(120, 40);
+
+		// thêm
+		btnDatBan.setOnAction(e -> {
+			xuLyDatBan();
+		});
+
 		HBox boxDatBan = new HBox(btnDatBan);
 		boxDatBan.setAlignment(Pos.BOTTOM_RIGHT);
 		boxDatBan.setPadding(new Insets(10, 20, 10, 10));
@@ -181,75 +216,143 @@ public class Gui_DanhSachBan extends BorderPane {
 		grid.setVgap(15);
 		grid.setPadding(new Insets(20));
 		grid.setStyle("-fx-background-color: white");
-
-		String[] tenBan = new String[30];
-		for (int k = 0; k < 30; k++) {
-			tenBan[k] = "Bàn " + (k + 1);
-		}
-
-		List<StackPane> danhSachBan = new ArrayList<>();
-
-		for (int i = 0; i < tenBan.length; i++) {
-
-			// Thêm logic để biết trạng thái (đây là dữ liệu mẫu)
-			TrangThaiBan trangThai;
-			if (i % 3 == 0) {
-				trangThai = TrangThaiBan.TRONG;
-			} else if (i % 3 == 1) {
-				trangThai = TrangThaiBan.DA_DAT_BAN;
-			} else {
-				trangThai = TrangThaiBan.DANG_SU_DUNG;
-			}
-
-			StackPane theBan = taoTheBan(tenBan[i], trangThai);
-
-			int hang = i / 5;
-			int cot = i % 5;
-
-			danhSachBan.add(theBan);
-
-			final int indexBan = i;
-			theBan.setOnMouseClicked(e -> {
-				for (int j = 0; j < danhSachBan.size(); j++) {
-					StackPane khungReset = danhSachBan.get(j);
-					VBox theReset = (VBox) khungReset.getChildren().get(1);
-					theReset.setStyle("-fx-background-color: #082744" + ";" + "-fx-background-radius: 20;"
-							+ "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);"
-							+ "-fx-cursor: hand;");
-				}
-				StackPane khungChon = danhSachBan.get(indexBan);
-				VBox theChon = (VBox) khungChon.getChildren().get(1);
-				theChon.setStyle("-fx-background-color: #BDBDBD;" + "-fx-background-radius: 20;"
-						+ "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" + "-fx-cursor: hand;");
-			});
-
-			GridPane.setRowIndex(theBan, hang);
-			GridPane.setColumnIndex(theBan, cot);
-			grid.getChildren().add(theBan);
-		}
-
 		return grid;
 	}
 
-	private StackPane taoTheBan(String tenBan, TrangThaiBan trangThai) {
-		// ----- StackPane chứa cả thẻ -----
+	private void loadDataToGrid() {
+		// 1. Xóa bàn cũ và reset lựa chọn
+		luoiBan.getChildren().clear();
+		danhSachBanDaChon.clear();
+
+		// 2. Lấy tất cả bàn từ DAO (chỉ theo tầng)
+		List<BanAn> dsBanAnFull = banAn_DAO.getBanAnTheoViTri(viTriHienTai);
+
+		// 3. Lấy giá trị từ các bộ lọc
+		String tuKhoa = timKiem.getText().trim().toLowerCase();
+		String loaiLoc = cmbTatCa.getValue();
+
+		// 4. Lọc danh sách
+		List<BanAn> dsDaLoc = new ArrayList<>();
+
+		for (BanAn ban : dsBanAnFull) {
+			boolean khopTuKhoa = true;
+			boolean khopLoaiLoc = true;
+
+			if (!tuKhoa.isEmpty()) {
+				khopTuKhoa = ban.getMaBan().toLowerCase().contains(tuKhoa);
+			}
+
+			switch (loaiLoc) {
+			case "Bàn trống":
+				khopLoaiLoc = (ban.getTrangThai() == TrangThai.TRONG);
+				break;
+			case "Đang sử dụng":
+				khopLoaiLoc = (ban.getTrangThai() == TrangThai.DANG_SU_DUNG);
+				break;
+			case "Đã đặt bàn":
+				khopLoaiLoc = (ban.getTrangThai() == TrangThai.DA_DAT);
+				break;
+			case "Bàn VIP":
+				khopLoaiLoc = (ban.getLoai() == LoaiBan.VIP);
+				break;
+			default:
+				khopLoaiLoc = true;
+				break;
+			}
+
+			if (khopTuKhoa && khopLoaiLoc) {
+				dsDaLoc.add(ban);
+			}
+		}
+
+		// 5. Hiển thị các bàn ĐÃ LỌC lên lưới
+		List<StackPane> danhSachTheBan = new ArrayList<>();
+		for (int i = 0; i < dsDaLoc.size(); i++) {
+			BanAn ban = dsDaLoc.get(i);
+
+			StackPane theBan = taoTheBan(ban);
+			danhSachTheBan.add(theBan);
+
+			theBan.setOnMouseClicked(e -> {
+				VBox theChon = (VBox) theBan.getChildren().get(1);
+
+				if (danhSachBanDaChon.contains(ban)) {
+					danhSachBanDaChon.remove(ban);
+					theChon.getStyleClass().add("theBan");
+					theChon.setStyle("");
+				} else {
+					if (ban.getTrangThai() == TrangThai.TRONG) {
+						danhSachBanDaChon.add(ban);
+						theChon.getStyleClass().removeAll("theBan");
+						theChon.setStyle("-fx-background-color: #BDBDBD;" + "-fx-background-radius: 20;"
+								+ "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);"
+								+ "-fx-cursor: hand;");
+					} else {
+						showAlert(AlertType.WARNING, "Không thể chọn", "Chỉ có thể chọn bàn đang 'Trống'.");
+					}
+				}
+			});
+
+			// 6. Thêm vào lưới
+			int hang = i / 5;
+			int cot = i % 5;
+			GridPane.setRowIndex(theBan, hang);
+			GridPane.setColumnIndex(theBan, cot);
+			luoiBan.getChildren().add(theBan);
+		}
+	}
+
+	private void xuLyDatBan() {
+		if (danhSachBanDaChon.isEmpty()) { // Sửa
+			showAlert(AlertType.ERROR, "Chưa chọn bàn", "Vui lòng click chọn ít nhất một bàn để đặt.");
+			return;
+		}
+
+		for (BanAn ban : danhSachBanDaChon) {
+			if (ban.getTrangThai() != TrangThai.TRONG) {
+				showAlert(AlertType.WARNING, "Bàn không hợp lệ",
+						"Trong danh sách có bàn " + ban.getMaBan() + " không 'Trống'.");
+				return;
+			}
+		}
+
+		try {
+			datban guiDatBan = new datban(mainLayout, danhSachBanDaChon);
+			mainLayout.setCenter(guiDatBan);
+
+		} catch (Exception e) {
+			e.printStackTrace();
+			showAlert(AlertType.ERROR, "Lỗi", "Không thể mở giao diện đặt bàn.");
+		}
+	}
+
+	private void showAlert(AlertType alertType, String title, String content) {
+		Alert alert = new Alert(alertType);
+		alert.setTitle(title);
+		alert.setHeaderText(null);
+		alert.setContentText(content);
+		alert.showAndWait();
+	}
+
+	private StackPane taoTheBan(BanAn ban) {
 		StackPane khung = new StackPane();
 		khung.setPrefSize(220, 130);
 
-		// ----- Viền (thay đổi màu theo trạng thái) -----
+		// Viền thay đổi màu theo trạng thái
 		Region mauVien = new Region();
 		mauVien.setPrefSize(15, 130);
 
 		String indicatorColor;
-		switch (trangThai) {
+
+		switch (ban.getTrangThai()) {
 		case DANG_SU_DUNG:
-			indicatorColor = "#38A169";
+			indicatorColor = "#32CD32";
 			break;
-		case DA_DAT_BAN:
+		case DA_DAT:
 			indicatorColor = "red";
 			break;
 		default:
-			indicatorColor = "#32CD32";
+			indicatorColor = "#BDBDBD";
 			break;
 		}
 		mauVien.setStyle("-fx-background-color: " + indicatorColor + "; -fx-background-radius: 20;");
@@ -259,12 +362,9 @@ public class Gui_DanhSachBan extends BorderPane {
 		the.setPrefSize(210, 130);
 		the.setAlignment(Pos.CENTER);
 		the.setPadding(new Insets(0, 10, 0, 10));
-		the.getStyleClass().add("theBan");
-		the.setStyle("-fx-background-color: #082744;" + "-fx-background-radius: 20;"
-				+ "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" + "-fx-cursor: hand;");
+		the.getStyleClass().add("theBan"); // Dùng style class
 
-		// ----- Các label -----
-		Label nhanBan = new Label(tenBan);
+		Label nhanBan = new Label(ban.getMaBan());
 		nhanBan.setFont(Font.font("Arial", FontWeight.BOLD, 20));
 		nhanBan.setTextFill(Color.WHITE);
 
@@ -278,16 +378,18 @@ public class Gui_DanhSachBan extends BorderPane {
 		ImageView iconVip = new ImageView(new Image("img/vipicon.png"));
 		iconVip.setFitHeight(20);
 		iconVip.setFitWidth(20);
+
+		// --- SỬA: Chỉ hiển thị icon nếu là bàn VIP ---
+		iconVip.setVisible(ban.getLoai() == LoaiBan.VIP);
+
 		HBox hboxVip = new HBox(iconVip);
 		hboxVip.setAlignment(Pos.TOP_RIGHT);
 		hboxVip.setMinHeight(20);
 
-		// --- SỬA: Thay vboxThongTinKhach bằng btnXemThongTin ---
 		the.getChildren().addAll(hboxVip, nhanBan, btnXemThongTin);
 
-		// Thêm sự kiện click cho nút
 		btnXemThongTin.setOnAction(e -> {
-			showTableInfoDialog(tenBan, trangThai);
+			showTableInfoDialog(ban);
 			e.consume();
 		});
 
@@ -298,7 +400,7 @@ public class Gui_DanhSachBan extends BorderPane {
 		return khung;
 	}
 
-	private void showTableInfoDialog(String tenBan, TrangThaiBan trangThai) {
+	private void showTableInfoDialog(BanAn ban) {
 		Dialog<Void> dialog = new Dialog<>();
 
 		dialog.initOwner(luoiBan.getScene().getWindow());
@@ -308,7 +410,7 @@ public class Gui_DanhSachBan extends BorderPane {
 		// Header
 		dialog.setHeaderText(null);
 		dialog.setGraphic(null);
-		Label title = new Label(tenBan);
+		Label title = new Label(ban.getMaBan());
 		title.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: black;");
 		Button closeButton = new Button("X");
 		closeButton.setStyle(
@@ -321,17 +423,17 @@ public class Gui_DanhSachBan extends BorderPane {
 		headerPane.setPadding(new Insets(10, 10, 10, 15));
 		headerPane.setStyle("-fx-background-color: #F7FAFC;");
 		Separator separator = new Separator();
-
 		// Content
 		String statusText, subText, bgColor, textColor;
-		switch (trangThai) {
+
+		switch (ban.getTrangThai()) {
 		case DANG_SU_DUNG:
 			statusText = "Đang phục vụ";
 			subText = "Bàn đang có khách sử dụng";
 			bgColor = "#F0FFF4";
 			textColor = "#22543D";
 			break;
-		case DA_DAT_BAN:
+		case DA_DAT:
 			statusText = "Bàn đã đặt";
 			subText = "Bàn đã được khách đặt trước";
 			bgColor = "#FFF5F5";
@@ -354,12 +456,17 @@ public class Gui_DanhSachBan extends BorderPane {
 		statusBox.setPadding(new Insets(15));
 		statusBox.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 8;");
 
-		// Main Layout
-		VBox mainLayout = new VBox(headerPane, separator, statusBox);
+		Label lblLoaiBan = new Label("Loại bàn: " + ban.getLoai().name());
+		lblLoaiBan.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+		Label lblViTri = new Label("Vị trí: " + ban.getViTri().name().replace("_", " "));
+		lblViTri.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+
+		VBox extraInfoBox = new VBox(5, lblLoaiBan, lblViTri);
+		extraInfoBox.setPadding(new Insets(15, 0, 0, 0));
+
+		VBox mainLayout = new VBox(headerPane, separator, statusBox, extraInfoBox);
 		mainLayout.setSpacing(0);
-		mainLayout.setPadding(new Insets(0, 15, 15, 15));
-		mainLayout.setStyle("-fx-background-color: white;");
-		mainLayout.setPrefWidth(350);
+		mainLayout.setPrefWidth(350); 
 
 		dialog.getDialogPane().setContent(mainLayout);
 
@@ -373,7 +480,6 @@ public class Gui_DanhSachBan extends BorderPane {
 		Node closeNode = dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
 		closeNode.setVisible(false);
 		closeNode.setManaged(false);
-
 		dialog.showAndWait();
 	}
 
