@@ -13,7 +13,6 @@ public class BanAn {
         this.trangThai = trangThai;
         this.viTri = viTri;
     }
-
     public String getMaBan() {
         return maBan;
     }

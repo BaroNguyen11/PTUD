@@ -18,13 +18,9 @@ public class ThongKe_DAO {
      */
     public Map<String, Double> getDoanhThuTheoThang() {
         Map<String, Double> dsDoanhThu = new LinkedHashMap<>();
-
         String sql = """
-            SELECT FORMAT(NgayLap, 'MM/yyyy') AS Thang, SUM(TongTien) AS TongDoanhThu
-            FROM HoaDon
-            GROUP BY FORMAT(NgayLap, 'MM/yyyy')
-            ORDER BY MIN(NgayLap)
-        """;
+       SELECT FORMAT(H.ngayTao, 'MM') AS Thang, SUM(CH.soLuong * ISNULL(KM.giaSauKhuyenMai, MA.giaTien)) AS TongDoanhThu FROM HoaDon H JOIN ChiTietHoaDon CH ON H.maHoaDon = CH.maHoaDon JOIN MonAn MA ON CH.maMonAn = MA.maMonAn LEFT JOIN ChiTietKMMonAn KM ON CH.maMonAn = KM.maMonAn WHERE H.trangThai = N'Đã thanh toán' GROUP BY FORMAT(H.ngayTao, 'MM') ORDER BY MIN(H.ngayTao);
+    """;
 
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
@@ -43,6 +39,7 @@ public class ThongKe_DAO {
         return dsDoanhThu;
     }
 
+
     /**
      * Lấy tổng doanh thu hiện tại
      */
@@ -60,7 +57,7 @@ public class ThongKe_DAO {
              ResultSet rs = ps.executeQuery()) {
 
             if (rs.next()) {
-                total = rs.getDouble("Tong");
+                total = rs.getDouble("TongTienTatCaHoaDon");
             }
 
         } catch (SQLException e) {
@@ -72,14 +69,18 @@ public class ThongKe_DAO {
     public double getDoanhThuTrungBinhBan() {
         double avg = 0;
         String sql = """
-            SELECT SUM(TongTien) / COUNT(DISTINCT MaBan) AS TB
-            FROM HoaDon
-            WHERE TongTien IS NOT NULL
+           SELECT SUM(T.ThanhTien) / COUNT(DISTINCT T.maHoaDon) 
+           AS DoanhThuTrungBinhBan 
+           FROM ( SELECT CH.maHoaDon, (CH.soLuong * MA.giaTien) 
+           AS ThanhTien 
+           FROM ChiTietHoaDon CH JOIN MonAn MA 
+           ON CH.maMonAn = MA.maMonAn ) 
+           AS T;
         """;
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) avg = rs.getDouble("TB");
+            if (rs.next()) avg = rs.getDouble("DoanhThuTrungBinhBan");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -90,14 +91,13 @@ public class ThongKe_DAO {
     public double getTiLeTienMat() {
         double tile = 0;
         String sql = """
-            SELECT 
-                100.0 * SUM(CASE WHEN PhuongThucThanhToan = N'Tiền mặt' THEN 1 ELSE 0 END) / COUNT(*) AS TiLe
-            FROM HoaDon
+          SELECT 100.0 * SUM(CASE WHEN phuongThuc = N'Tiền mặt' THEN 1 ELSE 0 END) / COUNT(phuongThuc) 
+          AS TiLeTienMat FROM HoaDon WHERE trangThai != N'Hủy';
         """;
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) tile = rs.getDouble("TiLe");
+            if (rs.next()) tile = rs.getDouble("TiLeTienMat");
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -108,14 +108,19 @@ public class ThongKe_DAO {
     public double getDoanhThuCaToi() {
         double total = 0;
         String sql = """
-            SELECT SUM(TongTien) AS Tong
-            FROM HoaDon
-            WHERE DATEPART(HOUR, GioLap) BETWEEN 17 AND 23
+           SELECT SUM(T.ThanhTien) 
+           AS DoanhThuCaToi 
+           FROM ( SELECT CH.maHoaDon, (CH.soLuong * MA.giaTien) 
+           AS ThanhTien 
+           FROM ChiTietHoaDon CH JOIN MonAn MA ON CH.maMonAn = MA.maMonAn )
+            AS T JOIN HoaDon H ON T.maHoaDon = H.maHoaDon 
+            WHERE DATEPART(HOUR, H.ngayTao) 
+            BETWEEN 17 AND 23;
         """;
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-            if (rs.next()) total = rs.getDouble("Tong");
+            if (rs.next()) total = rs.getDouble("DoanhThuCaToi");
         } catch (SQLException e) {
             e.printStackTrace();
         }

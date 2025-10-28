@@ -1,5 +1,6 @@
 package gui;
 
+import dao.DangNhap_DAO;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -32,9 +33,8 @@ public class TrangChu extends BorderPane {
         this.setTop(createHeader());
         
         // 4. Đặt Vùng Nội dung Chính vào giữa và hiển thị Dashboard mặc định
-        this.setCenter(mainContentArea); 
-        showDashboard(); 
-        
+        this.setCenter(mainContentArea);
+        showDashboard();
         // Áp dụng CSS class cho toàn bộ BorderPane
         this.getStyleClass().add("trang-chu-container");
     }
@@ -53,8 +53,7 @@ public class TrangChu extends BorderPane {
      * Hiển thị Dashboard (Trang Chủ) mặc định
      */
     public void showDashboard() {
-        VBox dashboard = createDashboard();
-        setMainContent(dashboard);
+        setMainContent(new Dashboard());
     }
     
     // --- CÁC PHƯƠNG THỨC TẠO GIAO DIỆN ---
@@ -80,50 +79,24 @@ public class TrangChu extends BorderPane {
         // 2. Khu vực thông báo và người dùng
         
         // Icon Thông báo (Sử dụng Unicode thay cho FontIcon)
-        Label notificationIcon = createSimpleIcon("\u25CF"); // Dấu chấm tròn (mô phỏng chuông)
-        notificationIcon.getStyleClass().add("header-icon");
+
         
         // Icon Người dùng (Sử dụng Unicode thay cho FontIcon)
         Label userIcon = createSimpleIcon("\u25C9"); // Dấu tròn với chấm đen
         userIcon.getStyleClass().add("user-icon");
         
         // Tên người dùng
-        Label userName = new Label("Nguyễn Văn A (Quản lý)");
+        DangNhap_DAO user = new DangNhap_DAO();
+        Label userName = new Label("Xin chào: abc");
         userName.getStyleClass().add("user-name-label");
 
-        HBox userInfo = new HBox(15, notificationIcon, userIcon, userName);
+        HBox userInfo = new HBox(15, userIcon, userName);
         userInfo.setAlignment(Pos.CENTER_RIGHT);
 
         header.getChildren().addAll(titleLabel, userInfo);
         return header;
     }
 
-    /**
-     * Tạo Dashboard (Bảng điều khiển) mẫu cho màn hình chính.
-     * @return VBox chứa Dashboard
-     */
-    private VBox createDashboard() {
-        VBox dashboard = new VBox(20);
-        dashboard.setPadding(new Insets(20));
-        
-        Label welcomeLabel = new Label("Chào mừng đến với Bảng điều khiển!");
-        welcomeLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        welcomeLabel.getStyleClass().add("welcome-label");
-
-        // Tạo khu vực Thống kê nhanh (GridPane)
-        GridPane statsGrid = new GridPane();
-        statsGrid.setHgap(20);
-        statsGrid.setVgap(20);
-
-        // Thêm các thẻ thống kê mẫu (Thay thế Enum bằng String cho Unicode)
-        statsGrid.add(createStatCard("Doanh thu hôm nay", "2,500,000 VND", "\u20AB"), 0, 0); // Ký tự tiền tệ
-        statsGrid.add(createStatCard("Tổng hóa đơn", "45", "\u270F"), 1, 0); // Ký tự bút
-        statsGrid.add(createStatCard("Khách hàng mới", "5", "\u002B"), 2, 0); // Ký tự cộng
-        statsGrid.add(createStatCard("Bàn đang phục vụ", "8", "\u25A1"), 3, 0); // Ký tự hình vuông
-
-        dashboard.getChildren().addAll(welcomeLabel, statsGrid);
-        return dashboard;
-    }
 
     /**
      * Tạo một thẻ hiển thị số liệu thống kê.

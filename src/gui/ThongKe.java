@@ -1,9 +1,12 @@
+
 package gui;
 
+import ctrl.ThongKe_Ctrl;
 import dao.ThongKe_DAO;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.chart.*;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -22,10 +25,54 @@ import javafx.geometry.Side;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
 
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
 public class ThongKe extends VBox {
-    ThongKe_DAO thongKeDao = new ThongKe_DAO();
+    ThongKe_Ctrl thongKeCtrl =  new ThongKe_Ctrl();
+    // ===== PHƯƠNG THỨC HỖ TRỢ ÁP DỤNG STYLE CHO BIỂU ĐỒ =====
+    private void applyBlackTextStyle(Chart chart, Axis xAxis, Axis yAxis) {
+        String chartStyle =
+                "-fx-text-fill: black;" +
+                        "-fx-font-family: 'Segoe UI';" +
+                        "-fx-font-size: 12px;";
+
+        String axisStyle =
+                "-fx-tick-label-fill: black;" +
+                        "-fx-axis-label-fill: black;" +
+                        "-fx-font-family: 'Segoe UI';" +
+                        "-fx-font-size: 11px;";
+
+        // Áp dụng style cho biểu đồ
+        chart.setStyle(chartStyle);
+
+        // Áp dụng style cho các trục
+        if (xAxis != null) {
+            xAxis.setStyle(axisStyle);
+        }
+        if (yAxis != null) {
+            yAxis.setStyle(axisStyle);
+        }
+
+        // Style cho tiêu đề biểu đồ (sau khi biểu đồ được render)
+        // Sử dụng Platform.runLater để đảm bảo biểu đồ đã được render trước khi lookup
+        javafx.application.Platform.runLater(() -> {
+            if (chart.lookup(".chart-title") != null) {
+                chart.lookup(".chart-title").setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
+            }
+
+            // Style cho legend nếu có
+            if (chart.lookup(".chart-legend") != null) {
+                chart.lookup(".chart-legend").setStyle("-fx-text-fill: black;");
+            }
+
+            // Style cho các nhãn trên biểu đồ
+            if (chart.lookup(".chart-content") != null) {
+                chart.lookup(".chart-content").setStyle("-fx-text-fill: black;");
+            }
+        });
+    }
     public ThongKe() {
         // Container chính với animation
         VBox rootContent = new VBox(40);
@@ -44,10 +91,7 @@ public class ThongKe extends VBox {
                 createRevenueSection(),
                 createBookingSection(),
                 createMenuSection(),
-                createEmployeeSection(),
-                createCustomerSection(),
-                createInventorySection(),
-                createFinanceSection()
+                createCustomerSection()
         );
 
         rootContent.getChildren().addAll(header, filterBar, dashboardContent);
@@ -188,38 +232,26 @@ public class ThongKe extends VBox {
         statGrid.setHgap(20);
         statGrid.setVgap(20);
         statGrid.setPadding(new Insets(15, 0, 25, 0));
-
-        double tongDoanhThu = thongKeDao.getTongDoanhThu();
-        double dtTrungBinhBan = thongKeDao.getDoanhThuTrungBinhBan();
-        double tiLeTienMat = thongKeDao.getTiLeTienMat();
-        double doanhThuCaToi = thongKeDao.getDoanhThuCaToi();
-
-        // Định dạng số
-        String tongDTFormatted = String.format("%.0fM", tongDoanhThu / 1_000_000);
-        String tbBanFormatted = String.format("%.0fK", dtTrungBinhBan / 1_000);
-        String tileFormatted = String.format("%.0f", tiLeTienMat);
-        String caToiFormatted = String.format("%.0fM", doanhThuCaToi / 1_000_000);
-
-        statGrid.add(createModernStatCard("Tổng Doanh thu", tongDTFormatted, "VND", "↑ 12%", "So với tháng trước", "#667eea", "💰"), 0, 0);
-        statGrid.add(createModernStatCard("DT TB/Bàn", tbBanFormatted, "VND", "↑ 8%", "Cao điểm: 650K", "#764ba2", "💸"), 1, 0);
-        statGrid.add(createModernStatCard("TT Tiền mặt", tileFormatted, "%", "↓ 5%", "Thẻ/Ví: " + (100 - tiLeTienMat) + "%", "#f093fb", "💵"), 2, 0);
-        statGrid.add(createModernStatCard("DT Ca Tối", caToiFormatted, "VND", "↑ 15%", "Chiếm 50% tổng", "#4facfe", "🌙"), 3, 0);
+        statGrid.add(createModernStatCard("Tổng Doanh thu",  String.format("%.2f", thongKeCtrl.getTongDoanhThu()), "VND", "↑ 12%", "So với tháng trước", "#667eea", "💰"), 0, 0);
+        statGrid.add(createModernStatCard("DT TB/Bàn", String.format("%.2f",thongKeCtrl.getDoanhThuTBBan()), "VND", "↑ 8%", "Cao điểm: 650K", "#764ba2", "💸"), 1, 0);
+        statGrid.add(createModernStatCard("TT Tiền mặt", String.format("%.2f",thongKeCtrl.getTiLeTienMat()), "%", "↓ 5%", "Thẻ/Ví: " + (100 - thongKeCtrl.getTiLeTienMat()) + "%", "#f093fb", "💵"), 2, 0);
+        statGrid.add(createModernStatCard("DT Ca Tối", String.format("%.2f",thongKeCtrl.getDoanhThuCaToi()), "VND", "↑ 15%", "Chiếm 50% tổng", "#4facfe", "🌙"), 3, 0);
 
         GridPane chartGrid = new GridPane();
         chartGrid.setHgap(25);
         chartGrid.setVgap(25);
 
-        VBox monthlyChart = createStyledChart(createMonthlyRevenueChart(), "Xu hướng 6 tháng");
-        VBox shiftChart = createStyledChart(createRevenueByShiftChart(), "Theo ca làm việc");
-        VBox areaChart = createStyledChart(createRevenueByAreaChart(), "Theo khu vực");
+        // BIỂU ĐỒ DOANH THU THEO THÁNG (NĂM HIỆN TẠI)
+        VBox monthlyRevenueChart = createStyledChart(createMonthlyRevenueChart(), "Doanh thu Theo Tháng (" + java.time.Year.now().getValue() + ")");
 
-        GridPane.setHgrow(monthlyChart, Priority.ALWAYS);
-        GridPane.setHgrow(shiftChart, Priority.ALWAYS);
-        GridPane.setHgrow(areaChart, Priority.ALWAYS);
+        // BIỂU ĐỒ SO SÁNH DOANH THU THEO BUỔI
+        VBox revenueBySessionChart = createStyledChart(createRevenueBySessionChart(), "Doanh thu Theo Buổi trong Ngày");
 
-        chartGrid.add(monthlyChart, 0, 0);
-        chartGrid.add(shiftChart, 1, 0);
-        chartGrid.add(areaChart, 0, 1, 2, 1);
+        GridPane.setHgrow(monthlyRevenueChart, Priority.ALWAYS);
+        GridPane.setHgrow(revenueBySessionChart, Priority.ALWAYS);
+
+        chartGrid.add(monthlyRevenueChart, 0, 0);
+        chartGrid.add(revenueBySessionChart, 1, 0);
 
         return new VBox(25, sectionTitle, statGrid, chartGrid);
     }
@@ -283,30 +315,6 @@ public class ThongKe extends VBox {
         return new VBox(25, sectionTitle, statGrid, chartGrid);
     }
 
-    // ===== 4. EMPLOYEE SECTION =====
-    private VBox createEmployeeSection() {
-        Label sectionTitle = createModernSectionTitle("👥 THỐNG KÊ HIỆU SUẤT NHÂN VIÊN", "#fa709a");
-
-        GridPane statGrid = new GridPane();
-        statGrid.setHgap(20);
-        statGrid.setVgap(20);
-        statGrid.setPadding(new Insets(15, 0, 25, 0));
-
-        statGrid.add(createModernStatCard("NV xuất sắc", "NV Dung", "51M VND", "125%", "hiệu suất", "#fa709a", "🌟"), 0, 0);
-        statGrid.add(createModernStatCard("Bàn TB/NV", "15", "bàn/ngày", "↑ 10%", "Sau đào tạo", "#fee140", "🍽️"), 1, 0);
-        statGrid.add(createModernStatCard("Hài lòng KH", "92", "%", "↑ 2%", "Mục tiêu: >90%", "#30cfd0", "😊"), 2, 0);
-
-        GridPane chartGrid = new GridPane();
-        chartGrid.setHgap(25);
-        chartGrid.setVgap(25);
-
-        VBox employeeChart = createStyledChart(createEmployeeRevenueChart(), "Top 4 nhân viên");
-        GridPane.setHgrow(employeeChart, Priority.ALWAYS);
-        chartGrid.add(employeeChart, 0, 0);
-
-        return new VBox(25, sectionTitle, statGrid, chartGrid);
-    }
-
     // ===== 5. CUSTOMER SECTION =====
     private VBox createCustomerSection() {
         Label sectionTitle = createModernSectionTitle("👤 THỐNG KÊ KHÁCH HÀNG", "#30cfd0");
@@ -325,53 +333,9 @@ public class ThongKe extends VBox {
         chartGrid.setVgap(25);
 
         VBox topCustomers = createStyledChart(createTopCustomersList(), "Top 5 khách hàng");
-        VBox segmentChart = createStyledChart(createCustomerSegmentationChart(), "Phân loại");
 
         GridPane.setHgrow(topCustomers, Priority.ALWAYS);
-        GridPane.setHgrow(segmentChart, Priority.ALWAYS);
-
         chartGrid.add(topCustomers, 0, 0);
-        chartGrid.add(segmentChart, 1, 0);
-
-        return new VBox(25, sectionTitle, statGrid, chartGrid);
-    }
-
-    // ===== 6. INVENTORY SECTION =====
-    private VBox createInventorySection() {
-        Label sectionTitle = createModernSectionTitle("📦 THỐNG KÊ KHO & NGUYÊN LIỆU", "#e26887");
-
-        GridPane statGrid = new GridPane();
-        statGrid.setHgap(20);
-        statGrid.setVgap(20);
-        statGrid.setPadding(new Insets(15, 0, 25, 0));
-
-        statGrid.add(createModernStatCard("Giá trị Kho", "50M", "VND", "1.5%", "Chậm luân chuyển", "#a8edea", "📦"), 0, 0);
-        statGrid.add(createModernStatCard("Sắp hết hạn", "5", "mục", "5M", "Tổng giá trị", "#fbc2eb", "⚠️"), 1, 0);
-        statGrid.add(createModernStatCard("Chi phí/DT", "30", "%", "Tốt", "Mục tiêu: <32%", "#a6c1ee", "⚙️"), 2, 0);
-
-        return new VBox(25, sectionTitle, statGrid);
-    }
-
-    // ===== 7. FINANCE SECTION =====
-    private VBox createFinanceSection() {
-        Label sectionTitle = createModernSectionTitle("💵 THỐNG KÊ CHI PHÍ & LỢI NHUẬN", "#f18a46");
-
-        GridPane statGrid = new GridPane();
-        statGrid.setHgap(20);
-        statGrid.setVgap(20);
-        statGrid.setPadding(new Insets(15, 0, 25, 0));
-
-        statGrid.add(createModernStatCard("Tổng Chi phí", "90M", "VND", "60%", "của DT", "#fbc2eb", "🔻"), 0, 0);
-        statGrid.add(createModernStatCard("Lợi nhuận Gộp", "60M", "VND", "40%", "Biên LN", "#a6c1ee", "📈"), 1, 0);
-        statGrid.add(createModernStatCard("Lợi nhuận Ròng", "45M", "VND", "✓", "Vượt mục tiêu", "#ffecd2", "✅"), 2, 0);
-
-        GridPane chartGrid = new GridPane();
-        chartGrid.setHgap(25);
-        chartGrid.setVgap(25);
-
-        VBox expenseChart = createStyledChart(createExpenseStructureChart(), "Cơ cấu chi phí");
-        GridPane.setHgrow(expenseChart, Priority.ALWAYS);
-        chartGrid.add(expenseChart, 0, 0);
 
         return new VBox(25, sectionTitle, statGrid, chartGrid);
     }
@@ -483,64 +447,198 @@ public class ThongKe extends VBox {
         return wrapper;
     }
 
-    // ===== CHART CREATION METHODS (Keep existing logic, just return VBox) =====
+    // ===== CÁC BIỂU ĐỒ DOANH THU MỚI =====
 
-    private VBox createMonthlyRevenueChart() {
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis("Triệu VND", 0, 200, 20);
-        LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
-        chart.setTitle("Xu hướng Doanh thu");
-        chart.setLegendVisible(false);
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().add(new XYChart.Data<>("1", 50));
-        series.getData().add(new XYChart.Data<>("2", 120));
-        series.getData().add(new XYChart.Data<>("3", 80));
-        series.getData().add(new XYChart.Data<>("4", 150));
-//        XYChart.Series<String, Number> series = new XYChart.Series<>();
-//        Map<String, Double> data = thongKeDao.getDoanhThuTheoThang();
+//    private VBox createMonthlyRevenueChart() {
+//        CategoryAxis xAxis = new CategoryAxis();
+//        NumberAxis yAxis = new NumberAxis("Triệu VND", 0, 300, 50);
 //
-//        for (Map.Entry<String, Double> entry : data.entrySet()) {
-//            series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+//        LineChart<String, Number> chart = new LineChart<>(xAxis, yAxis);
+//        chart.setTitle("Doanh thu Theo Tháng - Năm " + java.time.Year.now().getValue());
+//        chart.setLegendVisible(false);
+//        chart.setAnimated(true);
+//
+//        // CSS để tất cả chữ thành màu đen
+//        applyBlackTextStyle(chart, xAxis, yAxis);
+//
+//        XYChart.Series<String, Number> series = new XYChart.Series<>();
+//
+//        // Dữ liệu doanh thu theo tháng trong năm hiện tại - có thể thay bằng dữ liệu thực từ controller
+//        String[] months = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
+//        double[] monthlyRevenue = {125.5, 142.3, 118.7, 156.2, 189.5, 210.8, 195.3, 178.6, 165.4, 148.9, 132.1, 158.7};
+//
+//        // Chỉ hiển thị các tháng đã qua (giả sử hiện tại là tháng 6)
+//        int currentMonth = java.time.LocalDate.now().getMonthValue();
+//        for (int i = 0; i < currentMonth; i++) {
+//            series.getData().add(new XYChart.Data<>(months[i], monthlyRevenue[i]));
+//        }
+//
+//        // Thêm tooltip cho từng điểm dữ liệu
+//        for (XYChart.Data<String, Number> data : series.getData()) {
+//            Tooltip tooltip = new Tooltip(String.format("Tháng %s: %s triệu VND",
+//                    data.getXValue(), data.getYValue()));
+//            Tooltip.install(data.getNode(), tooltip);
+//            tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 11px;");
 //        }
 //
 //        chart.getData().add(series);
-        return new VBox(chart);
+//        chart.setPrefHeight(300);
+//
+//        VBox container = new VBox(chart);
+//        container.setPadding(new Insets(10));
+//        container.setAlignment(Pos.CENTER);
+//        container.setStyle("-fx-background-color: white;");
+//        return container;
+//    }
+private VBox createMonthlyRevenueChart() {
+    CategoryAxis xAxis = new CategoryAxis();
+    NumberAxis yAxis = new NumberAxis("Triệu VND", 0, 250, 50);
+
+    BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
+    chart.setTitle("Doanh thu Theo Tháng - Năm " + java.time.Year.now().getValue());
+    chart.setLegendVisible(false);
+    chart.setBarGap(3); // Khoảng cách giữa các cột
+
+    applyBlackTextStyle(chart, xAxis, yAxis);
+
+    XYChart.Series<String, Number> series = new XYChart.Series<>();
+    Map<String,Double> monthlyData = thongKeCtrl.thongKeDoanhThuTheoThang();
+    String[] months = {"T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"};
+    String[] a = {"01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"};
+//    for (Map.Entry<String, Double> entry : monthlyData.entrySet()) {
+//        System.out.println("Tháng: " + entry.getKey() + " - Doanh thu: " + entry.getValue());
+//    }
+
+    int currentMonth = java.time.LocalDate.now().getMonthValue();
+
+    // 3. ĐIỀN DỮ LIỆU VÀO SERIES THEO THỨ TỰ THÁNG
+    for (int i = 0; i < currentMonth && i < months.length; i++) {
+        String monthKey = a[i];
+        // Lấy giá trị doanh thu từ Map, nếu không có (null), mặc định là 0.0
+        // Chia cho 1_000_000 để chuyển từ VND sang Triệu VND (như trục Y)
+        double revenueInMillions = monthlyData.getOrDefault(monthKey, 0.0) /10000;
+        XYChart.Data<String, Number> dataPoint = new XYChart.Data<>(monthKey, revenueInMillions);
+        series.getData().add(dataPoint);
     }
 
+    // Thêm màu cho các cột
 
-    private VBox createRevenueByShiftChart() {
+    int colorIndex = 0;
+    for (XYChart.Data<String, Number> data : series.getData()) {
+        final int index = colorIndex;
+        data.nodeProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue != null) {
+                newValue.setStyle("-fx-bar-fill: " + "#fa709a" + ";");
+
+                Tooltip tooltip = new Tooltip(String.format("Tháng %s: %s triệu VND",
+                        data.getXValue(), data.getYValue()));
+                Tooltip.install(newValue, tooltip);
+                tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 11px; -fx-background-color: #e2e7ed");
+            }
+        });
+        colorIndex++;
+    }
+
+    chart.getData().add(series);
+    chart.setPrefHeight(300);
+
+    VBox container = new VBox(chart);
+    container.setPadding(new Insets(10));
+    container.setAlignment(Pos.CENTER);
+    container.setStyle("-fx-background-color: white;");
+    return container;
+}
+
+    private VBox createRevenueBySessionChart() {
+        // Tạo biểu đồ tròn trực tiếp
         PieChart chart = new PieChart(FXCollections.observableArrayList(
-                new PieChart.Data("Ca Tối", 45),
-                new PieChart.Data("Ca Trưa", 40),
-                new PieChart.Data("Ca Sáng", 15)
+                new PieChart.Data("Ca Sáng\n(6h-11h)", 18),
+                new PieChart.Data("Ca Trưa\n(11h-14h)", 35),
+                new PieChart.Data("Ca Chiều\n(14h-17h)", 15),
+                new PieChart.Data("Ca Tối\n(17h-22h)", 28),
+                new PieChart.Data("Ca Đêm\n(22h-2h)", 4)
         ));
-        chart.setTitle("Theo Ca");
+
+        chart.setTitle("Tỷ lệ Doanh thu Theo Ca");
         chart.setLabelsVisible(true);
         chart.setLegendSide(Side.BOTTOM);
-        chart.setPrefHeight(320);
-        chart.setStyle("-fx-background-color: transparent;");
+        chart.setPrefHeight(300);
+        chart.setStyle("-fx-text-fill: black; -fx-font-family: 'Segoe UI';");
+
+        // Thêm tooltip đơn giản
+        for (PieChart.Data data : chart.getData()) {
+            final String name = data.getName();
+            final double percentage = data.getPieValue();
+            final double amount = (percentage / 100) * thongKeCtrl.getTongDoanhThu();
+
+            data.nodeProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    Tooltip tooltip = new Tooltip(
+                            String.format("%s: %.1f%%\n%.1f triệu VND", name, percentage, amount / 1000000)
+                    );
+                    Tooltip.install(newVal, tooltip);
+                    tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 11px;");
+                }
+            });
+        }
+
+        // Style sau render
+        javafx.application.Platform.runLater(() -> {
+            if (chart.lookup(".chart-title") != null) {
+                chart.lookup(".chart-title").setStyle("-fx-text-fill: black; -fx-font-weight: bold; -fx-font-size: 14px;");
+            }
+            if (chart.lookup(".chart-legend") != null) {
+                chart.lookup(".chart-legend").setStyle("-fx-text-fill: black;");
+            }
+        });
+
+        VBox container = new VBox(chart);
+        container.setStyle("-fx-background-color: white;");
+        return container;
+    }
+
+
+    private VBox createRevenueByWeekdayChart() {
+//        PieChart chart = new PieChart(FXCollections.observableArrayList(
+//                new PieChart.Data("Thứ 2", 12),
+//                new PieChart.Data("Thứ 3", 15),
+//                new PieChart.Data("Thứ 4", 14),
+//                new PieChart.Data("Thứ 5", 18),
+//                new PieChart.Data("Thứ 6", 25),
+//                new PieChart.Data("Thứ 7", 30),
+//                new PieChart.Data("Chủ nhật", 26)
+//        ));
+//        chart.setTitle("Doanh thu Theo Ngày trong Tuần");
+//        chart.setLabelsVisible(true);
+//        chart.setLegendSide(Side.BOTTOM);
+//        chart.setPrefHeight(300);
+//        chart.setStyle("-fx-background-color: transparent;");
+//
+//        return new VBox(chart);
+        PieChart chart = new PieChart(FXCollections.observableArrayList(
+                new PieChart.Data("Thứ 2", 12),
+                new PieChart.Data("Thứ 3", 15),
+                new PieChart.Data("Thứ 4", 14),
+                new PieChart.Data("Thứ 5", 18),
+                new PieChart.Data("Thứ 6", 25),
+                new PieChart.Data("Thứ 7", 30),
+                new PieChart.Data("Chủ nhật", 26)
+        ));
+        chart.setTitle("Doanh thu Theo Ngày trong Tuần");
+        chart.setLabelsVisible(true);
+        chart.setLegendSide(Side.BOTTOM);
+        chart.setPrefHeight(300);
+
+        // CSS cho PieChart - tất cả chữ màu đen
+        chart.setStyle("-fx-text-fill: black; -fx-font-family: 'Segoe UI';");
+        chart.lookup(".chart-title").setStyle("-fx-text-fill: black; -fx-font-weight: bold;");
+        chart.lookup(".chart-legend").setStyle("-fx-text-fill: black;");
+
         return new VBox(chart);
     }
 
-    private VBox createRevenueByAreaChart() {
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis("Triệu VND", 0, 80, 10);
-        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
-        chart.setTitle("Theo Khu vực");
-        chart.setLegendVisible(false);
-        chart.setStyle("-fx-background-color: transparent;");
 
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().add(new XYChart.Data<>("Khu A", 45));
-        series.getData().add(new XYChart.Data<>("Khu B", 30));
-        series.getData().add(new XYChart.Data<>("VIP", 75));
-        series.getData().add(new XYChart.Data<>("Sân vườn", 25));
-
-        chart.getData().add(series);
-        chart.setPrefHeight(320);
-        return new VBox(chart);
-    }
+    // ===== CÁC BIỂU ĐỒ KHÁC GIỮ NGUYÊN =====
 
     private VBox createBookingSuccessRateChart() {
         PieChart chart = new PieChart(FXCollections.observableArrayList(
@@ -609,25 +707,6 @@ public class ThongKe extends VBox {
         return new VBox(chart);
     }
 
-    private VBox createEmployeeRevenueChart() {
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis("Triệu VND", 0, 60, 10);
-        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
-        chart.setTitle("Top Nhân viên");
-        chart.setLegendVisible(false);
-        chart.setStyle("-fx-background-color: transparent;");
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().add(new XYChart.Data<>("NV Thảo", 35));
-        series.getData().add(new XYChart.Data<>("NV Long", 42));
-        series.getData().add(new XYChart.Data<>("NV Hải", 28));
-        series.getData().add(new XYChart.Data<>("NV Dung", 51));
-
-        chart.getData().add(series);
-        chart.setPrefHeight(320);
-        return new VBox(chart);
-    }
-
     private VBox createTopCustomersList() {
         VBox container = new VBox(12);
         container.setPadding(new Insets(15));
@@ -676,47 +755,5 @@ public class ThongKe extends VBox {
         VBox wrapper = new VBox(container);
         wrapper.setPrefHeight(320);
         return wrapper;
-    }
-
-    private VBox createCustomerSegmentationChart() {
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis("Số khách", 0, 1000, 100);
-        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
-        chart.setTitle("Phân loại Khách");
-        chart.setLegendVisible(false);
-        chart.setStyle("-fx-background-color: transparent;");
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().add(new XYChart.Data<>("VIP", 150));
-        series.getData().add(new XYChart.Data<>("Thân thiết", 450));
-        series.getData().add(new XYChart.Data<>("Quay lại", 300));
-        series.getData().add(new XYChart.Data<>("Mới", 800));
-
-        chart.getData().add(series);
-        chart.setPrefHeight(320);
-        return new VBox(chart);
-    }
-
-    private VBox createExpenseStructureChart() {
-        PieChart chart = new PieChart(FXCollections.observableArrayList(
-                new PieChart.Data("Nguyên liệu", 50),
-                new PieChart.Data("Nhân sự", 33),
-                new PieChart.Data("Thuê MB", 10),
-                new PieChart.Data("Khác", 7)
-        ));
-        chart.setTitle("Cơ cấu Chi phí");
-        chart.setLabelsVisible(true);
-        chart.setLegendSide(Side.RIGHT);
-        chart.setPrefHeight(320);
-        chart.setStyle("-fx-background-color: transparent;");
-
-        // Add tooltips
-        chart.getData().forEach(data -> {
-            String label = String.format("%s: %.0f%%", data.getName(), data.getPieValue());
-            Tooltip tooltip = new Tooltip(label);
-            Tooltip.install(data.getNode(), tooltip);
-        });
-
-        return new VBox(chart);
     }
 }

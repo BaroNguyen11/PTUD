@@ -10,5 +10,4 @@ public enum LoaiBan {
 	private LoaiBan(double tienCoc) {
 		this.tienCoc = tienCoc;
 	}
-	
 }

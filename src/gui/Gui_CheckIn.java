@@ -1,10 +1,17 @@
 package gui;
 
+
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+
+import ctrl.CheckIn_Ctrl;
+import entity.LoaiBan;
+import entity.PhieuDatBan;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
@@ -26,21 +33,48 @@ import javafx.util.StringConverter;
 
 public class Gui_CheckIn extends BorderPane {
 
+    private CheckIn_Ctrl control = new CheckIn_Ctrl();
+    private TextField txtMaKh;
+    private TextField txtTenKH;
+    private TextField txtSdt;
+    private TextField txtDiem;
+    private TextField txtGioDen;
+    private TextField txtNgayDen;
+    private TextField txtSoNguoi;
+    private RadioButton radioDatTruoc;
+    private RadioButton radioDungNgay;
+    private TextField txtTienCoc;
+    private GridPane luoiBan;
+    private ScrollPane cuonLuoi;
 
-  public Gui_CheckIn() {
-      this.setStyle("-fx-background-color: white;");
+    private List<String> dsBanDat;
+    private ToggleButton tang1;
+    private ToggleButton tang2;
+    private TextField txtTiemKiem;
+    private Button nutCheckIn;
+    private String maBanDaChon = null;
+    private ToggleGroup radioGroup;
 
-      // Phần giữa: Khu vực tầng, tìm kiếm, danh sách bàn
-      VBox phanGiuaAll = new VBox();
-      phanGiuaAll.getChildren().addAll(taoPhanTren(), taoPhanGiua());
-      phanGiuaAll.setMinWidth(750);
-      this.setCenter(phanGiuaAll);
+    public Gui_CheckIn() {
 
-      // Phần bên phải
-      VBox phanBenPhai = taoPhanBenPhai();
-      this.setRight(phanBenPhai);
+        this.setStyle("-fx-background-color: white;");
 
-  }
+
+        // Phần giữa: HBox với phần trái (khu vực tầng, tìm kiếm, danh sách bàn) và phần phải (thông tin khách hàng)
+        HBox phanTren = taoPhanTren();
+        HBox phanGiua = taoPhanGiua();
+        VBox phanGiuaAll = new VBox();
+        phanGiuaAll.getChildren().addAll(phanTren, phanGiua);
+        phanGiuaAll.setMinWidth(750);
+        this.setCenter(phanGiuaAll);
+
+
+
+        // Phần dưới: Thông tin đặt bàn với DatePicker và Spinner cho giờ
+        VBox phanBenPhai = taoPhanBenPhai();
+        this.setRight(phanBenPhai);
+        this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
+    }
 
     // Tạo phần trên với nút tầng và trạng thái
     private HBox taoPhanTren() {
@@ -54,9 +88,9 @@ public class Gui_CheckIn extends BorderPane {
         HBox nutTang = new HBox(5);
         nutTang.setAlignment(Pos.TOP_LEFT);
         nutTang.setMinWidth(400);
-        ToggleButton tang1 = new ToggleButton("Tầng 1");
+        tang1 = new ToggleButton("Tầng 1");
         tang1.setPrefSize(70, 40);
-        ToggleButton tang2 = new ToggleButton("Tầng 2");
+        tang2 = new ToggleButton("Tầng 2");
         tang2.setPrefSize(70, 40);
         ToggleGroup buttonGroup = new ToggleGroup();
         tang1.setToggleGroup(buttonGroup);
@@ -64,17 +98,35 @@ public class Gui_CheckIn extends BorderPane {
         tang1.getStyleClass().add("nutTang");
         tang2.getStyleClass().add("nutTang");
         nutTang.getChildren().addAll(tang1, tang2);
+        tang1.setSelected(true);
+
+        //Chức năng loc tầng
+        tang1.setOnAction(e ->{
+            cuonLuoi.setContent(taoLuoiBan(control.chiaTang(dsBanDat, "Tầng 1")));
+        });
+
+        tang2.setOnAction(e ->{
+            cuonLuoi.setContent(taoLuoiBan(control.chiaTang(dsBanDat, "Tầng 2")));
+        });
+
 
         // Ô tìm kiếm
         Label lblTiemKiem = new Label("Tìm kiếm");
         lblTiemKiem.getStyleClass().add("fontTieuDeNho");
-        TextField timKiem = new TextField();
-        timKiem.setPromptText("Tìm kiếm bàn số điện thoại khách hàng");
-        timKiem.getStyleClass().add("timKiem");
+        txtTiemKiem = new TextField();
+        txtTiemKiem.setPromptText("Tìm kiếm bàn số điện thoại khách hàng");
+        txtTiemKiem.getStyleClass().add("timKiem");
         Button nutTimKiem = new Button("Tìm kiếm");
         nutTimKiem.getStyleClass().add("button-timKiem");
-        HBox oTimKiem = new HBox(10, timKiem, nutTimKiem);
+        HBox oTimKiem = new HBox(10, txtTiemKiem, nutTimKiem);
         oTimKiem.setAlignment(Pos.CENTER_LEFT);
+
+        //Chuc nang tim kiem
+        nutTimKiem.setOnAction(e -> {
+            String chuoiSDT = txtTiemKiem.getText();
+            timKiemBanDat(chuoiSDT);
+        });
+
 
         // Trạng thái chức vụ
         VBox trangThai = new VBox(2);
@@ -119,8 +171,46 @@ public class Gui_CheckIn extends BorderPane {
         return topALL;
     }
 
+    // Tìm kiếm bàn đặt theo SĐT
+    private void timKiemBanDat(String text) {
+        String soDienThoai = text.trim();
+
+        // Gọi hàm DAO hoặc control để lấy chuỗi dữ liệu
+        String chuoi = control.timBanBangSDT(soDienThoai, LocalDate.now());
+
+        // Kiểm tra nếu không có dữ liệu
+        if (chuoi == null || chuoi.isBlank() || chuoi.equals("N/A")) {
+            //System.out.println("❌ Không tìm thấy bàn đặt cho SĐT: " + soDienThoai);
+            JOptionPane.showMessageDialog(null, "Không tìm thấy bàn đặt !", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+            txtTiemKiem.requestFocus();
+            txtTiemKiem.selectAll();
+            // Hiện lại thông tin cũ
+            List<String> dsBan = control.layThongTinDatBan(LocalDate.now());
+            cuonLuoi.setContent(taoLuoiBan(dsBan));
+            tang1.setSelected(true);
+
+            xoaThongTinHienThi();
+            return;
+
+        }
+
+        List<String> dsBan = List.of(chuoi);
+        cuonLuoi.setContent(taoLuoiBan(dsBan));
+        if(dsBan.get(0).split(",")[10].equals("Tầng 1")) {
+            tang1.setSelected(true);
+        }else {
+            tang2.setSelected(true);
+        }
+        xoaThongTinHienThi();
+    }
+
+
+
+
     // Tạo phần giữa với phần trái (tìm kiếm và danh sách bàn) và phần phải (thông tin khách hàng)
     private HBox taoPhanGiua() {
+        dsBanDat = control.layThongTinDatBan(LocalDate.now());
+        System.out.println("dsBanDat: " + dsBanDat);
         HBox giua = new HBox(20);
         giua.setPadding(new Insets(10));
 
@@ -133,8 +223,10 @@ public class Gui_CheckIn extends BorderPane {
         danhSach.getStyleClass().add("fontTieuDeNho");
 
         // Lưới bàn
-        GridPane luoiBan = taoLuoiBan();
-        ScrollPane cuonLuoi = new ScrollPane(luoiBan);
+        luoiBan = taoLuoiBan(control.chiaTang(dsBanDat,"Tầng 1"));
+        System.out.println("Số lượng node trong luoiBan: " + luoiBan.getChildren().size());
+
+        cuonLuoi = new ScrollPane(luoiBan);
         cuonLuoi.setFitToWidth(true);
         cuonLuoi.setPrefHeight(620);
         cuonLuoi.getStyleClass().add("scroll-pane");
@@ -183,23 +275,21 @@ public class Gui_CheckIn extends BorderPane {
     }
 
     // Tạo lưới các bàn
-    private GridPane taoLuoiBan() {
+    private GridPane taoLuoiBan(List<String> DSThongTinBan) {
         GridPane grid = new GridPane();
         grid.setHgap(15);
         grid.setVgap(15);
         grid.setPadding(new Insets(20));
         grid.setStyle("-fx-background-color: white");
 
-        String[] tenBan = {"Bàn 1", "Bàn 2", "Bàn 3", "Bàn 6", "Bàn 7", "Bàn 8", "Bàn 11", "Bàn 12", "Bàn 13",
-                "Bàn 16", "Bàn 17", "Bàn 18", "Bàn 19", "Bàn 20", "Bàn 21"};
-        String tenKhach = "Hồ Văn Thông";
-        String thoiGian = "(19h 22/10/25)";
 
-        List<StackPane> danhSachBan = new ArrayList<>();
+        List<StackPane> danhSachBan = new ArrayList<StackPane>();
 
-        for (int i = 0; i < tenBan.length; i++) {
+
+        for (int i = 0; i < DSThongTinBan.size(); i++) {
+            String chuoi = DSThongTinBan.get(i);
             // Truyền màu gốc vào taoTheBan để set style cho VBox the
-            StackPane theBan = taoTheBan(tenBan[i], tenKhach, thoiGian);
+            StackPane theBan = taoTheBan(DSThongTinBan.get(i).split(",")[0], DSThongTinBan.get(i).split(",")[1], DSThongTinBan.get(i).split(",")[2], DSThongTinBan.get(i).split(",")[3].equals("VIP") ? LoaiBan.VIP : LoaiBan.THUONG);
             int hang = i / 3;
             int cot = i % 3;
             danhSachBan.add(theBan);
@@ -207,10 +297,11 @@ public class Gui_CheckIn extends BorderPane {
             // Sử dụng index để capture đúng bàn khi click
             final int indexBan = i;
             theBan.setOnMouseClicked(e -> {
+                loadThongTinBenPhai(chuoi);
                 // Reset tất cả bàn về màu gốc (dựa trên index)
                 for (int j = 0; j < danhSachBan.size(); j++) {
                     StackPane khungReset = danhSachBan.get(j);
-                    VBox theReset = (VBox) khungReset.getChildren().get(1);  // Lấy VBox the từ StackPane
+                    VBox theReset = (VBox) khungReset.getChildren().get(1);
 
                     theReset.setStyle("-fx-background-color: #082744"  + ";" +
                             "-fx-background-radius: 20;" +
@@ -225,6 +316,7 @@ public class Gui_CheckIn extends BorderPane {
                         "-fx-background-radius: 20;" +
                         "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);" +
                         "-fx-cursor: hand;");
+                maBanDaChon = chuoi.split(",")[10];
             });
             GridPane.setRowIndex(theBan, hang);
             GridPane.setColumnIndex(theBan, cot);
@@ -236,7 +328,7 @@ public class Gui_CheckIn extends BorderPane {
 
 
     // Tạo thẻ bàn
-    private StackPane taoTheBan(String tenBan, String khach, String thoiGian) {
+    private StackPane taoTheBan(String tenBan, String khach, String thoiGian, LoaiBan loaiBan) {
         // ----- StackPane chứa cả thẻ -----
         StackPane khung = new StackPane();
         khung.setPrefSize(220, 130);
@@ -281,7 +373,10 @@ public class Gui_CheckIn extends BorderPane {
         ImageView iconVip = new ImageView(new Image("img/vipicon.png"));
         iconVip.setFitHeight(20);
         iconVip.setFitWidth(20);
-        HBox hboxVip = new HBox(iconVip);
+        HBox hboxVip = new HBox();
+        if(loaiBan.equals(LoaiBan.VIP)) {
+            hboxVip.getChildren().add(iconVip);
+        }
         hboxVip.setAlignment(Pos.TOP_RIGHT);
         hboxVip.setMinHeight(20);
 
@@ -295,6 +390,26 @@ public class Gui_CheckIn extends BorderPane {
         StackPane.setMargin(the, new Insets(0, 0, 0, 5));
 
         return khung;
+    }
+
+    public void loadSauKhiCheckIn() {
+        dsBanDat = control.layThongTinDatBan(LocalDate.now());
+        if(tang1.isSelected()) {
+            cuonLuoi.setContent(taoLuoiBan(control.chiaTang(dsBanDat, "Tầng 1")));
+        }else {
+            cuonLuoi.setContent(taoLuoiBan(control.chiaTang(dsBanDat, "Tầng 2")));
+        }
+    }
+
+    public void xoaThongTinHienThi() {
+        txtMaKh.setText("");
+        txtTenKH.setText("");
+        txtSdt.setText("");
+        txtDiem.setText("");
+        txtGioDen.setText("");
+        txtNgayDen.setText("");
+        txtSoNguoi.setText("");
+        radioGroup.selectToggle(null);
     }
 
 
@@ -324,13 +439,13 @@ public class Gui_CheckIn extends BorderPane {
         Label tieuDeKH = new Label("Thông Tin Khách Hàng");
         tieuDeKH.setStyle("-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: gray");
 
-        //Ma kh 
+        //Ma kh
         Label lblMaKH = new Label("Mã khách hàng:");
         lblMaKH.getStyleClass().add("fontTieuDeNho");
-        TextField txtMaKh = new TextField();
+        txtMaKh = new TextField();
         txtMaKh.setEditable(false);
         txtMaKh.setPrefWidth(250);
-        txtMaKh.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12; -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtMaKh.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12; -fx-background-color: #e8f8f5; -fx-font-size: 15");
         HBox hbox1 = new HBox(lblMaKH, spacer1, txtMaKh );
         hbox1.setPadding(new Insets(5));
 
@@ -339,32 +454,31 @@ public class Gui_CheckIn extends BorderPane {
         //Ten kh
         Label lblTenKH = new Label("Tên khách hàng:");
         lblTenKH.getStyleClass().add("fontTieuDeNho");
-        TextField txtTenKH = new TextField();
-        txtTenKH.setText("Hồ Vạn Thương");
+        txtTenKH = new TextField();
         txtTenKH.setEditable(false);
         txtTenKH.setPrefWidth(250);
         txtTenKH.setPrefWidth(250);
-        txtTenKH.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtTenKH.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #e8f8f5; -fx-font-size: 15; -fx-border-weight: 1; -fx-border-coloer");
         HBox hbox2 = new HBox(lblTenKH, spacer2, txtTenKH );
         hbox2.setPadding(new Insets(5));
 
         //So dien Thoai
         Label lblSdt = new Label("Số điện thoại:");
         lblSdt.getStyleClass().add("fontTieuDeNho");
-        TextField txtSdt = new TextField();
+        txtSdt = new TextField();
         txtSdt.setPrefWidth(250);
         txtSdt.setEditable(false);
-        txtSdt.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtSdt.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #e8f8f5; -fx-font-size: 15");
         HBox hbox3 = new HBox(lblSdt, spacer3,txtSdt );
         hbox3.setPadding(new Insets(5));
 
         //Diem tich luy
         Label lblDiem = new Label("Điểm tích lũy:");
         lblDiem.getStyleClass().add("fontTieuDeNho");
-        TextField txtDiem = new TextField();
+        txtDiem = new TextField();
         txtDiem.setPrefWidth(250);
         txtDiem.setEditable(false);
-        txtDiem.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtDiem.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #e8f8f5; -fx-font-size: 15");
         HBox hbox4 = new HBox(lblDiem, spacer4,txtDiem);
         hbox4.setPadding(new Insets(5));
 
@@ -380,15 +494,13 @@ public class Gui_CheckIn extends BorderPane {
         // Ngay gio den
         Label lblNgayGio = new Label("Ngày giờ đến:");
         lblNgayGio.getStyleClass().add("fontTieuDeNho");
-        TextField txtGioDen = new TextField();
-        TextField txtNgayDen = new TextField();
+        txtGioDen = new TextField();
+        txtNgayDen = new TextField();
         txtGioDen.setEditable(false);
         txtNgayDen.setEditable(false);
-        txtGioDen.setText("19:00");
-        txtNgayDen.setText("23/10/2025");
         txtGioDen.setPrefWidth(80);
-        txtGioDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
-        txtNgayDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 0 3 3 0");
+        txtGioDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #e8f8f5; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
+        txtNgayDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #e8f8f5; -fx-font-size: 15; -fx-background-radius: 0 3 3 0");
         txtNgayDen.setPrefWidth(170);
         ImageView iconGio = new ImageView(new Image("/img/clock.png"));
         iconGio.setFitHeight(25);
@@ -412,25 +524,24 @@ public class Gui_CheckIn extends BorderPane {
         // So nguoi
         Label lblSoNguoi = new Label("Số người:");
         lblSoNguoi.getStyleClass().add("fontTieuDeNho");
-        TextField txtSoNguoi = new TextField();
+        txtSoNguoi = new TextField();
         txtSoNguoi.setEditable(false);
         txtSoNguoi.setPrefWidth(250);
-        txtSoNguoi.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; ");
+        txtSoNguoi.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #e8f8f5; -fx-font-size: 15; ");
         HBox hbox6 = new HBox(lblSoNguoi, spacer6,txtSoNguoi);
         hbox6.setPadding(new Insets(5));
 
         //Kiểu đặt bàn
         Label lblKieuDatBan = new Label("Kiểu đặt bàn");
         lblKieuDatBan.getStyleClass().add("fontTieuDeNho");
-        RadioButton radioDatTruoc = new RadioButton("Đặt trước");
-        RadioButton radioDungNgay = new RadioButton("Dùng ngay");
-        ToggleGroup radioGroup = new ToggleGroup();
+        radioDatTruoc = new RadioButton("Đặt trước");
+        radioDungNgay = new RadioButton("Dùng ngay");
+        radioGroup = new ToggleGroup();
         radioDatTruoc.setToggleGroup(radioGroup);
         radioDungNgay.setToggleGroup(radioGroup);
         radioDatTruoc.getStyleClass().add("radio-button");
         radioDungNgay.getStyleClass().add("radio-button");
         radioDatTruoc.setDisable(true);
-        radioDatTruoc.setSelected(true);
         radioDungNgay.setDisable(true);
 
         HBox hboxRadio = new HBox(5);
@@ -453,11 +564,10 @@ public class Gui_CheckIn extends BorderPane {
         // Tien coc
         Label lblTienCoc = new Label("Tiền cọc:");
         lblTienCoc.getStyleClass().add("fontTieuDeNho");
-        TextField txtTienCoc = new  TextField();
+        txtTienCoc = new  TextField();
         txtTienCoc.setEditable(false);
         txtTienCoc.setPrefWidth(250);
-        txtTienCoc.setText("1.000.000 VND");
-        txtTienCoc.setStyle("-fx-text-fill: red; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-font-weight: bold;");
+        txtTienCoc.setStyle("-fx-text-fill: red; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #e8f8f5; -fx-font-size: 15; -fx-font-weight: bold;");
         HBox hbox8 = new HBox(lblTienCoc, spacer8,txtTienCoc);
         hbox8.setPadding(new Insets(5));
 
@@ -467,20 +577,36 @@ public class Gui_CheckIn extends BorderPane {
         vboxAll3.getChildren().addAll(lblTienCocTieuDe,hbox8);
 
 
-        Button nutCheckIn = new Button("Check-in");
+        nutCheckIn = new Button("Check-in");
         nutCheckIn.setPrefSize(120, 40);
         nutCheckIn.getStyleClass().add("button-checkin");
         HBox hbox9 = new HBox(nutCheckIn);
         nutCheckIn.setOnAction(e -> {
-            Alert dialog = new Alert(AlertType.INFORMATION);
-            dialog.setTitle("Thông Báo");
-            dialog.setHeaderText("");
-            dialog.setContentText("Đã check-in thành công!");
-            ImageView iconCheck = new ImageView(new Image("/img/check.png"));
-            iconCheck.setFitHeight(30);
-            iconCheck.setFitWidth(30);
-            dialog.setGraphic(iconCheck);
-            dialog.showAndWait();
+
+            //Check coi coi đã có chọn cái nào chưa
+            if(maBanDaChon == null) {
+                JOptionPane.showMessageDialog(null, "Phải chọn một bàn để check-in");
+            }else {
+                Alert dialog = new Alert(AlertType.INFORMATION);
+                dialog.setTitle("Thông Báo");
+                dialog.setHeaderText("");
+
+                if(control.capNhatTrangThai(maBanDaChon, "Đã dùng")) {
+                    dialog.setContentText("Đã check-in thành công!");
+                    ImageView iconCheck = new ImageView(new Image("/img/check.png"));
+                    iconCheck.setFitHeight(30);
+                    iconCheck.setFitWidth(30);
+                    dialog.setGraphic(iconCheck);
+                    loadSauKhiCheckIn();
+                }else {
+                    dialog.setContentText("Check-in không thành công!");
+                    ImageView iconCheck = new ImageView(new Image("/img/cross.png"));
+                    iconCheck.setFitHeight(30);
+                    iconCheck.setFitWidth(30);
+                    dialog.setGraphic(iconCheck);
+                }
+                dialog.showAndWait();
+            }
         });
 
         hbox9.setPadding(new Insets(20));
@@ -492,10 +618,48 @@ public class Gui_CheckIn extends BorderPane {
         VBox vboxALL = new VBox(40);
         vboxALL.getChildren().addAll(vboxAll1, vboxAll2, vboxAll3, hbox9);
         vboxALL.setAlignment(Pos.TOP_LEFT);
-        vboxALL.setPadding(new Insets(0,20, 0, 0));
+        vboxALL.setPadding(new Insets(20,20, 0, 0));
         vboxALL.setMinWidth(500);
 
         return vboxALL;
+    }
+
+    public void loadThongTinBenPhai(String chuoi) {
+        // 🟢 Tách dữ liệu từ chuỗi CSV
+        String[] parts = chuoi.split(",");
+
+        String maBan = parts[0];
+        String tenKH = parts[1];
+        String ngayGio = parts[2];
+        String ngay = ngayGio.split(" ")[1];
+        String gio = ngayGio.split(" ")[0];
+        String loaiBan = parts[3];
+        String maKH = parts[4];
+        String sdt = parts[5];
+        String diemTichLuy = parts[6];
+        String soNguoi = parts[8];
+        String kieuDatBan = parts[9];
+
+        // 🟢 Xác định tiền cọc dựa theo loại bàn
+        double tienCoc = loaiBan.equalsIgnoreCase("VIP") ? 450000.0 : 350000.0;
+
+        // 🟢 Gán dữ liệu lên giao diện
+        txtMaKh.setText(maKH);
+        txtTenKH.setText(tenKH);
+        txtSdt.setText(sdt);
+        txtDiem.setText(diemTichLuy);
+        txtSoNguoi.setText(String.valueOf(soNguoi));
+        txtNgayDen.setText(ngay);
+        txtGioDen.setText(gio);
+
+        if (!kieuDatBan.trim().equalsIgnoreCase("Dùng ngay")) {
+            radioDatTruoc.setSelected(true);
+            txtTienCoc.setText(String.valueOf(tienCoc) + 'đ');
+        } else {
+            radioDungNgay.setSelected(true);
+            txtTienCoc.setText("0.0đ");
+        }
+
     }
 
 

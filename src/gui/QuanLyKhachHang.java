@@ -1,5 +1,6 @@
 package gui;
 
+import dao.KhachHang_DAO;
 import entity.KhachHang;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
@@ -17,12 +18,16 @@ import javafx.stage.Stage;
 
 public class QuanLyKhachHang extends BorderPane {
     private final ObservableList<KhachHang> data = FXCollections.observableArrayList();
+    private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
+    private TableView<KhachHang> table;
+    private ComboBox<String> cbSort;
+    private TextField txtSearch;
 
     // ====================== ✅ CONSTRUCTOR ======================
     public QuanLyKhachHang() {
         // Tạo layout
-        VBox searchSection = createSearchSection(); // bỏ Stage
-        TableView<KhachHang> table = createCustomerTable(); // bỏ Stage
+        VBox searchSection = createSearchSection();
+        table = createCustomerTable();
 
         // Gán vào BorderPane
         setTop(searchSection);
@@ -30,10 +35,13 @@ public class QuanLyKhachHang extends BorderPane {
 
         setPadding(new Insets(20));
         setStyle("-fx-background-color: #f7f9fc;");
+
+        // 🔹 Load dữ liệu từ database sau khi tạo giao diện
+        loadDataFromDatabase();
     }
 
     // =============================================================
-    // 🔍 TẠO THANH TÌM KIẾM + LỌC + THÊM
+    // 🔍 THANH TÌM KIẾM + THÊM
     // =============================================================
     private VBox createSearchSection() {
         Label lblSearchTitle = new Label("Tìm kiếm khách hàng");
@@ -49,7 +57,7 @@ public class QuanLyKhachHang extends BorderPane {
         iconSearch.setFitWidth(16);
         iconSearch.setFitHeight(16);
 
-        TextField txtSearch = new TextField();
+        txtSearch = new TextField();
         txtSearch.setPromptText("Tìm theo Tên/SĐT...");
         txtSearch.setPrefWidth(500);
         txtSearch.setStyle("""
@@ -65,7 +73,7 @@ public class QuanLyKhachHang extends BorderPane {
         StackPane.setMargin(iconSearch, new Insets(0, 0, 0, 8));
 
         // ComboBox lọc
-        ComboBox<String> cbSort = new ComboBox<>();
+        cbSort = new ComboBox<>();
         cbSort.getItems().addAll("Tất cả xếp loại", "Khách thường", "Khách VIP");
         cbSort.getSelectionModel().selectFirst();
         cbSort.setStyle("-fx-padding: 6; -fx-background-radius: 8;");
@@ -89,6 +97,16 @@ public class QuanLyKhachHang extends BorderPane {
         txtSearch.setMaxWidth(Double.MAX_VALUE);
         searchBar.setPadding(new Insets(0, 0, 5, 0));
 
+        // 🔹 Thêm sự kiện tìm kiếm
+        txtSearch.textProperty().addListener((obs, oldValue, newValue) -> {
+            applyFilters();
+        });
+
+        // 🔹 Thêm sự kiện lọc
+        cbSort.valueProperty().addListener((obs, oldValue, newValue) -> {
+            applyFilters();
+        });
+
         return new VBox(5, lblSearchTitle, searchBar);
     }
 
@@ -104,13 +122,37 @@ public class QuanLyKhachHang extends BorderPane {
         TableColumn<KhachHang, String> colName = new TableColumn<>("Tên khách hàng");
         TableColumn<KhachHang, String> colPhone = new TableColumn<>("Số điện thoại");
         TableColumn<KhachHang, Double> colPoints = new TableColumn<>("Điểm tích lũy");
+        TableColumn<KhachHang, String> colType = new TableColumn<>("Xếp loại");
         TableColumn<KhachHang, Void> colAction = new TableColumn<>("Hành động");
 
         colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(table.getItems().indexOf(col.getValue()) + 1));
+        colSTT.setStyle("-fx-alignment: CENTER;");
+
         colID.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getMaKhachHang()));
         colName.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTenKhachHang()));
         colPhone.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getSoDienThoai()));
         colPoints.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getDiemTichLuy()));
+        colPoints.setStyle("-fx-alignment: CENTER_LEFT;");
+
+        // Cột xếp loại
+        colType.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(getXepLoaiKhachHang(cell.getValue().getDiemTichLuy())));
+        colType.setCellFactory(column -> new TableCell<KhachHang, String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) {
+                    setText(null);
+                    setStyle("");
+                } else {
+                    setText(item);
+                    if ("VIP".equals(item)) {
+                        setStyle("-fx-text-fill: #d4af37; -fx-font-weight: bold; -fx-alignment: CENTER;");
+                    } else {
+                        setStyle("-fx-text-fill: #666; -fx-font-weight: bold; -fx-alignment: CENTER;");
+                    }
+                }
+            }
+        });
 
         // Cột hành động
         colAction.setCellFactory(param -> new TableCell<>() {
@@ -142,13 +184,7 @@ public class QuanLyKhachHang extends BorderPane {
             }
         });
 
-        table.getColumns().addAll(colSTT, colID, colName, colPhone, colPoints, colAction);
-
-        // Dữ liệu mẫu
-        for (int i = 1; i <= 15; i++) {
-            data.add(new KhachHang("KH0000" + i, "Khách hàng " + i, "090000000" + i, Math.random() * 10));
-        }
-
+        table.getColumns().addAll(colSTT, colID, colName, colPhone, colPoints, colType, colAction);
         table.setItems(data);
 
         table.setStyle("""
@@ -159,6 +195,56 @@ public class QuanLyKhachHang extends BorderPane {
                 """);
 
         return table;
+    }
+
+    // =============================================================
+    // 🔄 HÀM LOAD DỮ LIỆU VÀ LỌC
+    // =============================================================
+    private void loadDataFromDatabase() {
+        data.clear();
+        data.addAll(khachHangDAO.getAllKhachHang());
+    }
+
+    private void applyFilters() {
+        String searchKeyword = txtSearch.getText().trim();
+        String filterType = cbSort.getValue();
+
+        // Lấy toàn bộ dữ liệu từ database
+        java.util.List<KhachHang> allCustomers = khachHangDAO.getAllKhachHang();
+
+        // Lọc theo từ khóa tìm kiếm
+        if (!searchKeyword.isEmpty()) {
+            allCustomers = allCustomers.stream()
+                    .filter(kh ->
+                            kh.getTenKhachHang().toLowerCase().contains(searchKeyword.toLowerCase()) ||
+                                    kh.getSoDienThoai().contains(searchKeyword)
+                    )
+                    .toList();
+        }
+
+        // Lọc theo xếp loại
+        if (filterType != null && !filterType.equals("Tất cả xếp loại")) {
+            allCustomers = allCustomers.stream()
+                    .filter(kh -> {
+                        String xepLoai = getXepLoaiKhachHang(kh.getDiemTichLuy());
+                        if ("Khách VIP".equals(filterType)) {
+                            return "VIP".equals(xepLoai);
+                        } else if ("Khách thường".equals(filterType)) {
+                            return "Thường".equals(xepLoai);
+                        }
+                        return true;
+                    })
+                    .toList();
+        }
+
+        data.setAll(allCustomers);
+    }
+
+    // =============================================================
+    // 🏷️ HÀM XẾP LOẠI KHÁCH HÀNG
+    // =============================================================
+    private String getXepLoaiKhachHang(double diemTichLuy) {
+        return diemTichLuy >= 200 ? "VIP" : "Thường";
     }
 
     // =============================================================
@@ -199,7 +285,7 @@ public class QuanLyKhachHang extends BorderPane {
                 -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 15, 0, 0, 5);
                 """);
 
-        Scene scene = new Scene(layout, 550, 400);
+        Scene scene = new Scene(layout, 550, 450);
         modal.setScene(scene);
         modal.showAndWait();
     }
@@ -209,19 +295,44 @@ public class QuanLyKhachHang extends BorderPane {
         Label lblTen = new Label("Họ tên khách hàng:");
         Label lblSDT = new Label("Số điện thoại:");
         Label lblDiem = new Label("Điểm tích lũy:");
+        Label lblXepLoai = new Label("Xếp loại:");
 
-        for (Label lbl : new Label[]{lblMa, lblTen, lblSDT, lblDiem})
+        for (Label lbl : new Label[]{lblMa, lblTen, lblSDT, lblDiem, lblXepLoai})
             lbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #333;");
 
-        TextField txtMa = new TextField(kh == null ? "KH" + (data.size() + 1) : kh.getMaKhachHang());
+        // Tạo mã tự động nếu thêm mới
+        String maKhachHang = kh == null ? khachHangDAO.generateMaKhachHang() : kh.getMaKhachHang();
+
+        TextField txtMa = new TextField(maKhachHang);
         txtMa.setEditable(false);
         styleReadonlyField(txtMa);
 
         TextField txtTen = new TextField(kh == null ? "" : kh.getTenKhachHang());
         TextField txtSDT = new TextField(kh == null ? "" : kh.getSoDienThoai());
-        TextField txtDiem = new TextField(kh == null ? "0" : String.valueOf(kh.getDiemTichLuy()));
+
+        double diemTichLuy = kh == null ? 0 : kh.getDiemTichLuy();
+        TextField txtDiem = new TextField(String.valueOf(diemTichLuy));
         txtDiem.setEditable(false);
         styleReadonlyField(txtDiem);
+
+        // Hiển thị xếp loại
+        String xepLoai = getXepLoaiKhachHang(diemTichLuy);
+        TextField txtXepLoai = new TextField(xepLoai);
+        txtXepLoai.setEditable(false);
+        if ("VIP".equals(xepLoai)) {
+            txtXepLoai.setStyle("""
+                -fx-opacity: 0.8;
+                -fx-background-color: #fff8e1;
+                -fx-border-color: #d4af37;
+                -fx-border-radius: 5;
+                -fx-background-radius: 5;
+                -fx-padding: 6 10;
+                -fx-text-fill: #d4af37;
+                -fx-font-weight: bold;
+                """);
+        } else {
+            styleReadonlyField(txtXepLoai);
+        }
 
         GridPane form = new GridPane();
         form.setVgap(18);
@@ -231,6 +342,7 @@ public class QuanLyKhachHang extends BorderPane {
         form.addRow(1, lblTen, txtTen);
         form.addRow(2, lblSDT, txtSDT);
         form.addRow(3, lblDiem, txtDiem);
+        form.addRow(4, lblXepLoai, txtXepLoai);
         return form;
     }
 
@@ -242,7 +354,62 @@ public class QuanLyKhachHang extends BorderPane {
         stylePrimaryDarkButton(btnSave);
 
         btnClose.setOnAction(e -> modal.close());
-        btnSave.setOnAction(e -> modal.close());
+
+        btnSave.setOnAction(e -> {
+            // Lấy các control từ form
+            TextField txtMa = (TextField) form.getChildren().get(1); // cột thứ 2 của dòng 0
+            TextField txtTen = (TextField) form.getChildren().get(3); // cột thứ 2 của dòng 1
+            TextField txtSDT = (TextField) form.getChildren().get(5); // cột thứ 2 của dòng 2
+
+            String ma = txtMa.getText();
+            String ten = txtTen.getText().trim();
+            String sdt = txtSDT.getText().trim();
+
+            // Validation
+            if (ten.isEmpty() || sdt.isEmpty()) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
+
+            if (!sdt.matches("\\d{10,11}")) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại phải có 10-11 chữ số!");
+                return;
+            }
+
+            try {
+                if (kh == null) {
+                    // Thêm mới
+                    if (khachHangDAO.isSoDienThoaiExists(sdt)) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại đã tồn tại!");
+                        return;
+                    }
+
+                    KhachHang newKh = new KhachHang(ma, ten, sdt, 0);
+                    if (khachHangDAO.addKhachHang(newKh)) {
+                        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Thêm khách hàng thành công!");
+                        loadDataFromDatabase();
+                        modal.close();
+                    }
+                } else {
+                    // Cập nhật
+                    if (khachHangDAO.isSoDienThoaiExistsForOther(sdt, ma)) {
+                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại đã tồn tại cho khách hàng khác!");
+                        return;
+                    }
+
+                    kh.setTenKhachHang(ten);
+                    kh.setSoDienThoai(sdt);
+                    if (khachHangDAO.updateKhachHang(kh)) {
+                        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật khách hàng thành công!");
+                        loadDataFromDatabase();
+                        modal.close();
+                    }
+                }
+            } catch (Exception ex) {
+                showAlert(Alert.AlertType.ERROR, "Lỗi", "Có lỗi xảy ra: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
 
         HBox buttons = new HBox(15, btnClose, btnSave);
         buttons.setAlignment(Pos.CENTER);
@@ -294,5 +461,16 @@ public class QuanLyKhachHang extends BorderPane {
                 -fx-padding: 8 25;
                 -fx-background-radius: 6;
                 """);
+    }
+
+    // =============================================================
+    // 🔔 HÀM HIỂN THỊ THÔNG BÁO
+    // =============================================================
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
