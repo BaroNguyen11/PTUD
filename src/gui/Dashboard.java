@@ -1,26 +1,37 @@
 package gui;
 
+import dao.Dashboard_DAO;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.chart.*;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.*;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
+import javafx.scene.text.Text;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.scene.Node;
+
+import java.text.NumberFormat;
+import java.util.Locale;
+import java.util.Map;
 
 public class Dashboard extends BorderPane {
 
-    public Dashboard() {
-        setStyle("-fx-background-color: #f5f5f5;");
+    private Dashboard_DAO dashboardDAO;
+    private NumberFormat currencyFormat;
 
-        // === SIDEBAR ===
-        SideBar sideBar = new SideBar(null);
-        setLeft(sideBar);
-        sideBar.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+    public Dashboard() {
+        dashboardDAO = new Dashboard_DAO();
+        currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        
+        setStyle("-fx-background-color: #f5f5f5;");
 
         // === MAIN CONTENT ===
         VBox content = new VBox(25);
@@ -32,14 +43,7 @@ public class Dashboard extends BorderPane {
         lblTitle.setStyle("-fx-font-weight: bold; -fx-text-fill: #3e2723;");
 
         // === THỐNG KÊ NHANH ===
-        HBox quickStats = new HBox(20);
-        quickStats.setAlignment(Pos.CENTER);
-        quickStats.getChildren().addAll(
-                createStatCard("💰 Doanh thu hôm nay", "12.540.000 VNĐ", "+5%", "so với hôm qua" , "#4CAF50"),
-                createStatCard("📅 Lượt đặt bàn", "36 lượt", "-2%","so với hôm qua", "#F44336"),
-                createStatCard("🍽 Món bán ra", "125 phần", "+8%", "so với hôm qua", "#4CAF50"),
-                createStatCard("👥 Khách phục vụ", "98 khách", "+3%", "so với hôm qua", "#4CAF50")
-        );
+        HBox quickStats = createQuickStats();
 
         // === HÀNG BIỂU ĐỒ 1: Doanh thu & Món ăn ===
         HBox chartsRow1 = new HBox(30);
@@ -61,6 +65,58 @@ public class Dashboard extends BorderPane {
 
         content.getChildren().addAll(lblTitle, quickStats, chartsRow1, customerChartBox);
         setCenter(content);
+    }
+
+    // === TẠO THỐNG KÊ NHANH ===
+    private HBox createQuickStats() {
+        HBox quickStats = new HBox(20);
+        quickStats.setAlignment(Pos.CENTER);
+
+        // Lấy dữ liệu từ DAO
+        double doanhThuHomNay = dashboardDAO.getTongDoanhThuHomNay();
+        double doanhThuHomQua = dashboardDAO.getTongDoanhThuHomQua();
+        String doanhThuChange = dashboardDAO.tinhPhanTramThayDoi(doanhThuHomNay, doanhThuHomQua);
+
+        int luotDatBanHomNay = dashboardDAO.getLuotDatBanHomNay();
+        int luotDatBanHomQua = dashboardDAO.getLuotDatBanHomQua();
+        String datBanChange = dashboardDAO.tinhPhanTramThayDoi(luotDatBanHomNay, luotDatBanHomQua);
+
+        int monBanRaHomNay = dashboardDAO.getSoMonBanRaHomNay();
+        int monBanRaHomQua = dashboardDAO.getSoMonBanRaHomQua();
+        String monBanChange = dashboardDAO.tinhPhanTramThayDoi(monBanRaHomNay, monBanRaHomQua);
+
+        int khachHomNay = dashboardDAO.getSoKhachPhucVuHomNay();
+        int khachHomQua = dashboardDAO.getSoKhachPhucVuHomQua();
+        String khachChange = dashboardDAO.tinhPhanTramThayDoi(khachHomNay, khachHomQua);
+
+        // Tạo các card
+        quickStats.getChildren().addAll(
+                createStatCard("💰 Doanh thu hôm nay", 
+                        currencyFormat.format(doanhThuHomNay), 
+                        doanhThuChange, 
+                        "so với hôm qua",
+                        doanhThuChange.startsWith("+") ? "#4CAF50" : "#F44336"),
+                        
+                createStatCard("📅 Lượt đặt bàn", 
+                        luotDatBanHomNay + " lượt", 
+                        datBanChange,
+                        "so với hôm qua",
+                        datBanChange.startsWith("+") ? "#4CAF50" : "#F44336"),
+                        
+                createStatCard("🍽 Món bán ra", 
+                        monBanRaHomNay + " phần", 
+                        monBanChange,
+                        "so với hôm qua",
+                        monBanChange.startsWith("+") ? "#4CAF50" : "#F44336"),
+                        
+                createStatCard("👥 Khách phục vụ", 
+                        khachHomNay + " khách", 
+                        khachChange,
+                        "so với hôm qua",
+                        khachChange.startsWith("+") ? "#4CAF50" : "#F44336")
+        );
+
+        return quickStats;
     }
 
     // --- CARD THỐNG KÊ ---
@@ -94,19 +150,125 @@ public class Dashboard extends BorderPane {
         return card;
     }
 
-    // --- KHỐI BIỂU ĐỒ DOANH THU ---
+ // --- BIỂU ĐỒ DOANH THU (ĐÃ FIX CĂN LỆCH) ---
+    private BarChart<String, Number> createRevenueChart(Map<String, Double> doanhThuData, String title) {
+        CategoryAxis xAxis = new CategoryAxis();
+        NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Thời gian");
+        yAxis.setLabel("Doanh thu (VND)");
+
+        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
+        chart.setTitle(title);
+        chart.setLegendVisible(false);
+        chart.setAnimated(true);
+
+        // Tạo dữ liệu
+        XYChart.Series<String, Number> series = new XYChart.Series<>();
+        for (Map.Entry<String, Double> entry : doanhThuData.entrySet()) {
+            series.getData().add(new XYChart.Data<>(entry.getKey(), entry.getValue()));
+        }
+        chart.getData().add(series);
+
+        // === FIX CĂN LỆCH HIỆU QUẢ ===
+        chart.applyCss();
+        chart.layout();
+        
+        // Sử dụng ChangeListener thay vì layoutBoundsProperty
+        chart.widthProperty().addListener((obs, oldVal, newVal) -> {
+            adjustBarPositions(chart, doanhThuData.size());
+        });
+        
+        // Gọi ngay sau khi render
+        Platform.runLater(() -> {
+            adjustBarPositions(chart, doanhThuData.size());
+        });
+
+        // Cấu hình trục X
+        xAxis.setTickLabelRotation(0);
+        xAxis.setTickLabelGap(5);
+        xAxis.setTickLabelFont(Font.font("Arial", 11));
+
+        // Tooltip
+        for (XYChart.Data<String, Number> data : series.getData()) {
+            Tooltip tooltip = new Tooltip(data.getXValue() + ": " + 
+                String.format("%,.0f VND", data.getYValue().doubleValue()));
+            Tooltip.install(data.getNode(), tooltip);
+            
+            // Thêm style cho bar
+            data.getNode().setStyle("-fx-bar-fill: #4CAF50; -fx-background-radius: 3 3 0 0;");
+        }
+
+        chart.setPrefHeight(300);
+        chart.setPrefWidth(600);
+        return chart;
+    }
+
+    // === PHƯƠNG THỨC ĐIỀU CHỈNH VỊ TRÍ BAR ===
+    private void adjustBarPositions(BarChart<String, Number> chart, int dataCount) {
+        if (dataCount == 0) return;
+        
+        Node plotArea = chart.lookup(".chart-plot-background");
+        if (plotArea == null) return;
+        
+        double plotWidth = plotArea.getBoundsInLocal().getWidth();
+        if (plotWidth <= 0) return;
+        
+        double categorySpacing = plotWidth / dataCount;
+        double barWidth = Math.min(categorySpacing * 0.7, 50); // 70% mỗi category, max 50px
+        
+        chart.setCategoryGap(categorySpacing - barWidth);
+        chart.setBarGap(0);
+ 
+    }
+
+    // --- CẬP NHẬT PHƯƠNG THỨC createRevenueChartBox ---
     private VBox createRevenueChartBox() {
         Label lbl = new Label("📈 Doanh thu theo ngày");
         lbl.setFont(Font.font("Arial", 18));
         lbl.setStyle("-fx-text-fill: #3e2723; -fx-font-weight: bold;");
 
-        ComboBox<String> cbo = new ComboBox<>(FXCollections.observableArrayList("Hôm nay", "Tuần này", "Tháng này"));
-        cbo.setValue("Hôm nay");
+        ComboBox<String> cbo = new ComboBox<>(FXCollections.observableArrayList(
+            "Hôm nay", "Tuần này", "Tháng này"));
+        cbo.setValue("Tuần này");
+
+        CategoryAxis xAxis = new CategoryAxis();
+        NumberAxis yAxis = new NumberAxis();
+        yAxis.setLabel("Doanh thu (VNĐ)");
+
+        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
+        chart.setLegendVisible(false);
+        chart.setPrefHeight(300);
+        chart.setAnimated(false);
+
+        // Hàm load và fix layout
+        Runnable updateChart = () -> {
+            chart.getData().clear();
+            XYChart.Series<String, Number> series = new XYChart.Series<>();
+            Map<String, Double> data;
+
+            switch (cbo.getValue()) {
+                case "Hôm nay" -> data = dashboardDAO.getDoanhThuHomNayTheoGio();
+                case "Tháng này" -> data = dashboardDAO.getDoanhThuTheoThang();
+                default -> data = dashboardDAO.getDoanhThuTheoTuan();
+            }
+
+            for (Map.Entry<String, Double> e : data.entrySet()) {
+                series.getData().add(new XYChart.Data<>(e.getKey(), e.getValue()));
+            }
+
+            chart.getData().add(series);
+            
+            // Fix layout sau khi có data
+            Platform.runLater(() -> {
+                adjustBarPositions(chart, data.size());
+            });
+        };
+
+        updateChart.run();
+        cbo.setOnAction(e -> updateChart.run());
 
         HBox header = new HBox(10, lbl, cbo);
         header.setAlignment(Pos.CENTER_LEFT);
-
-        BarChart<String, Number> chart = createRevenueChart();
 
         VBox box = new VBox(10, header, chart);
         box.setPadding(new Insets(15));
@@ -120,114 +282,116 @@ public class Dashboard extends BorderPane {
         return box;
     }
 
-    // --- BIỂU ĐỒ DOANH THU ---
-    private BarChart<String, Number> createRevenueChart() {
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis();
-        yAxis.setLabel("Doanh thu (VNĐ)");
 
-        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
-        chart.setLegendVisible(false);
-        chart.setPrefHeight(300);
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().addAll(
-                new XYChart.Data<>("Thứ 2", 4200000),
-                new XYChart.Data<>("Thứ 3", 5500000),
-                new XYChart.Data<>("Thứ 4", 3800000),
-                new XYChart.Data<>("Thứ 5", 6200000),
-                new XYChart.Data<>("Thứ 6", 8000000)
-        );
-
-        chart.getData().add(series);
-
-        // Làm cột doanh thu nổi bật
-        chart.setStyle("""
-            .chart-bar {
-                -fx-bar-fill: #8D6E63;
-            }
-        """);
-
-        // Hiển thị giá trị trên cột
-        chart.getData().forEach(s -> s.getData().forEach(d -> {
-            Label label = new Label(String.format("%,.0f", d.getYValue().doubleValue()));
-            label.setStyle("-fx-font-size: 12; -fx-font-weight: bold; -fx-text-fill: #3e2723;");
-            d.nodeProperty().addListener((obs, oldNode, newNode) -> {
-                if (newNode != null) {
-                    StackPane node = (StackPane) newNode;
-                    node.parentProperty().addListener((o, oldParent, newParent) -> {
-                        if (newParent != null) {
-                            ((Pane) chart.lookup(".chart-plot-background")).getChildren().add(label);
-                            label.layoutXProperty().bind(node.layoutXProperty().add(5));
-                            label.layoutYProperty().bind(node.layoutYProperty().subtract(15));
-                        }
-                    });
-                }
-            });
-        }));
-
-        return chart;
-    }
 
     // --- KHỐI BIỂU ĐỒ MÓN ĂN ---
     private VBox createBestSellerChartBox() {
-        Label lbl = new Label("🍛 Top món bán chạy");
-        lbl.setFont(Font.font("Arial", 18));
+        Label lbl = new Label("🛒 Top món bán chạy");
+        lbl.setFont(Font.font("Arial", 20)); // Tăng font size
         lbl.setStyle("-fx-text-fill: #3e2723; -fx-font-weight: bold;");
 
         ComboBox<String> cbo = new ComboBox<>(FXCollections.observableArrayList("Hôm nay", "Tuần này", "Tháng này"));
         cbo.setValue("Tuần này");
-
-        HBox header = new HBox(10, lbl, cbo);
-        header.setAlignment(Pos.CENTER_LEFT);
+        cbo.setPrefWidth(120);
 
         PieChart chart = new PieChart();
-        ObservableList<PieChart.Data> dataList = chart.getData();
-        dataList.addAll(
-                new PieChart.Data("Lẩu hải sản", 30),
-                new PieChart.Data("Bò nướng tiêu đen", 25),
-                new PieChart.Data("Gỏi cuốn tôm", 20),
-                new PieChart.Data("Cơm chiên dương châu", 15),
-                new PieChart.Data("Canh chua cá lóc", 10)
-        );
+        chart.setPrefSize(550, 400); // Tăng kích thước biểu đồ
+        chart.setLabelLineLength(20); // Tăng độ dài đường label
+        chart.setLabelsVisible(true);
+        chart.setLegendVisible(false); // Ẩn legend mặc định
 
-        double total = dataList.stream().mapToDouble(PieChart.Data::getPieValue).sum();
-        for (PieChart.Data data : dataList) {
-            data.nameProperty().bind(
-                    javafx.beans.binding.Bindings.concat(
-                            data.getName(), " (", String.format("%.0f%%", (data.getPieValue() / total) * 100), ")"
-                    )
-            );
-        }
-
-        chart.setPrefSize(450, 300);
-
-        // === CHÚ THÍCH DƯỚI BIỂU ĐỒ ===
         GridPane legendBox = new GridPane();
-        legendBox.setHgap(25);
-        legendBox.setVgap(8);
-        legendBox.setPadding(new Insets(10));
+        legendBox.setHgap(30); // Tăng khoảng cách ngang
+        legendBox.setVgap(10); // Tăng khoảng cách dọc
+        legendBox.setPadding(new Insets(15));
         legendBox.setAlignment(Pos.CENTER);
 
-        int col = 0, row = 0;
-        for (PieChart.Data d : dataList) {
-            Label lblInfo = new Label(d.getName().replaceAll("\\(.*\\)", "").trim() + ": " + (int) d.getPieValue() + " phần");
-            lblInfo.setFont(Font.font(13));
-            legendBox.add(lblInfo, col, row);
-            col++;
-            if (col == 2) { col = 0; row++; }
-        }
+        // Hàm load dữ liệu theo lựa chọn
+        Runnable updateChart = () -> {
+            chart.getData().clear();
+            legendBox.getChildren().clear();
 
-        VBox box = new VBox(10, header, chart, legendBox);
-        box.setPadding(new Insets(15));
+            Map<String, Integer> data;
+            switch (cbo.getValue()) {
+                case "Hôm nay" -> data = dashboardDAO.getTopMonBanChayHomNay(8); // Tăng số lượng hiển thị
+                case "Tháng này" -> data = dashboardDAO.getTopMonBanChayTheoThang(8);
+                default -> data = dashboardDAO.getTopMonBanChay(8);
+            }
+
+            double total = data.values().stream().mapToDouble(v -> v).sum();
+
+            int col = 0, row = 0;
+            int colorIndex = 0;
+            String[] colors = {"#4CAF50", "#2196F3", "#FF9800", "#E91E63", "#9C27B0", "#00BCD4", "#8BC34A", "#FF5722"};
+            
+            for (Map.Entry<String, Integer> e : data.entrySet()) {
+                double percent = total == 0 ? 0 : (e.getValue() / total) * 100;
+                String displayName = e.getKey() + " (" + String.format("%.1f%%", percent) + ")";
+                PieChart.Data pieData = new PieChart.Data(displayName, e.getValue());
+                chart.getData().add(pieData);
+
+                // Thêm màu sắc cho từng phần
+                final String color = colors[colorIndex % colors.length];
+                pieData.getNode().setStyle("-fx-pie-color: " + color + ";");
+                colorIndex++;
+
+                // Tạo legend với màu sắc
+                HBox legendItem = new HBox(8);
+                legendItem.setAlignment(Pos.CENTER_LEFT);
+                
+                Rectangle colorRect = new Rectangle(12, 12);
+                colorRect.setStyle("-fx-fill: " + color + "; -fx-stroke: #666; -fx-stroke-width: 1;");
+                
+                Label lblInfo = new Label(e.getKey() + ": " + e.getValue() + " phần");
+                lblInfo.setFont(Font.font(14)); // Tăng font size legend
+                lblInfo.setStyle("-fx-text-fill: #333;");
+                
+                legendItem.getChildren().addAll(colorRect, lblInfo);
+                legendBox.add(legendItem, col, row);
+                
+                col++;
+                if (col == 2) { 
+                    col = 0; 
+                    row++; 
+                }
+            }
+
+            // Tùy chỉnh font cho label trên biểu đồ
+            for (PieChart.Data d : chart.getData()) {
+                Text text = (Text) d.getNode().lookup(".chart-pie-label");
+                if (text != null) {
+                    text.setFont(Font.font("Arial", FontWeight.BOLD, 12));
+                    text.setFill(Color.WHITE);
+                    text.setStroke(Color.BLACK);
+                    text.setStrokeWidth(0.3);
+                }
+            }
+        };
+
+        updateChart.run();
+        cbo.setOnAction(e -> updateChart.run());
+
+        HBox header = new HBox(15, lbl, cbo);
+        header.setAlignment(Pos.CENTER_LEFT);
+
+        VBox chartContainer = new VBox(chart);
+        chartContainer.setAlignment(Pos.CENTER);
+        chartContainer.setPadding(new Insets(10));
+
+        VBox box = new VBox(15, header, chartContainer, legendBox); // Tăng khoảng cách
+        box.setPadding(new Insets(20)); // Tăng padding
         box.setStyle("""
                 -fx-background-color: white;
-                -fx-border-radius: 10;
-                -fx-background-radius: 10;
-                -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 8,0,0,4);
+                -fx-border-radius: 15;
+                -fx-background-radius: 15;
+                -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 12,0,0,6);
                 """);
+        box.setPrefWidth(650); // Tăng chiều rộng
+        box.setPrefHeight(650); // Tăng chiều cao
+        
         return box;
     }
+
 
     // --- BIỂU ĐỒ KHÁCH THEO KHUNG GIỜ ---
     private LineChart<String, Number> createCustomerTimeChart() {
@@ -244,13 +408,17 @@ public class Dashboard extends BorderPane {
         lineChart.setPrefWidth(1100);
 
         XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().addAll(
-                new XYChart.Data<>("7-9h", 5),
-                new XYChart.Data<>("9-11h", 20),
-                new XYChart.Data<>("11-13h", 45),
-                new XYChart.Data<>("13-17h", 15),
-                new XYChart.Data<>("17-21h", 60)
-        );
+        
+        // Lấy dữ liệu từ DAO
+        Map<String, Integer> khachData = dashboardDAO.getLuongKhachTheoKhungGio();
+        
+        // Thêm dữ liệu theo thứ tự khung giờ
+        String[] khungGio = {"7-9h", "9-11h", "11-13h", "13-17h", "17-21h"};
+        for (String kg : khungGio) {
+            int soKhach = khachData.getOrDefault(kg, 0);
+            series.getData().add(new XYChart.Data<>(kg, soKhach));
+        }
+        
         lineChart.getData().add(series);
         return lineChart;
     }
