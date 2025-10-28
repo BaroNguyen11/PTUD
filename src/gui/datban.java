@@ -97,10 +97,6 @@ public class datban extends BorderPane {
 		}
 	}
 
-	// =================================================================================
-	// PHẦN BÊN TRÁI (THÔNG TIN KHÁCH + BÀN CHỌN)
-	// =================================================================================
-
 	private VBox taoPhanBenTrai() {
 		VBox vbox = new VBox(0);
 		vbox.setPadding(Insets.EMPTY);
@@ -176,16 +172,16 @@ public class datban extends BorderPane {
 		txtGioDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
 		txtNgayDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 0 3 3 0");
 
-		// -- Bỏ qua phần hình ảnh theo yêu cầu --
-		// ImageView iconGio = createImageViewSafe("/img/clock.png", 25, 25);
-		// ImageView iconNgay = createImageViewSafe("/img/calendar.png", 25, 25);
-		// StackPane stackGio = new StackPane(txtGioDen, iconGio);
-		// StackPane stackNgay = new StackPane(txtNgayDen, iconNgay);
-		// StackPane.setAlignment(iconGio, Pos.CENTER_RIGHT);
-		// StackPane.setAlignment(iconNgay, Pos.CENTER_RIGHT);
-		// StackPane.setMargin(iconNgay, new Insets(0, 4, 0, 0));
+
+		 ImageView iconGio = createImageViewSafe("/img/clock.png", 25, 25);
+		 ImageView iconNgay = createImageViewSafe("/img/calendar.png", 25, 25);
+		 StackPane stackGio = new StackPane(txtGioDen, iconGio);
+		 StackPane stackNgay = new StackPane(txtNgayDen, iconNgay);
+		 StackPane.setAlignment(iconGio, Pos.CENTER_RIGHT);
+		 StackPane.setAlignment(iconNgay, Pos.CENTER_RIGHT);
+		 StackPane.setMargin(iconNgay, new Insets(0, 4, 0, 0));
 		HBox hboxNgayGio = new HBox(txtGioDen, txtNgayDen); // Chỉ hiển thị TextField
-		// -- Hết phần bỏ qua hình ảnh --
+
 
 		HBox hbox5 = new HBox(lblNgayGio, spacer5, hboxNgayGio); hbox5.setPadding(new Insets(5));
 		Label lblSoNguoi = new Label("Số người:");
@@ -215,34 +211,7 @@ public class datban extends BorderPane {
 		return vboxALL;
 	}
 
-	// Hàm createImageViewSafe đã được comment out theo yêu cầu
-	/*
-	private ImageView createImageViewSafe(String path, double width, double height) {
-		try {
-			Image img = new Image(getClass().getResourceAsStream(path));
-			if (img.isError()) {
-			    throw new Exception("Lỗi load ảnh: " + img.getException());
-			}
-			ImageView imgView = new ImageView(img);
-			imgView.setFitWidth(width);
-			imgView.setFitHeight(height);
-			return imgView;
-		} catch (Exception e) {
-			System.err.println("Không tìm thấy hoặc lỗi load ảnh: " + path + " - " + e.getMessage());
-			ImageView placeholder = new ImageView();
-			placeholder.setFitWidth(width);
-			placeholder.setFitHeight(height);
-			Pane pane = new Pane();
-			pane.setStyle("-fx-background-color: #CBD5E0; -fx-border-color: #A0AEC0;");
-			Text text = new Text("Ảnh lỗi");
-			text.setFill(Color.web("#718096"));
-			StackPane stack = new StackPane(pane, text);
-			stack.setPrefSize(width, height);
-			placeholder.setImage(stack.snapshot(null, null));
-			return placeholder;
-		}
-	}
-	*/
+	
 	// ---- Thay thế bằng hàm trả về null để tránh lỗi ----
 	private ImageView createImageViewSafe(String path, double width, double height) {
 		// Tạm thời trả về null hoặc một Node rỗng
@@ -374,13 +343,6 @@ public class datban extends BorderPane {
 		vbox.setPadding(new Insets(10));
 		vbox.setStyle("-fx-background-color: white;-fx-background-radius: 20;-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.1), 10, 0, 0, 3);");
 
-		// -- Bỏ qua phần hình ảnh theo yêu cầu --
-		// ImageView imgView = createImageViewSafe(mon.getImgPath(), 130, 110); // Giả sử có getImgPath()
-		// if (imgView != null) {
-		//     imgView.setPreserveRatio(true);
-		//     vbox.getChildren().add(imgView);
-		// }
-		// -- Hết phần bỏ qua hình ảnh --
 
 		Label lblTen = new Label(mon.getTenMonAn());
 		lblTen.setWrapText(true); lblTen.setStyle("-fx-font-weight: 900; -fx-font-size: 15px; -fx-font-family: 'Times New Roman'; -fx-alignment: CENTER;");
