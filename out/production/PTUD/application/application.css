@@ -4,7 +4,7 @@
 	-fx-background-color: #0c345d;
 	/* Màu nền của sidebar */
 	-fx-padding: 15px;
-	-fx-spacing: 10px;
+	-fx-spacing: 2px;
 }
 
 .menu-item Label {
@@ -15,4 +15,3 @@
 	-fx-cursor: hand;
 	/* Con trỏ chuột khi hover */
 }
-

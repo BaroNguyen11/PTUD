@@ -1,14 +1,21 @@
 package gui;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
+import javafx.beans.property.SimpleStringProperty;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.swing.JOptionPane;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.MouseButton;
+import control.Crl_QuanLiHoaDon;
+import entity.ChiTietHoaDon;
 import entity.HoaDon;
 import entity.KhachHang;
-import entity.MonAn;
+import entity.ChiTietHoaDon;
 import entity.NhanVien;
 import javafx.application.Application;
 import javafx.beans.value.ObservableValue;
@@ -17,6 +24,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -28,6 +36,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableColumn.CellDataFeatures;
 import javafx.scene.control.TableView;
+import javafx.scene.control.TableView.TableViewSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.image.Image;
@@ -43,15 +52,27 @@ import javafx.stage.Stage;
 import javafx.util.Callback;
 
 public class Gui_QuanLiHoaDon extends BorderPane {
-
+	private Crl_QuanLiHoaDon control;
     // Dữ liệu test cho món ăn
-    private ObservableList<MonAn> dsMonAnTest = FXCollections.observableArrayList();
+    private ObservableList<String> dsThongTinMonAn = FXCollections.observableArrayList();
     // Dữ liệu test cho hóa đơn
-    private ObservableList<HoaDon> dsHoaDonTest = FXCollections.observableArrayList();
+    private ObservableList<HoaDon> dsHoaDon = FXCollections.observableArrayList();
+	private TextField txtMaHoaDon;
+	private TextField txtKhachHang;
+	private TextField txtNhanVien;
+	private TextField txtTongTien;
+	private TextField txtPhuongThuc;
+	private TextField txtTienCoc;
+	private TextField txtNgayTao;
+	private TextField txtBanTra;
+	private TableView tableMonAn;
+	private TableView<HoaDon> tableHoaDon;
+	private TextField timKiem;
 
 
     public Gui_QuanLiHoaDon() {
-
+    		control = new Crl_QuanLiHoaDon();
+    		dsHoaDon = control.layDanhSachHoaDon();
         // Phần thông tin và tìm kiếm
         VBox bangThongTinTimKiem = taoPhanThongTimKiem();
         this.setCenter(bangThongTinTimKiem);
@@ -67,7 +88,9 @@ public class Gui_QuanLiHoaDon extends BorderPane {
 
         //Bảng hóa đơn
         this.setBottom(taoBangHoaDon());
+        this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
         this.setStyle("-fx-background-color: white");
+        
     }
 
 
@@ -99,7 +122,7 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         //// Ô tìm kiếm
         Label lblTiemKiem = new Label("Tìm kiếm hóa đơn");
         lblTiemKiem.getStyleClass().add("fontTieuDeNho");
-        TextField timKiem = new TextField();
+        timKiem = new TextField();
         timKiem.setPromptText("Tìm kiếm bằng mã hóa đơn");
         timKiem.getStyleClass().add("timKiem");
         Button nutTimKiem = new Button("Tìm kiếm");
@@ -109,15 +132,21 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         VBox vboxTimKiem = new VBox(5);
         vboxTimKiem.getChildren().addAll(lblTiemKiem, oTimKiem);
 
+        //CLick nút tìm
+        nutTimKiem.setOnAction(e -> {
+        		String maHoaDon = timKiem.getText();
+        		timHoaDon(maHoaDon);
+        });
+        
         //Thông tin hóa đơn
 
         //Ma hóa đơn
         Label lblMaHoaDon = new Label("Mã hóa đơn:");
         lblMaHoaDon.getStyleClass().add("fontTieuDeNho");
-        TextField txtMaHoaDon = new TextField();
+        txtMaHoaDon = new TextField();
         txtMaHoaDon.setEditable(false);
         txtMaHoaDon.setPrefWidth(250);
-        txtMaHoaDon.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtMaHoaDon.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox1 = new HBox(lblMaHoaDon, spacer1, txtMaHoaDon );
         hbox1.setPadding(new Insets(5));
         hbox1.setPadding(new Insets(0, 30, 0, 0));
@@ -126,10 +155,10 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         //Khách hang
         Label lblKhachHang = new Label("Khách hàng:");
         lblKhachHang.getStyleClass().add("fontTieuDeNho");
-        TextField txtKhachHang = new TextField();
+        txtKhachHang = new TextField();
         txtKhachHang.setEditable(false);
         txtKhachHang.setPrefWidth(250);
-        txtKhachHang.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtKhachHang.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox2 = new HBox(lblKhachHang, spacer2, txtKhachHang );
         hbox2.setPadding(new Insets(5));
         hbox2.setPadding(new Insets(0, 30, 0, 0));
@@ -137,32 +166,32 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         //Nhan viên
         Label lblNhanVien = new Label("Nhân viên:");
         lblNhanVien.getStyleClass().add("fontTieuDeNho");
-        TextField txtNhanVien = new TextField();
+        txtNhanVien = new TextField();
         txtNhanVien.setEditable(false);
         txtNhanVien.setPrefWidth(250);
-        txtNhanVien.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtNhanVien.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox3 = new HBox(lblNhanVien, spacer3, txtNhanVien );
         hbox3.setPadding(new Insets(5));
         hbox3.setPadding(new Insets(0, 30, 0, 0));
 
-        //Giảm giá
-        Label lblGiamGia = new Label("Giảm giá:");
-        lblGiamGia.getStyleClass().add("fontTieuDeNho");
-        TextField txtGiamGia = new TextField();
-        txtGiamGia.setEditable(false);
-        txtGiamGia.setPrefWidth(250);
-        txtGiamGia.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
-        HBox hbox4 = new HBox(lblGiamGia, spacer4, txtGiamGia );
+        //Bàn đặt
+        Label lblBanTra = new Label("Bàn trả:");
+        lblBanTra.getStyleClass().add("fontTieuDeNho");
+        txtBanTra = new TextField();
+        txtBanTra.setEditable(false);
+        txtBanTra.setPrefWidth(250);
+        txtBanTra.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
+        HBox hbox4 = new HBox(lblBanTra, spacer4, txtBanTra );
         hbox4.setPadding(new Insets(5));
         hbox4.setPadding(new Insets(0, 30, 0, 0));
 
         //Tổng tiền
         Label lblTongTien = new Label("Tổng tiền:");
         lblTongTien.getStyleClass().add("fontTieuDeNho");
-        TextField txtTongTien = new TextField();
+        txtTongTien = new TextField();
         txtTongTien.setEditable(false);
         txtTongTien.setPrefWidth(250);
-        txtTongTien.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtTongTien.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox5 = new HBox(lblTongTien, spacer5, txtTongTien );
         hbox5.setPadding(new Insets(5));
         hbox5.setPadding(new Insets(0, 30, 0, 0));
@@ -170,10 +199,10 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         //Phương thức
         Label lblPhuongThuc = new Label("Phương thức:");
         lblPhuongThuc.getStyleClass().add("fontTieuDeNho");
-        TextField txtPhuongThuc = new TextField();
+        txtPhuongThuc = new TextField();
         txtPhuongThuc.setEditable(false);
         txtPhuongThuc.setPrefWidth(250);
-        txtPhuongThuc.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtPhuongThuc.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox6 = new HBox(lblPhuongThuc, spacer6, txtPhuongThuc );
         hbox6.setPadding(new Insets(5));
         hbox6.setPadding(new Insets(0, 30, 0, 0));
@@ -181,10 +210,10 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         //Tien coc
         Label lblTienCoc = new Label("Tiền cọc:");
         lblTienCoc.getStyleClass().add("fontTieuDeNho");
-        TextField txtTienCoc = new TextField();
+        txtTienCoc = new TextField();
         txtTienCoc.setEditable(false);
         txtTienCoc.setPrefWidth(250);
-        txtTienCoc.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtTienCoc.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox7 = new HBox(lblTienCoc, spacer7, txtTienCoc );
         hbox7.setPadding(new Insets(5));
         hbox7.setPadding(new Insets(0, 30, 0, 0));
@@ -192,10 +221,10 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         //Ngày tạo
         Label lblNgayTao = new Label("Ngày tạo:");
         lblNgayTao.getStyleClass().add("fontTieuDeNho");
-        TextField txtNgayTao = new TextField();
+        txtNgayTao = new TextField();
         txtNgayTao.setEditable(false);
         txtNgayTao.setPrefWidth(250);
-        txtNgayTao.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #D9D9D9; -fx-font-size: 15");
+        txtNgayTao.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro';  -fx-background-color: #ecf0f1; -fx-font-size: 15px; -fx-border-color: #bdc3c7;");
         HBox hbox8 = new HBox(lblNgayTao, spacer8, txtNgayTao );
         hbox8.setPadding(new Insets(5));
         hbox8.setPadding(new Insets(0, 30, 0, 0));
@@ -226,13 +255,13 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         Label lblTieuDe = new Label("Danh sách món thanh toán");
         lblTieuDe.getStyleClass().add("fontTieuDeNho");
 
-        TableView<MonAn> tableMonAn = new TableView<>();
+        tableMonAn = new TableView<>();
 
         // Cột STT
-        TableColumn<MonAn, Void> colSTT = new TableColumn<>("STT");
+        TableColumn<String, Void> colSTT = new TableColumn<>("STT");
         colSTT.setPrefWidth(50);
         colSTT.setSortable(false);
-        colSTT.setCellFactory(col -> new TableCell<MonAn, Void>() {
+        colSTT.setCellFactory(col -> new TableCell<String, Void>() {
             @Override
             protected void updateItem(Void item, boolean empty) {
                 super.updateItem(item, empty);
@@ -242,58 +271,39 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         });
 
         // Cột tên món
-        TableColumn<MonAn, String> colTenMon = new TableColumn<>("Tên món");
+        TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
 
         // Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
-        colTenMon.setCellValueFactory(new PropertyValueFactory<>("tenMonAn"));
-
-        // Tùy chỉnh hiển thị từng ô (cell)
-        colTenMon.setCellFactory(tc -> new TableCell<MonAn, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle(""); // reset style khi ô rỗng
-                } else {
-                    setText(item);
-                    setAlignment(Pos.CENTER_LEFT); // căn trái (CENTER hoặc RIGHT tùy ý)
-                }
-            }
+        colTenMon.setCellValueFactory(cellData -> {
+        		String tenMon = cellData.getValue().split(",")[0];
+        		return new SimpleStringProperty(tenMon);
         });
+
+
 
         colTenMon.setPrefWidth(250);
 
         // Cột số lượng
-        TableColumn<MonAn, Integer> colSoLuong = new TableColumn<>("Số lượng");
+        TableColumn<String, Integer> colSoLuong = new TableColumn<>("Số lượng");
 
         // Ở đây mình đang test giá trị cố định = 111 (có thể thay bằng dữ liệu thật)
-        colSoLuong.setCellValueFactory(param -> new ReadOnlyObjectWrapper<>(111));
-
-        colSoLuong.setCellFactory(tc -> new TableCell<MonAn, Integer>() {
-            @Override
-            protected void updateItem(Integer item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(String.valueOf(item));
-                    setAlignment(Pos.CENTER);
-                    setStyle("-fx-font-size: 13px;");
-                }
-            }
+        colSoLuong.setCellValueFactory( cellData -> {
+        		int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
+        		return new SimpleIntegerProperty(soLuong).asObject();
         });
+
 
         colSoLuong.setPrefWidth(100);
 
 
         // Cột giá
-        TableColumn<MonAn, Double> colGia = new TableColumn<>("Giá");
-        colGia.setCellValueFactory(new PropertyValueFactory<>("giaTien"));
+        TableColumn<String, Double> colGia = new TableColumn<>("Giá");
+        colGia.setCellValueFactory( cellData -> {
+        		double gia = Double.parseDouble(cellData.getValue().split(",")[2]);
+        		return new SimpleDoubleProperty(gia).asObject();
+        });
         colGia.setPrefWidth(150);
-        colGia.setCellFactory(tc -> new TableCell<MonAn, Double>() {
+        colGia.setCellFactory(tc -> new TableCell<String, Double>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
@@ -304,16 +314,20 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         });
 
         // Cột tổng tiền
-        TableColumn<MonAn, Double> colTong = new TableColumn<>("Tổng tiền");
+        TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
         colTong.setPrefWidth(150);
-        colTong.setCellValueFactory(param -> new ReadOnlyObjectWrapper<Double>(1100111111111.0));
-        colTong.setCellFactory(tc -> new TableCell<MonAn, Double>() {
+        colTong.setCellValueFactory( cellData -> {
+        		double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
+        		return new SimpleDoubleProperty(tongTien).asObject();
+        });
+        colTong.setCellFactory(tc -> new TableCell<String, Double>() {
             @Override
             protected void updateItem(Double item, boolean empty) {
                 super.updateItem(item, empty);
 
                 if (empty || item == null) {
                     setText(null);
+                    setGraphic(null);
                     setStyle("");
                 } else {
                     Label lbl = new Label(String.format("%,.0fđ", item));
@@ -339,32 +353,21 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         tableMonAn.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
         tableMonAn.setPrefHeight(400);
 
-        addMonAnTestData(tableMonAn.getItems());
+        //addMonAnTestData(tableMonAn.getItems());
 
         vboxAll.getChildren().addAll(lblTieuDe, tableMonAn);
         return vboxAll;
     }
 
-
-    private void addMonAnTestData(ObservableList<MonAn> items) {
-        items.addAll(
-                new MonAn("MA001", "Cơm gà xào sả ớt", "Món chính", 50000.0, "Món ngon, cay nồng"),
-                new MonAn("MA002", "Bò nướng lá lốt", "Món chính", 120000.0, "Thịt bò mềm, thơm"),
-                new MonAn("MA003", "Cá kho tộ", "Món chính", 80000.0, "Cá tươi, kho đậm đà"),
-                new MonAn("MA004", "Rau củ xào", "Món phụ", 30000.0, "Rau tươi, xào nhanh"),
-                new MonAn("MA005", "Nước cam tươi", "Đồ uống", 40000.0, "Cam tươi, ép tại chỗ")
-        );
-    }
     // Phần bảng hóa đơn 
     private VBox taoBangHoaDon() {
         VBox vbox = new VBox(5);
         vbox.setPrefWidth(600);
         vbox.setPadding(new Insets(10));
 
-        Label lblTitle = new Label("Danh sách hóa đơn test");
+        Label lblTitle = new Label("Danh sách hóa đơn");
         lblTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 16;");
-        taoDanhSachHoaDon();
-        TableView<HoaDon> table = new TableView<>(dsHoaDonTest);
+        tableHoaDon = new TableView<>(dsHoaDon);
 
         TableColumn<HoaDon, String> colMaHoaDon = new TableColumn<>("Mã hóa đơn");
         colMaHoaDon.setCellValueFactory(new PropertyValueFactory<>("maHoaDon"));
@@ -372,30 +375,33 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         colMaHoaDon.setStyle("-fx-alignment: CENTER; -fx-font-size: 15px;");
 
         TableColumn<HoaDon, String> colKhachHang = new TableColumn<>("Khách hàng");
-        colKhachHang.setCellValueFactory(new PropertyValueFactory<>("tenKhachHang"));
-        colKhachHang.setPrefWidth(300);
+        colKhachHang.setCellValueFactory(cellData -> {
+            KhachHang kh = cellData.getValue().getKhachHang();
+            String tenKH = (kh != null) ? kh.getTenKhachHang() : "Không xác định";
+            return new SimpleStringProperty(tenKH);
+        });
+        
+        colKhachHang.setPrefWidth(200);
         colKhachHang.setStyle("-fx-alignment: CENTER; -fx-font-size: 15px;");
 
         TableColumn<HoaDon, String> colBan = new TableColumn<>("Bàn");
-        colBan.setCellValueFactory(new PropertyValueFactory<>("ban"));
+        colBan.setCellValueFactory(cellData -> {
+        		String maHoaDon = cellData.getValue().getMaHoaDon();
+        		List<String> dsMaBan = control.layDSMaBanBangMaHoaDon(maHoaDon);
+        		return new SimpleStringProperty(String.join(", ", dsMaBan));
+        });
         colBan.setPrefWidth(100);
         colBan.setStyle("-fx-alignment: CENTER; -fx-font-size: 15px;");
 
-        TableColumn<HoaDon, Double> colTongTien = new TableColumn<>("Tổng tiền");
-        colTongTien.setCellValueFactory(new PropertyValueFactory<>("tongTien"));
-        colTongTien.setPrefWidth(200);
-        colTongTien.setStyle("-fx-alignment: CENTER; -fx-font-size: 15px;");
-        colTongTien.setCellFactory(tc -> new TableCell<HoaDon, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("%,.0fđ", item));
-                }
-            }
+        TableColumn<HoaDon, String> colTongTien = new TableColumn<>("Tổng tiền");
+        colTongTien.setCellValueFactory(cellData -> {
+        		String maHoaDon = cellData.getValue().getMaHoaDon();
+        		double tongTien = control.tinhTongTienHoaDon(maHoaDon);
+        		DecimalFormat dtf = new DecimalFormat("#,##0.0 đ");
+        		return new SimpleStringProperty(dtf.format(tongTien));
         });
+        colTongTien.setPrefWidth(250);
+        colTongTien.setStyle("-fx-alignment: CENTER; -fx-font-size: 15px;");
 
         TableColumn<HoaDon, String> colPhuongThuc = new TableColumn<>("Phương thức");
         colPhuongThuc.setCellValueFactory(new PropertyValueFactory<>("phuongThuc"));
@@ -406,104 +412,131 @@ public class Gui_QuanLiHoaDon extends BorderPane {
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
 
-                {
-                    setStyle("-fx-padding: 1 30 1 30");
-                }
+                setStyle("-fx-padding: 1 30 1 30");
 
                 if (empty || item == null) {
                     setGraphic(null);
                     setText(null);
                 } else {
-                    // Tạo label
-                    Label lblPhuongThuc = new Label(item);
-                    lblPhuongThuc.setStyle(
-                            "-fx-text-fill: #29D617;" +
-                                    "-fx-font-size: 15px;" +
-                                    "-fx-font-weight: bold;"
-                    );
+                    // Lấy ra đối tượng HoaDon của dòng hiện tại
+                    HoaDon hoaDon = getTableRow().getItem();
+                    // Kiểm tra giá trị trong cột hiện tại
+                    String phuongThuc = item; // chính là giá trị của cột này
 
-                    // Tạo icon
-                    ImageView imgTienMat = new ImageView(new Image(getClass().getResource("/img/banking.png").toExternalForm()));
-                    imgTienMat.setFitHeight(20);
-                    imgTienMat.setFitWidth(20);
+                    Label lblPhuongThuc = new Label(phuongThuc);
+                    HBox hbox = new HBox(6);
+                    hbox.setAlignment(Pos.CENTER);
+                    ImageView icon;
 
-                    // Gom icon và text lại
-                    HBox hboxPhuongThuc = new HBox(6);
-                    hboxPhuongThuc.setAlignment(Pos.CENTER);
-                    hboxPhuongThuc.getChildren().addAll(imgTienMat, lblPhuongThuc);
+                    if (phuongThuc.equalsIgnoreCase("Tiền mặt")) {
+                        lblPhuongThuc.setStyle("-fx-text-fill: #1003FF; -fx-font-size: 15px; -fx-font-weight: bold;");
+                        hbox.setStyle("-fx-background-color: #D3CFFF; -fx-background-radius: 3; -fx-padding: 3 5 3 5;");
+                        icon = new ImageView(new Image(getClass().getResource("/img/dollar.png").toExternalForm()));
+                    } else {
+                        lblPhuongThuc.setStyle("-fx-text-fill: #29D617; -fx-font-size: 15px; -fx-font-weight: bold;");
+                        hbox.setStyle("-fx-background-color: #D7F7D3; -fx-background-radius: 3; -fx-padding: 3 5 3 5;");
+                        icon = new ImageView(new Image(getClass().getResource("/img/banking.png").toExternalForm()));
+                    }
+                    icon.setFitHeight(20);
+                    icon.setFitWidth(20);
+                    hbox.getChildren().addAll(icon, lblPhuongThuc);
+                                        
+                    setGraphic(hbox);
 
-                    // Style của container
-                    hboxPhuongThuc.setStyle(
-                            "-fx-background-color: #D7F7D3;" +
-                                    "-fx-background-radius: 3;" +
-                                    "-fx-padding: 3 5 3 5;" +
-                                    "-fx-border-color: transparent;"
-                    );
-                    setGraphic(hboxPhuongThuc);
                 }
             }
         });
 
 
         TableColumn<HoaDon, String> colNgayTao = new TableColumn<>("Ngày tạo");
-        colNgayTao.setCellValueFactory(new PropertyValueFactory<>("ngayTao"));
+        colNgayTao.setCellValueFactory(cellData -> {
+        		LocalDate ngayTao = cellData.getValue().getNgayTao().toLocalDate();
+        		DateTimeFormatter ngayFormat = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        		
+        		return new SimpleStringProperty(ngayFormat.format(ngayTao));	
+        });
         colNgayTao.setPrefWidth(200);
         colNgayTao.setStyle("-fx-alignment: CENTER; -fx-font-size: 15px;");
 
         TableColumn<HoaDon, String> colCoc = new TableColumn<>("Cọc");
-        colCoc.setCellValueFactory(new PropertyValueFactory<>("testCheck"));
+        colCoc.setCellValueFactory(cellData -> {
+        		String maHoaDon = cellData.getValue().getMaHoaDon();
+        		double tienCoc = control.tinhTienCoc(maHoaDon);
+        		DecimalFormat dtf = new DecimalFormat("#,##0.0 đ");
+        		return new SimpleStringProperty(dtf.format(tienCoc));	
+        });
+        
         colCoc.setPrefWidth(100);
         colCoc.setStyle("-fx-alignment: CENTER;");
-        colCoc.setCellFactory(tc -> new TableCell<HoaDon, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    ImageView iconCheck = new ImageView(new Image("/img/check.png"));
-                    iconCheck.setFitHeight(20);
-                    iconCheck.setFitWidth(20);
-                    setGraphic(iconCheck);
-                    setText(null);
-                } else {
-                    ImageView iconCheck = new ImageView(new Image("/img/check.png"));
-                    iconCheck.setFitHeight(20);
-                    iconCheck.setFitWidth(20);
-                    setGraphic(iconCheck);
-                    setText(null);
-                }
+       
+        tableHoaDon.getColumns().addAll(colMaHoaDon, colKhachHang, colBan, colTongTien, colCoc, colPhuongThuc, colNgayTao);
+        tableHoaDon.setPrefHeight(200);
+        tableHoaDon.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
+        //CLICK
+        tableHoaDon.setOnMouseClicked(event -> {
+            HoaDon hoaDon = tableHoaDon.getSelectionModel().getSelectedItem();
+            int selectedIndex = tableHoaDon.getSelectionModel().getSelectedIndex();
+            if (hoaDon != null) {
+            		txtMaHoaDon.setText(hoaDon.getMaHoaDon());
+            		txtNhanVien.setText(hoaDon.getNhanVien().getTenNhanVien());
+            		txtTienCoc.setText(colCoc.getCellData(selectedIndex));
+            		txtTongTien.setText(colTongTien.getCellData(selectedIndex));
+                txtPhuongThuc.setText(hoaDon.getPhuongThuc());
+                txtKhachHang.setText(hoaDon.getKhachHang().getTenKhachHang());
+                txtTongTien.setText(String.format("%,.0f", control.tinhTongTienHoaDon(hoaDon.getMaHoaDon())));
+                txtNgayTao.setText(colNgayTao.getCellData(selectedIndex));
+                txtBanTra.setText(colBan.getCellData(selectedIndex));
             }
+            
+            loadDanhSachMonAn(hoaDon);
+            
         });
 
-
-        table.getColumns().addAll(colMaHoaDon, colKhachHang, colBan, colTongTien, colPhuongThuc, colNgayTao, colCoc);
-        table.setPrefHeight(250);
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        vbox.getChildren().addAll(lblTitle, table);
+        vbox.getChildren().addAll(lblTitle, tableHoaDon);
 
         return vbox;
     }
-
-    public void taoDanhSachHoaDon() {
-        dsHoaDonTest.addAll(new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang())
-                ,new HoaDon("HD001", LocalDateTime.now(), "Đã thanh toán", "Tiền mặt", "Không có", new NhanVien(), new KhachHang()));
+    
+    private void loadDanhSachMonAn(HoaDon hoaDon) {
+    	if (hoaDon != null) {
+            List<String> ds = control.dsThongTinMonAnTheoMaHD(hoaDon.getMaHoaDon());
+            dsThongTinMonAn = FXCollections.observableArrayList(ds);
+            tableMonAn.getItems().clear();
+            tableMonAn.setItems(dsThongTinMonAn);
+        }
     }
+    
+    private void timHoaDon(String chuoiTim) {
+        HoaDon hoaDonTimThay = control.timHoaDonTheoMa(chuoiTim.trim());
 
+        if (hoaDonTimThay == null) {
+            JOptionPane.showMessageDialog(null, "Không tìm thấy hóa đơn !");
+            timKiem.requestFocus();
+            timKiem.selectAll();
+            return;
+        }
+
+        // Lấy danh sách hiện tại trong bảng
+        ObservableList<HoaDon> dsHoaDon = tableHoaDon.getItems();
+
+        // Duyệt để tìm vị trí
+        for (int i = 0; i < dsHoaDon.size(); i++) {
+            if (dsHoaDon.get(i).getMaHoaDon().equalsIgnoreCase(hoaDonTimThay.getMaHoaDon())) {
+                tableHoaDon.getSelectionModel().select(i);
+                tableHoaDon.scrollTo(i);
+                tableHoaDon.fireEvent(
+                        new MouseEvent(MouseEvent.MOUSE_CLICKED,
+                            0, 0, 0, 0,
+                            MouseButton.PRIMARY, 1,
+                            false, false, false, false,
+                            true, false, false, true, false, false, null)
+                    );
+                return;
+            }
+        }
+
+    }
 
 }
 

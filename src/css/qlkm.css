@@ -172,7 +172,7 @@
 .radio-button{
 	-fx-cursor: hand;
 	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 15;
+	-fx-font-size: 15px;
 	-fx-background-color: white;
 
 }
@@ -237,7 +237,7 @@
 
 
 .button-chonMon{
-	-fx-background-color: #0F1F1F1;
+	-fx-background-color: #0F1F1F;
 	-fx-text-fill: black;
 	-fx-font-weight: bold;
 	-fx-background-radius: 5;
