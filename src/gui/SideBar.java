@@ -2,6 +2,7 @@ package gui;
 
 
 
+import entity.NhanVien;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -192,7 +193,7 @@ public class SideBar extends VBox {
                 trangChu.setMainContent(new QuanLyNhanVien());
                 break;
             case "Thanh toán":
-                trangChu.setMainContent(new Gui_ThanhToan());
+                trangChu.setMainContent(new Gui_ThanhToan(new NhanVien()));
                 break;
             case "Quản lí khuyến mãi":
                 trangChu.setMainContent(new Gui_QuanLiKhuyenMai());

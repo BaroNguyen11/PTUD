@@ -16,6 +16,7 @@ import connectDB.ConnectDB;
 import entity.BanAn;
 import entity.HoaDon;
 import entity.KhachHang;
+import entity.KhuyenMai;
 import entity.LoaiBan;
 import entity.NhanVien;
 import entity.PhieuDatBan;
@@ -334,17 +335,21 @@ public class Dao_ThanhToan {
 	    return soTienGiam;
 	}
 
-	public boolean capNhatTrangThaiThanhToan(String maHoaDon) throws SQLException {
-		Connection con = ConnectDB.getConnection();
-        String sql = "UPDATE HoaDon SET trangThai = N'Đã thanh toán' WHERE maHoaDon = ?";
-        try (PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, maHoaDon);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
+	public boolean capNhatTrangThaiThanhToan(String maHoaDon, String phuongThuc) throws SQLException {
+	    Connection con = ConnectDB.getConnection();
+	    
+	    // Cập nhật 2 cột: trangThai và phuongThuc
+	    String sql = "UPDATE HoaDon SET trangThai = N'Đã thanh toán', phuongThuc = ? WHERE maHoaDon = ?";
+	    
+	    try (PreparedStatement ps = con.prepareStatement(sql)) {
+	        ps.setString(1, phuongThuc);   
+	        ps.setString(2, maHoaDon);     
+	        return ps.executeUpdate() > 0; 
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return false;
+	}
 	
 	public boolean capNhatTrangThaiHoanTat(String maPhieu) throws SQLException {
 		Connection con = ConnectDB.getConnection();
@@ -370,6 +375,92 @@ public class Dao_ThanhToan {
         return false;
     }
 	
-	
+
+    /**
+     * Lấy KM hợp lệ cho hóa đơn tại thời điểm phiếu tạo, sắp xếp theo số tiền giảm thực tế DESC.
+     * 
+     * @param maPhieu Mã phiếu.
+     * @param tongTien Tổng tiền hóa đơn (để tính %).
+     * @return List<KhuyenMai> với field soTienGiamThucTe computed.
+     */
+    public List<KhuyenMai> getKhuyenMaiApDungChoHoaDon(String maPhieu, double tongTien) {
+        List<KhuyenMai> dsKM = new ArrayList<>();
+
+        String sql = """
+            SELECT 
+                maKhuyenMai, tenKhuyenMai, ngayBatDau, ngayKetThuc, dieuKienApDung, 
+                giaTriToiDa, giamGiaPhanTram, giaTriGiam,
+                CASE 
+                    WHEN giamGiaPhanTram = 1 THEN 
+                        CASE 
+                            WHEN ? >= dieuKienApDung THEN 
+                                LEAST( (? * giaTriGiam / 100), COALESCE(giaTriToiDa, 999999999))
+                            ELSE 0 
+                        END
+                    ELSE 
+                        CASE 
+                            WHEN ? >= dieuKienApDung THEN 
+                                LEAST(giaTriGiam, COALESCE(giaTriToiDa, 999999999))
+                            ELSE 0 
+                        END
+                END AS soTienGiamThucTe
+            FROM KhuyenMai
+            WHERE ngayBatDau <= (
+                SELECT CAST(thoiGianBatDau AS DATE) FROM PhieuDatBan WHERE maPhieu = ?
+            )
+            AND ngayKetThuc >= (
+                SELECT CAST(thoiGianBatDau AS DATE) FROM PhieuDatBan WHERE maPhieu = ?
+            )
+            ORDER BY soTienGiamThucTe DESC
+        """;
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+
+            stmt.setDouble(1, tongTien);
+            stmt.setDouble(2, tongTien);
+            stmt.setDouble(3, tongTien);
+            stmt.setString(4, maPhieu.trim());
+            stmt.setString(5, maPhieu.trim());
+
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                KhuyenMai km = new KhuyenMai(
+                    rs.getString("maKhuyenMai"),
+                    rs.getString("tenKhuyenMai"),
+                    rs.getDate("ngayBatDau").toLocalDate(),
+                    rs.getDate("ngayKetThuc").toLocalDate(),
+                    rs.getBigDecimal("dieuKienApDung").doubleValue(),
+                    rs.getBigDecimal("giaTriToiDa").doubleValue(),
+                    rs.getBoolean("giamGiaPhanTram"),
+                    rs.getBigDecimal("giaTriGiam").doubleValue()
+                );
+
+                dsKM.add(km);
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return dsKM;   
+	}
+    
+    public boolean taoChiTietKMHD(String maHoaDon, String maKhuyenMai, double soTienGiam) throws SQLException {
+	    Connection con = ConnectDB.getConnection();
+	    String sql = "INSERT INTO ChiTietKMHD(maHoaDon, maKhuyenMai, soTienGiam) VALUES (?, ?, ?)";
+	    try (PreparedStatement ps = con.prepareStatement(sql)) {
+	        ps.setString(1, maHoaDon);
+	        ps.setString(2, maKhuyenMai);
+	        ps.setDouble(3, soTienGiam);
+	        return ps.executeUpdate() > 0;
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    } finally {
+	        if (con != null) con.close();
+	    }
+	}
 
 }

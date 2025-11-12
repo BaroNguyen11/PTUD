@@ -35,18 +35,21 @@
 
 
 .fontTieuDeNho {
-	-fx-font-family: "Tai Heritage Pro";
+	-fx-font-family: "Segoe UI";
 	-fx-text-fill: gray;
 	-fx-font-size: 15px;
 }
 
 .nutTang {
-	-fx-background-color: #082744;
+	-fx-background-color: linear-gradient(to top right, #667eea, #764ba2);
 	-fx-text-fill: white;
 	-fx-font-weight: bold;
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-cursor: hand;
 	transition: -fx-background-color 0.3s ease;
+	-fx-pref-width: 80px;
+	-fx-pref-height: 25px;
+	-fx-font-size: 16px;
 }
 
 .nutTang:hover {
@@ -65,7 +68,7 @@
     -fx-border-width: 1;
     -fx-border-color: #D2D2D2;
     -fx-border-radius: 20px;
-    -fx-font-family: 'Tai Heritage Pro';
+    -fx-font-family: 'Segoe UI';
     -fx-background-color: white;
     -fx-font-size: 15;
 }
@@ -155,7 +158,7 @@
 
 .radio-button {
 	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-font-size: 15;
 	-fx-background-color: white;
 }
@@ -171,7 +174,7 @@
 
 .radio-button{
 	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-font-size: 15;
 	-fx-background-color: white;
 
@@ -182,7 +185,7 @@
 }
 
 .radio-button:disabled .radio {
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-font-size: 15;
 	-fx-background-color: white;
 }
@@ -217,7 +220,7 @@
 	-fx-font-weight: bold;
 	-fx-border-radius: 5;
 	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-font-size: 20;
 }
 
@@ -242,7 +245,7 @@
 	-fx-font-weight: bold;
 	-fx-background-radius: 5;
 	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-font-size: 20;
 }
 
@@ -252,7 +255,7 @@
 
 .textField-guiKhuyenMai{
 	-fx-text-fill: black;
-	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-family: 'Segoe UI';
 	-fx-background-color: white;
 	-fx-font-size: 15;
 	-fx-border-weight: 1;
@@ -356,7 +359,7 @@
     -fx-border-radius: 8;
     -fx-background-radius: 8;
     -fx-font-size: 15px;
-    -fx-font-family:	'Tai Heritage Pro' ;
+    -fx-font-family:	'Segoe UI' ;
 }
 
 .list-view .list-cell:selected {

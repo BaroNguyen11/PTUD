@@ -1,0 +1,59 @@
+.table-view {
+    -fx-background-color: transparent;
+    -fx-border-color: black;  /* Không viền ngoài cho toàn table */
+    -fx-table-cell-border-color: #cccccc;  /* Màu viền lưới (xám nhạt), thay đổi nếu cần */
+}
+
+.table-view .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.table-view .scroll-pane .viewport {
+    -fx-background-color: transparent;
+}
+
+.table-view .scroll-pane .scroll-bar:vertical,
+.table-view .scroll-pane .scroll-bar:horizontal {
+    -fx-background-color: transparent;  /* Ẩn nền scroll bars */
+    -fx-pref-width: 0;
+    -fx-pref-height: 0;
+    -fx-opacity: 0;  /* Ẩn hoàn toàn nếu không cần scroll */
+}
+
+.table-view .column-header-background {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header-background .filler {
+    -fx-background-color: transparent;
+}
+
+.table-view .column-header {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent -fx-table-cell-border-color transparent transparent;  /* Giữ viền phải cho header */
+    -fx-border-width: 1;
+}
+
+.table-row-cell {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0, 0 0 1 0;  /* Viền dưới mỏng cho lưới ngang */
+    -fx-border-width: 0 0 1 0;  /* Thêm viền dưới cho row */
+    -fx-border-color: transparent transparent -fx-table-cell-border-color transparent;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: transparent;  /* Không highlight nền khi chọn */
+}
+
+.table-cell {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent -fx-table-cell-border-color transparent transparent;  /* Viền phải cho lưới dọc */
+    -fx-border-width: 1;
+    -fx-padding: 0.166667em;  /* Khoảng cách nội dung */
+    -fx-alignment: center-left;  /* Align mặc định, tùy chỉnh per cell nếu cần */
+}
+
+.table-cell:selected {
+    -fx-background-color: transparent;  /* Không nền khi cell được chọn */
+}
