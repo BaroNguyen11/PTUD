@@ -7,6 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -384,5 +385,111 @@ public class Dao_QuanLiHoaDon {
         return dsChiTiet;
     }
 
+    public List<String> loadDanhSachHoaDon() {
+        List<String> ds = new ArrayList<>();
+
+        String sql = """
+                SELECT
+                    hd.maHoaDon,
+                    kh.tenKhachHang,
+                    nv.tenNhanVien,
+
+                    SUM(CASE
+                            WHEN kmma.giaSauKhuyenMai IS NOT NULL
+                                THEN kmma.giaSauKhuyenMai * cthd.soLuong
+                            ELSE ma.giaTien * cthd.soLuong
+                        END) AS tongTien,
+
+                    ISNULL(ctkmhd.soTienGiam, 0) AS giamGiaHD,
+
+                    hd.phuongThuc,
+                    hd.ngayTao,
+                    hd.trangThai,
+                    pdb.ghiChu,
+
+                    ba.loai AS loaiBan,
+
+                    STRING_AGG(pdb.maBan, ',') AS danhSachBan
+
+                FROM HoaDon hd
+                LEFT JOIN KhachHang kh ON hd.maKhachHang = kh.maKhachHang
+                LEFT JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien
+                LEFT JOIN ChiTietHoaDon cthd ON hd.maHoaDon = cthd.maHoaDon
+                LEFT JOIN MonAn ma ON cthd.maMonAn = ma.maMonAn
+
+                LEFT JOIN ChiTietKMMonAn kmma
+                    ON kmma.maMonAn = ma.maMonAn
+                    AND hd.ngayTao BETWEEN
+                        (SELECT ngayBatDau FROM KhuyenMai WHERE maKhuyenMai = kmma.maKhuyenMai)
+                        AND
+                        (SELECT ngayKetThuc FROM KhuyenMai WHERE maKhuyenMai = kmma.maKhuyenMai)
+
+                LEFT JOIN ChiTietKMHD ctkmhd ON hd.maHoaDon = ctkmhd.maHoaDon
+
+                LEFT JOIN PhieuDatBan pdb ON hd.maHoaDon = pdb.maHoaDon
+                LEFT JOIN BanAn ba ON ba.maBan = pdb.maBan
+
+                WHERE ba.loai IS NOT NULL
+                GROUP BY
+                    hd.maHoaDon,
+                    kh.tenKhachHang,
+                    nv.tenNhanVien,
+                    ctkmhd.soTienGiam,
+                    hd.phuongThuc,
+                    hd.ngayTao,
+                    hd.trangThai,
+                    ba.loai,
+                    pdb.ghiChu
+                """;
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+
+                String maHD       = rs.getString("maHoaDon");
+                String tenKH      = rs.getString("tenKhachHang");
+                String tenNV      = rs.getString("tenNhanVien");
+
+                String danhSachBan = rs.getString("danhSachBan"); 
+                String loaiBan     = rs.getString("loaiBan");      
+                String ghiChu      = rs.getString("ghiChu");       
+
+                double tongTien    = rs.getDouble("tongTien");
+                double giamGia     = rs.getDouble("giamGiaHD");
+
+                String phuongThuc  = rs.getString("phuongThuc");
+                String trangThai   = rs.getString("trangThai");
+                Timestamp ngayTao  = rs.getTimestamp("ngayTao");
+
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                
+                String dong = String.join(",",
+                        maHD,                           
+                        tenKH,                         
+                        tenNV,                         
+                        String.valueOf(tongTien),       
+                        String.valueOf(giamGia),        
+                        phuongThuc,                     
+                        dtf.format(ngayTao.toLocalDateTime()),   
+                        trangThai,                      
+                        ghiChu == null ? "" : ghiChu,   
+                        loaiBan == null ? "" : loaiBan, 
+                        danhSachBan == null ? "" : danhSachBan 
+                );
+
+                ds.add(dong);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return ds;
+    }
+
+
+    
     
 }
