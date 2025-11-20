@@ -6,16 +6,16 @@ public class KhuyenMai {
     private String tenKhuyenMai;
     private LocalDate ngayBatDau;
     private LocalDate ngayKetThuc;
-    private String dieuKienApDung;
+    private double dieuKienApDung;
     private double giaTriToiDa;
-    private double giamGiaPhanTram;
+    private boolean giamGiaPhanTram;
     private double giaTriGiam;
 
     public KhuyenMai() {}
 
     public KhuyenMai(String maKhuyenMai, String tenKhuyenMai, LocalDate ngayBatDau,
-                     LocalDate ngayKetThuc, String dieuKienApDung, double giaTriToiDa,
-                     double giamGiaPhanTram, double giaTriGiam) {
+                     LocalDate ngayKetThuc, double dieuKienApDung, double giaTriToiDa,
+                     boolean giamGiaPhanTram, double giaTriGiam) {
         this.maKhuyenMai = maKhuyenMai;
         this.tenKhuyenMai = tenKhuyenMai;
         this.ngayBatDau = ngayBatDau;
@@ -58,11 +58,11 @@ public class KhuyenMai {
         this.ngayKetThuc = ngayKetThuc;
     }
 
-    public String getDieuKienApDung() {
+    public double getDieuKienApDung() {
         return dieuKienApDung;
     }
 
-    public void setDieuKienApDung(String dieuKienApDung) {
+    public void setDieuKienApDung(double dieuKienApDung) {
         this.dieuKienApDung = dieuKienApDung;
     }
 
@@ -74,11 +74,11 @@ public class KhuyenMai {
         this.giaTriToiDa = giaTriToiDa;
     }
 
-    public double getGiamGiaPhanTram() {
+    public boolean getGiamGiaPhanTram() {
         return giamGiaPhanTram;
     }
 
-    public void setGiamGiaPhanTram(double giamGiaPhanTram) {
+    public void setGiamGiaPhanTram(boolean giamGiaPhanTram) {
         this.giamGiaPhanTram = giamGiaPhanTram;
     }
 
