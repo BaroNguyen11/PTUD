@@ -66,7 +66,53 @@ public class Crl_QuanLiKM {
     }
     
     public boolean ngungKhuyenMai(String maKM) {
+    		if(maKM.isEmpty()) {
+    			return false;
+    		}
+    		
     		return dao.ngungKhuyenMai(maKM);
     }
+    
+    public boolean xoaKhuyenMai(String maKM, int loaiKM) {
+    		if(maKM.isEmpty()) {
+    			return false;
+    		}
+    		
+    		if(loaiKM == 1) {
+    			if(!dao.xoaCTKMMonAn(maKM)) {
+    				System.out.println("Lỗi khi xóa chi tiết món ăn của khuyến mãi");
+    				return false;
+    			}
+    		}
+        
+    		return dao.xoaKhuyenMai(maKM);
+    }
 	
+    public boolean suaKhuyenMai(KhuyenMai km, List<String> dsMon, int loaiKM) {
+    	
+    		if(km == null) {
+    			return false;
+    		}
+    	
+    		if(loaiKM == 1) {
+    			if(!dao.xoaCTKMMonAn(km.getMaKhuyenMai())) {
+    				System.out.println("Lỗi khi xóa chi tiết món ăn của khuyến mãi");
+    				return false;
+    			}
+    			
+    			if(!themDSCTKMMonAn(dsMon, km)) {
+    				System.out.println("Lỗi khi update danh sách món ăn mới trong khuyến mãi");
+    				return false;
+    			}
+
+    		}
+    		
+    		if(!dao.updateKhuyenMai(km.getMaKhuyenMai(), km.getTenKhuyenMai(), km.getNgayBatDau(), km.getNgayKetThuc(), km.getDieuKienApDung(), km.getGiaTriToiDa(), km.getGiamGiaPhanTram(), km.getGiaTriGiam())) {
+				System.out.println("Lỗi khi update khuyến mãi");
+				return false;
+    		}
+    		
+    		return true;
+    }
+    
 }

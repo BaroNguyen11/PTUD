@@ -4,7 +4,9 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import control.Crl_QuanLiKM;
@@ -35,9 +37,13 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.Tooltip;
 import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -78,30 +84,34 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 	private DatePicker dateBatDau;
 	private DatePicker dateKetThuc;
 	private Button btnChonMonAn;
-	private Button btnThemLuu;
+	private Button btnSuaLuu;
 	private final EventHandler<MouseEvent> blockMouse = Event::consume;
 	private final EventHandler<KeyEvent> blockKey = Event::consume;
 	private Button btnNgung;
 	private ListView listMonAn;
 	TableColumn<String, Void> colXoa = new TableColumn<>("Xóa");
 	
-	private boolean flagButton = true;
+	// Cờ sửa và lưu || True là sửa || False là lưu
+	private boolean flagSuaLuu = true;
+	
+	// Cờ xóa và ngừng KM || True là ngừng || False là xóa
+	private boolean flagNgungXoa = true;
+	  
+	// Cờ đg xem và đang thêm || True là đang thêm || False là đang xem
+	private boolean flagXemThem = false;
+	
 	private ComboBox<String> cboTT;
 	private ComboBox<String> cboLoai;
 	private TextField txtTimKiem;
 	private Button btnReset;
 	private ComboBox<String> cboLocMon;
-
+	private Button btnThemKM;
+	private final Map<KeyCombination, Runnable> shortcuts = new HashMap<>();
 
     // Preload image để tránh load lại mỗi lần tạo cell (giảm lag scroll)
     private static final Image IMG_MON_AN = new Image("/img/monAn.png");
-    private static final Image IMG_DAU_CONG_DEN = new Image("/img/dauCongDen.png");
-    private static final Image IMG_LICH_TRANG = new Image("/img/lichTrang.png");
-    private static final Image IMG_CHAM_XANH = new Image("/img/chamXanh.png");
-    private static final Image IMG_CHAM_DO = new Image("/img/chamDo.png");
     private static final Image IMG_CHU_NHAT_XANH = new Image("/img/chuNhatXanh.png");
     private static final Image IMG_CHU_NHAT_VANG = new Image("/img/chuNhatVang.png");
-    private static final Image IMG_LON_HON_HOAC_BANG = new Image("/img/lonHonHoacBang.png");
 
 
    public Gui_QuanLiKhuyenMai() {
@@ -119,6 +129,39 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
        
        // Set vào BorderPane chính (this)
        this.setCenter(mainLayout);
+       
+       // === Phím tắt ===
+       
+       /////Hàng f
+       /// === Thêm khuyến mãi : F2
+       KeyCombination f2 = new KeyCodeCombination(KeyCode.F2);
+       /// === Truy cập tìm kiếm nhanh : F3
+       KeyCombination f3 = new KeyCodeCombination(KeyCode.F3);
+       /// === Tạo mới : F5
+       KeyCombination f5 = new KeyCodeCombination(KeyCode.F5);
+       /// === Lưu, sửa : F6
+       KeyCombination f6 = new KeyCodeCombination(KeyCode.F6);
+       /// === Xóa, ngừng KM : F9
+       KeyCombination f9 = new KeyCodeCombination(KeyCode.F9);
+       
+       
+       shortcuts.put(f3, () -> txtTimKiem.requestFocus());
+       shortcuts.put(f2, () -> btnThemKM.fire());
+       shortcuts.put(f5, () -> btnReset.fire());
+       shortcuts.put(f6, () -> btnSuaLuu.fire());
+       shortcuts.put(f9, () -> btnNgung.fire());
+       
+       
+       this.sceneProperty().addListener((obs, oldScene, newScene) -> {
+           if (newScene != null) {
+               newScene.getAccelerators().putAll(shortcuts);
+           }
+           
+           if(oldScene != null) {
+           		oldScene.getAccelerators().clear();
+           }
+       });
+       
    }
     public VBox taoPhanBenTrai() {
         // Ô tìm kiếm
@@ -135,12 +178,15 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         VBox vboxTimKiem = new VBox(5);
         vboxTimKiem.getChildren().addAll(lblTimKiem, oTimKiem);
         
+        txtTimKiem.setTooltip(new Tooltip("Nhấn F3 để truy cập nhanh"));
+        
         nutTimKiem.setOnAction(e -> {locKhuyenMai();});
         txtTimKiem.setOnAction(e -> {locKhuyenMai();});
         
         // ===== Lọc theo trạng thái =====
         Label lblLocTT = new Label("Trạng thái");
-
+        lblLocTT.getStyleClass().add("fontTieuDeNho");
+        
         cboTT = new ComboBox<>();
         cboTT.getItems().addAll("Tất cả", "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc");
         cboTT.setValue("Tất cả"); // mặc định
@@ -151,6 +197,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
         // ===== Lọc theo loại =====
         Label lblLocLoai = new Label("Loại");
+        lblLocLoai.getStyleClass().add("fontTieuDeNho");
 
         cboLoai = new ComboBox<>();
         cboLoai.getItems().addAll("Tất cả", "Hóa đơn", "Món ăn");
@@ -163,7 +210,8 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         
         // ===== nút reset tới chơi =====
         
-        //Nút reset lọc
+        VBox vboxReset = new VBox();
+        
         btnReset = new Button();
         btnReset.setGraphic(createSvgIcon(25, 24,"gray","M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"));
         btnReset.setStyle("""
@@ -176,12 +224,17 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         
         btnReset.setOnAction(e -> taoMoiTimKiem());
         
+        btnReset.setTooltip(new Tooltip("Nhấn F5 để dùng nhanh"));
+        
+        vboxReset.getChildren().addAll(btnReset);
+        
         //Hbox tim kiem
         HBox hboxTimKiem = new HBox(10);
-        hboxTimKiem.getChildren().addAll(vboxTimKiem, vboxLoai, vboxTT, btnReset);
+        hboxTimKiem.getChildren().addAll(vboxTimKiem, vboxLoai, vboxTT, vboxReset);
         hboxTimKiem.setAlignment(Pos.BOTTOM_LEFT);
-        vboxLoai.setPadding(new Insets(15, 0, 0, 0));
-        vboxTT.setPadding(new Insets(15, 0, 0, 0));
+        vboxLoai.setPadding(new Insets(5, 0, 0, 0));
+        vboxTT.setPadding(new Insets(5, 0, 0, 0));
+        vboxReset.setPadding(new Insets(36, 0, 0, 0));
         
         ///Tieu de danh sach va chu thich danh sach
         Label lblDanhSach = new Label("Danh sách khuyến mãi");
@@ -189,12 +242,55 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         lblDanhSach.setMinWidth(200);
 
         //HBOX chú thích
-        HBox hboxChuThich = new HBox(10);
-        hboxChuThich.getChildren().addAll(lblDanhSach);
-        hboxChuThich.setAlignment(Pos.BOTTOM_LEFT);
+        HBox hboxChuThich = new HBox(3);
+        
+        HBox hboxDangDienRa = new HBox(2);
+        HBox hboxSapDienRa = new HBox(2);
+        HBox hboxKetThuc = new HBox(2);
+        
+        Label lblDangDienRa = new Label("Đang diễn ra");
+        Label lblSapDienRa = new Label("Sắp diễn ra");
+        Label lblKetThuc = new Label("Đã kết thúc");
+        
+        lblDangDienRa.getStyleClass().add("fontTieuDeNho");
+        lblSapDienRa.getStyleClass().add("fontTieuDeNho");
+        lblKetThuc.getStyleClass().add("fontTieuDeNho");
+        
+        SVGPath iconDangDienRa = createSvgIcon(18, 24, "green", "m4.5 12.75 6 6 9-13.5");
+        SVGPath iconSapDienRa = createSvgIcon(18, 24, "gray", "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z");
+        SVGPath iconKetThuc = createSvgIcon(18, 24, "red", "M6 18 18 6M6 6l12 12");
+        
+        hboxDangDienRa.getChildren().addAll(iconDangDienRa, lblDangDienRa);
+        hboxDangDienRa.setAlignment(Pos.CENTER_LEFT);
+        hboxSapDienRa.getChildren().addAll(iconSapDienRa, lblSapDienRa);
+        hboxSapDienRa.setAlignment(Pos.CENTER_LEFT);
+        hboxKetThuc.getChildren().addAll(iconKetThuc, lblKetThuc);
+        hboxKetThuc.setAlignment(Pos.CENTER_LEFT);
+        hboxKetThuc.setPadding(new Insets(0, 160, 0, 0));
+        
+        // === Button thêm khuyến mãi tới chơi ===
+        
+        btnThemKM = new Button("Thêm KM");
+        btnThemKM.getStyleClass().add("btn-them");
+        
+        btnThemKM.setOnAction(e -> {
+        		hanhDongThem();
+        		flagXemThem = true;
+        		
+        		btnSuaLuu.setDisable(false);
+        	});
+        btnThemKM.setTooltip(new Tooltip("Nhấn F2 để dùng nhanh"));
+        
+        hboxChuThich.getChildren().addAll(hboxDangDienRa, hboxSapDienRa, hboxKetThuc, btnThemKM);
+        
+        HBox hboxChuThichAll = new HBox(10);
+        hboxChuThichAll.getChildren().addAll(lblDanhSach, hboxChuThich);
+        hboxChuThichAll.setAlignment(Pos.BOTTOM_RIGHT);
 
         //Danh sach khuyen mai
         VBox dsKhuyenMai = taoDanhSachKhuyenMai();
+        
+        
 
         //ALLLLL
         VBox vboxAll = new VBox(20);
@@ -202,7 +298,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         vboxAll.setMinHeight(600);
         //vboxAll.setStyle("-fx-background-color: black");
         vboxAll.setMinWidth(800);
-        vboxAll.getChildren().addAll(hboxTimKiem, hboxChuThich, dsKhuyenMai);
+        vboxAll.getChildren().addAll(hboxTimKiem, hboxChuThichAll, dsKhuyenMai);
 
         return vboxAll;
     }
@@ -256,7 +352,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
             String trangThaiStr = cellData.getValue().split(",")[9];
             return new SimpleStringProperty(trangThaiStr);
         });
-        colTT.setPrefWidth(50);
+        colTT.setPrefWidth(57);
         
         colTT.setCellFactory(tc -> new TableCell<String, String>() {
             @Override
@@ -290,24 +386,19 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         
         //CLICK
         tableDSKM.setOnMouseClicked(event -> {
+        		//
+        		flagXemThem = false;
+        		
+        		
         		String chuoi = tableDSKM.getSelectionModel().getSelectedItem();
         		
         		if(chuoi == null) {
         			return;
         		}
         	
-        		//Đổi lại button
-        		btnThemLuu.setText("Thêm");
-			btnThemLuu.getStyleClass().remove("btn-luu");
-			btnThemLuu.getStyleClass().add("btn-them");
-			flagButton = true;
-        		
         		///Ẩn col xóa đi
         		colXoa.setVisible(false);
         		///
-            
-            
-            
             
             String[] chuoiTach = chuoi.split(",");
             
@@ -322,7 +413,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
             double giaTriToiDa = Double.parseDouble(chuoiTach[5]);
             boolean laMonAn = chuoiTach[8].equals("1") ? true : false;
             double dkApDung = Double.parseDouble(chuoiTach[4]);
-            boolean trangThai = chuoiTach[9].equals("1") ? true : false;
+            String trangThai = chuoiTach[9];
             
             
             LocalDate ngayBD = LocalDate.parse(chuoiTach[2], dtf);
@@ -359,11 +450,41 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
             		moKhoaChinhSua(false);
             }
             
-            if (trangThai && (ngayBD.isBefore(LocalDate.now()) || ngayBD.isEqual(LocalDate.now()))) {
-                btnNgung.setDisable(false); 
+            if (trangThai.equals("1")) {
+                btnNgung.setDisable(false);
+                btnNgung.setText("Ngừng KM");
+                flagNgungXoa = true;
+                
+                	btnSuaLuu.setText("Sửa");
+        			btnSuaLuu.getStyleClass().remove("btn-luu");
+        			btnSuaLuu.getStyleClass().add("btn-sua");
+                
+                btnSuaLuu.setDisable(true);
             } else {
-                btnNgung.setDisable(true); 
+                if(trangThai.equals("2")) {
+	                	//Đổi lại button
+	        			btnSuaLuu.setText("Sửa");
+	        			btnSuaLuu.getStyleClass().remove("btn-luu");
+	        			btnSuaLuu.getStyleClass().add("btn-sua");
+	        			btnSuaLuu.setDisable(false);
+	        			flagSuaLuu = true;
+	        			
+	        			btnNgung.setDisable(false);
+	        			btnNgung.setText("Xóa");
+	        			flagNgungXoa = false;
+	        			
+                }else {
+                		btnSuaLuu.setDisable(true);
+                		btnNgung.setDisable(true);
+                		
+                		btnNgung.setText("Ngừng KM");
+                		btnSuaLuu.setText("Sửa");
+                		btnSuaLuu.getStyleClass().remove("btn-luu");
+	        			btnSuaLuu.getStyleClass().add("btn-sua");
+                		
+                }
             }
+			
         });
         
         vboxAll.getChildren().add(tableDSKM);
@@ -441,7 +562,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         //Giá trị giảm
         Label lblGiaTriGiam = new Label("Giá trị giảm:");
         lblGiaTriGiam.getStyleClass().add("fontTieuDeNho");
-        txtGiaTriGiam = createInputField(new TextField(), false);;
+        txtGiaTriGiam = createInputField(new TextField(), false);
         txtGiaTriGiam.setPrefWidth(250);
         Label lblDonVi = new Label("VND");
         lblDonVi.setPrefWidth(30);
@@ -476,6 +597,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         // cai dat group 1
         radioGroup1.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
             if(newVal == radioCo) {
+            		lblDonVi.setText("%");
                 fadeIn(hbox5);
             } else {
                 lblDonVi.setText("VND");
@@ -515,10 +637,8 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         lblDonViVND2.setAlignment(Pos.BOTTOM_RIGHT);
         lblDonViVND2.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold;");
 
-        ImageView iconLonHonBang = new ImageView(IMG_LON_HON_HOAC_BANG);
-        iconLonHonBang.setFitHeight(20);
-        iconLonHonBang.setFitWidth(20);
-
+        SVGPath iconLonHonBang = createSvgIcon(2, 24, "gray", "m4.435 1.704l17.3 6.796l-17.3 6.796l-.731-1.861L16.265 8.5L3.704 3.565l.73-1.861ZM3 19h18v2H3v-2Z");
+        iconLonHonBang.setStyle("-fx-stroke: gray; -fx-fill: gray;");
         StackPane stDieuKien = new StackPane(iconLonHonBang, txtDieuKienApDung);
         stDieuKien.setAlignment(Pos.CENTER_LEFT);
         StackPane.setMargin(txtDieuKienApDung, new Insets(0, 0, 0, 20));
@@ -584,11 +704,9 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         VBox vboxKhuyenMaiMonAn = new VBox(5);
 
         //Button chọn món khuyến mãi
-        ImageView iconDauCong = new ImageView(IMG_DAU_CONG_DEN);
-        iconDauCong.setFitHeight(30);
-        iconDauCong.setFitWidth(30);
 
-        btnChonMonAn = new Button("Chọn món khuyến mãi", iconDauCong);
+        btnChonMonAn = new Button("Chọn món");
+        btnChonMonAn.setGraphic(createSvgIcon(24, 24, "white", "M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z"));
         btnChonMonAn.setMinHeight(30);
         btnChonMonAn.setMinWidth(100);
         btnChonMonAn.getStyleClass().add("button-chonMon");
@@ -651,7 +769,6 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 	        		
         		if(dsTTMonAn.isEmpty()) {
         			loadLaiDSMonAn(ngayBD, ngayKT);
-        			System.out.println("Đã chạy load lại");
         		}
         	
             Stage stageChinh = (Stage) btnChonMonAn.getScene().getWindow(); 
@@ -817,33 +934,49 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         vbox2.setPadding(new Insets(0, 20, 0, 20));
 
         //Phần nút
-        btnThemLuu = new Button("Thêm");
+        btnSuaLuu = new Button("Sửa");
         btnNgung = new Button("Ngưng KM");
         
         btnNgung.setDisable(true);
+        btnSuaLuu.setDisable(true);
 
-        btnThemLuu.getStyleClass().add("btn-them");
+        btnSuaLuu.getStyleClass().add("btn-sua");
         btnNgung.getStyleClass().add("btn-ngung");
         
-        btnNgung.setOnAction(e -> hanhDongNgungKM());
+        btnSuaLuu.setTooltip(new Tooltip("Nhấn F6 để dùng nhanh"));
+        btnNgung.setTooltip(new Tooltip("Nhấn F9 để dùng nhanh"));
         
-        btnThemLuu.setOnAction(e -> {
-        		if(flagButton) {
-        			if(hanhDongThem()) {
-        				btnThemLuu.setText("Lưu");
-        				btnThemLuu.getStyleClass().remove("btn-them");
-            			btnThemLuu.getStyleClass().add("btn-luu");
+        btnNgung.setOnAction(e -> {
+        		if(flagNgungXoa) {
+        			hanhDongNgungKM();
+        		}else {
+        			hanhDongXoaKM();
+        		}
+        		
+        });
+        
+        btnSuaLuu.setOnAction(e -> {
+        		if(flagSuaLuu) {
+        			if(hanhDongSua()) {
+        				btnSuaLuu.setText("Lưu");
+        				btnSuaLuu.getStyleClass().remove("btn-sua");
+            			btnSuaLuu.getStyleClass().add("btn-luu");
             			colXoa.setVisible(true);
-            			flagButton = false;
+            			flagSuaLuu = false;
+            			btnChonMonAn.setDisable(false);
+            			
+            			moKhoaChinhSua(true);
         			}
         		}else {
         			if(hanhDongLuu()) {
-        				btnThemLuu.setText("Thêm");
-        				btnThemLuu.getStyleClass().remove("btn-luu");
-            			btnThemLuu.getStyleClass().add("btn-them");
-            			flagButton = true;
+        				btnSuaLuu.setText("Sửa");
+        				btnSuaLuu.getStyleClass().remove("btn-luu");
+            			btnSuaLuu.getStyleClass().add("btn-sua");
+            			flagSuaLuu = true;
             			colXoa.setVisible(false);
             			clear();
+            			
+            			moKhoaChinhSua(false);
         			}
         		}
         });
@@ -851,9 +984,9 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         HBox hboxButton = new HBox(10);
         Region spaceButton = new Region();
 
-        hboxButton.getChildren().addAll(btnThemLuu, btnNgung);
-        hboxButton.setAlignment(Pos.CENTER);
-        hboxButton.setPadding(new Insets(0, 10, 0, 10));
+        hboxButton.getChildren().addAll(btnSuaLuu, btnNgung);
+        hboxButton.setAlignment(Pos.CENTER_LEFT);
+        hboxButton.setPadding(new Insets(0, 25, 0, 22));
 
         /////
         VBox vboxAll = new VBox(30);
@@ -1243,7 +1376,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     
     private Label createModernSectionTitle(String title, String color) {
         Label label = new Label(title);
-        label.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+        label.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
         label.setStyle(
                 "-fx-text-fill: " + color + ";" +
                         "-fx-padding: 2 0 2 10;" +
@@ -1274,7 +1407,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
                             "-fx-border-color: #bdc3c7; " +
                             "-fx-border-radius: 6; " +
                             "-fx-background-radius: 6; " +
-                            "-fx-padding: 10; " +
+                            "-fx-padding: 5 10 5 10; " +
                             "-fx-font-size: 15px; " +
                             "-fx-text-fill: #7f8c8d;"
             );
@@ -1285,7 +1418,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
                             "-fx-border-width: 1.5; " +
                             "-fx-border-radius: 6; " +
                             "-fx-background-radius: 6; " +
-                            "-fx-padding: 10; " +
+                            "-fx-padding: 5 10 5 10; " +
                             "-fx-font-size: 15px;"
             );
 
@@ -1345,7 +1478,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
                             "-fx-border-color: #bdc3c7; " +
                             "-fx-border-radius: 6; " +
                             "-fx-background-radius: 6; " +
-                            "-fx-padding: 10; " +
+                            "-fx-padding: 5 10 5 10; " +
                             "-fx-font-size: 15px; " +
                             "-fx-text-fill: #7f8c8d;"
             );
@@ -1356,7 +1489,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
                             "-fx-border-width: 1.5; " +
                             "-fx-border-radius: 6; " +
                             "-fx-background-radius: 6; " +
-                            "-fx-padding: 10; " +
+                            "-fx-padding: 5 10 5 10; " +
                             "-fx-font-size: 15px;" +
                             "-fx-cursor: hand"
             );
@@ -1386,10 +1519,19 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     		
     		txtTenKhuyenMai.requestFocus();
     		btnNgung.setDisable(true);
+    		btnSuaLuu.setDisable(false);
+    		
+    		btnSuaLuu.setText("Lưu");
+    		btnSuaLuu.getStyleClass().remove("btn-sua");
+    		btnSuaLuu.getStyleClass().add("btn-luu");
+    		flagSuaLuu = false;
     		
     		dsMonChon.clear();
     		tableDSMonKMTheoMa.setItems(dsMonChon);
     		dsTTMonAn.clear();
+    		
+    		btnNgung.setDisable(true);
+    		btnSuaLuu.setDisable(true);
     		
     		return true;
     }
@@ -1412,7 +1554,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     		String tenKhuyenMai = txtTenKhuyenMai.getText();
     		
     		if(tenKhuyenMai.isEmpty()) {
-    			showAlert(AlertType.WARNING, "Tên rỗng", "Vui lòng nhập tên khuyến mãi trước khi thêm khuyến mãi !");
+    			showAlert(AlertType.WARNING, "Tên rỗng", "Vui lòng nhập tên khuyến mãi đầy đủ!");
     			focus(txtTenKhuyenMai);
     			return false;
     		}
@@ -1420,7 +1562,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     		String giaTriGiamString = txtGiaTriGiam.getText();
     		
     		if(giaTriGiamString.isEmpty()) {
-    			showAlert(AlertType.WARNING, "Giá trị giảm rỗng", "Vui lòng nhập giá trị giảm trước khi thêm khuyến mãi !");
+    			showAlert(AlertType.WARNING, "Giá trị giảm rỗng", "Vui lòng nhập giá trị giảm hợp lệ!");
     			focus(txtGiaTriGiam);
     			return false;
     		}
@@ -1434,8 +1576,6 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     			focus(txtGiaTriGiam);
     			return false;
 		}
-    		
-    		
     		
     		String giaTriToiDaString = "";
     		double giaTriToiDa = 0.0;
@@ -1557,29 +1697,58 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     		km.setNgayKetThuc(ngayKT);
     		
     		if(radioHoaDon.isSelected()) {
-    			//Tạo khuyến mãi cho hóa đơn
-    			km.setDieuKienApDung(dieuKienApDung);
-    			if(control.themKhuyenMai(km)) {
-        			showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
-        			loadLaiDanhSachKM();
-        			return true;
-        		}else {
-        			showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
-        			return false;
-        		}
+    			if(flagXemThem) {
+    				//Tạo khuyến mãi cho hóa đơn
+        			km.setDieuKienApDung(dieuKienApDung);
+        			if(control.themKhuyenMai(km)) {
+            			showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
+            			loadLaiDanhSachKM();
+            			return true;
+            		}else {
+            			showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
+            			return false;
+            		}
+    			}else {
+    				//Sửa cho khuyến mãi hóa đơn
+    				if(control.suaKhuyenMai(km, dsMonChon, 0)) {
+    					showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Sửa khuyến mãi thành công");
+            			loadLaiDanhSachKM();
+            			return true;
+    				}else {
+            			showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể sửa khuyến mãi");
+            			return false;
+            		}
+    			}
     		}else {
-    			//Tạo khuyến mãi cho các món ăn
-    			km.setDieuKienApDung(0.0);
-    			if(control.themKhuyenMai(km) && control.themDSCTKMMonAn(dsMonChon, km)) {
-        			showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
-        			loadLaiDanhSachKM();
-        			return true;
-        		}else {
-        			showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
-        			return false;
-        		}
+    			if (flagXemThem) {
+    				//Tạo khuyến mãi cho các món ăn
+        			km.setDieuKienApDung(0.0);
+        			if(control.themKhuyenMai(km) && control.themDSCTKMMonAn(dsMonChon, km)) {
+            			showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
+            			loadLaiDanhSachKM();
+            			return true;
+            		}else {
+            			showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
+            			return false;
+            		}
+			}else {
+				//Sửa khuyến mãi cho món ăn
+				if(control.suaKhuyenMai(km, dsMonChon, 1)) {
+					showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Sửa khuyến mãi thành công");
+	        			loadLaiDanhSachKM();
+	        			return true;
+				}else {
+	        			showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể sửa khuyến mãi");
+	        			return false;
+        			}
+				
+			}
     		}
     		
+    }
+    
+    public boolean hanhDongSua() {
+    		return true;
     }
     
     public void loadLaiDanhSachKM() {
@@ -1639,12 +1808,49 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     	        if (success) {
     	            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Khuyến mãi đã được ngừng.");
 
-    	            loadLaiDanhSachKM();
+	    	         // == reset lại ==
+	    	    	    clear();
+	    	    		loadLaiDanhSachKM();
     	        } else {
     	            showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể ngừng khuyến mãi. Kiểm tra lại dữ liệu.");
     	        }
     	    }
     	    
+    	    
+    }
+    
+    public void hanhDongXoaKM() {
+    		String maKM = txtMaKhuyenMai.getText();
+		
+		if (maKM.isEmpty()) {
+	        showAlert(Alert.AlertType.WARNING, "Chưa chọn KM", "Vui lòng chọn mã khuyến mãi trước khi xóa.");
+	        return;
+	    }
+		
+		// Hiển thị hộp thoại xác nhận
+	    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+	    alert.setTitle("Xác nhận");
+	    alert.setHeaderText("Bạn có chắc muốn xóa khuyến mãi này không?");
+	    alert.setContentText("Mã khuyến mãi: " + maKM);
+		
+	    int loaiKM = radioMonAn.isSelected() ? 1 : 0;
+	    
+	    Optional<ButtonType> result = alert.showAndWait();
+	    if (result.isPresent() && result.get() == ButtonType.OK) {
+
+	        boolean success = control.xoaKhuyenMai(maKM, loaiKM);
+	        
+	        if (success) {
+	            showAlert(Alert.AlertType.INFORMATION, "Thành công", "Xóa khuyến mãi thành công");
+
+		         // == reset lại ==
+		    	    clear();
+		    		loadLaiDanhSachKM();
+	        } else {
+	            showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể xóa khuyến mãi này, vui lòng kiểm tra lại dữ liệu");
+	        }
+	    }
+	    
     }
     
     private void locKhuyenMai() {
@@ -1710,6 +1916,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     		cboLoai.setValue("Tất cả");
     		cboTT.setValue("Tất cả");
     		locKhuyenMai();
+    		loadLaiDanhSachKM();
     }
     
     public void locMonAn() {

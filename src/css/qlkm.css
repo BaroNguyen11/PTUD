@@ -59,34 +59,7 @@
     -fx-text-fill: white;
 }
 
-.timKiem {
-	-fx-pref-width: 200px;
-    -fx-pref-height: 20px;
-    -fx-border-width: 1;
-    -fx-border-color: #D2D2D2;
-    -fx-border-radius: 20px;
-    -fx-font-family: 'Tai Heritage Pro';
-    -fx-background-color: white;
-    -fx-font-size: 15;
-}
 
-.timKiem:hover{
-	-fx-border-color: blue;
-}
-
-.button-timKiem{
-	-fx-background-color: white;
-	-fx-border-color: #D2D2D2;
-	-fx-border-width: 1;
-	-fx-border-radius: 20;
-	-fx-text-fill: black;
-	-fx-cursor: hand;
-	-fx-font-size: 15
-}
-
-.button-timKiem:hover{
-	-fx-border-color: blue;
-}
 
 
 /* hoc ve font */
@@ -237,13 +210,13 @@
 
 
 .button-chonMon{
-	-fx-background-color: #F1F1F1;
-	-fx-text-fill: black;
+	-fx-background-color: #667eea;
+	-fx-text-fill: white;
 	-fx-font-weight: bold;
-	-fx-background-radius: 5;
+	-fx-background-radius: 6;
 	-fx-cursor: hand;
 	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 20;
+	-fx-font-size: 15px;
 }
 
 .button-chonMon:hover{
@@ -317,31 +290,45 @@
 .btn-them {
 	-fx-background-radius: 5;
 	-fx-background-color: #2FB129;
-	-fx-font-size: 20px;
+	-fx-font-size: 15px;
 	-fx-text-fill: white;
-	-fx-pref-width: 100px;
+	-fx-pref-width: 80px;
 	-fx-cursor: hand;
 	-fx-font-weight: bold;
+	-fx-padding: 5;
+}
+
+.btn-sua {
+	-fx-background-radius: 5;
+	-fx-background-color: #F4C430;
+	-fx-font-size: 15px;
+	-fx-text-fill: white;
+	-fx-pref-width: 80px;
+	-fx-cursor: hand;
+	-fx-font-weight: bold;
+	-fx-padding: 5;
 }
 
 .btn-luu{
 	-fx-background-radius: 5;
 	-fx-background-color: #082744;
-	-fx-font-size: 20px;
+	-fx-font-size: 15px;
 	-fx-text-fill: white;
-	-fx-pref-width: 100px;
+	-fx-pref-width: 80px;
 	-fx-cursor: hand;
 	-fx-font-weight: bold;
+	-fx-padding: 5;
 }
 
 .btn-ngung{
 	-fx-background-radius: 5;
 	-fx-background-color: red;
-	-fx-font-size: 18px;
+	-fx-font-size: 15px;
 	-fx-text-fill: white;
-	-fx-pref-width: 120px;
+	-fx-pref-width: 100px;
 	-fx-cursor: hand;
 	-fx-font-weight: bold;
+	-fx-padding: 5;
 }
 
 .btn-luu:hover {
@@ -361,13 +348,43 @@
 	-fx-opacity: 0.9
 }
 
+.timKiem {
+	-fx-pref-width: 200px;
+    -fx-pref-height: 20px;
+    -fx-border-width: 1;
+    -fx-border-color: #D2D2D2;
+    -fx-border-radius: 6px;
+    -fx-font-family: 'Tai Heritage Pro';
+    -fx-background-color: white;
+    -fx-font-size: 15;
+}
+
+.timKiem:hover{
+	-fx-border-color: blue;
+}
+
+.button-timKiem{
+	-fx-background-color: white;
+	-fx-border-color: #D2D2D2;
+	-fx-border-width: 1;
+	-fx-border-radius: 6px;
+	-fx-text-fill: black;
+	-fx-cursor: hand;
+	-fx-font-size: 15
+}
+
+.button-timKiem:hover{
+	-fx-border-color: blue;
+}
+
 .combo-box {
     -fx-background-color: white;
-    -fx-border-color: black;
-    -fx-border-radius: 8;
-    -fx-background-radius: 8;
+    -fx-border-color: #D2D2D2;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
     -fx-font-size: 15px;
     -fx-font-family:	'Tai Heritage Pro' ;
+    -fx-cursor: hand;
 }
 
 .list-view .list-cell:selected {

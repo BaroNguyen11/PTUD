@@ -1,6 +1,7 @@
 package dao;
 
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -390,5 +391,86 @@ public class Dao_QuanLiKM {
         }
     }
 
+    public boolean xoaCTKMMonAn(String maKM) {
+        String sql = "DELETE FROM ChiTietKMMonAn WHERE maKhuyenMai = ?";
+        try (PreparedStatement ps = ConnectDB.getConnection().prepareStatement(sql)) {
+            ps.setString(1, maKM);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean xoaKhuyenMai(String maKM) {
+        String sql = "DELETE FROM KhuyenMai WHERE maKhuyenMai = ?";
+        try (PreparedStatement ps = ConnectDB.getConnection().prepareStatement(sql)) {
+            ps.setString(1, maKM);
+            int affected = ps.executeUpdate();
+            return affected > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
 
+    public boolean updateKhuyenMai(
+            String maKM,
+            String tenKM,
+            LocalDate ngayBatDau,
+            LocalDate ngayKetThuc,
+            double dieuKienApDung,
+            double giaTriToiDa,
+            boolean giamGiaPhanTram,
+            double giaTriGiam
+    ) {
+        Connection con = null;
+        PreparedStatement ps = null;
+
+        try {
+            con = ConnectDB.getConnection();
+            if (con == null) return false;
+
+            String sql = """
+                    UPDATE KhuyenMai
+                    SET tenKhuyenMai = ?,
+                        ngayBatDau = ?,
+                        ngayKetThuc = ?,
+                        dieuKienApDung = ?,
+                        giaTriToiDa = ?,
+                        giamGiaPhanTram = ?,
+                        giaTriGiam = ?
+                    WHERE maKhuyenMai = ?
+                """;
+
+            ps = con.prepareStatement(sql);
+
+            ps.setString(1, tenKM);
+            ps.setDate(2, Date.valueOf(ngayBatDau));
+            ps.setDate(3, Date.valueOf(ngayKetThuc));
+            ps.setDouble(4, dieuKienApDung);
+            ps.setDouble(5, giaTriToiDa);
+            ps.setBoolean(6, giamGiaPhanTram);
+            ps.setDouble(7, giaTriGiam);
+            ps.setString(8, maKM);
+
+            int result = ps.executeUpdate();
+            return result > 0;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+
+        } finally {
+            try {
+                if (ps != null) ps.close();
+                if (con != null) con.close();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
 }
