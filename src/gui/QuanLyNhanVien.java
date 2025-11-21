@@ -1,561 +1,554 @@
 package gui;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.stream.Collectors;
-
 import dao.NhanVien_DAO;
 import entity.NhanVien;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Cursor;
-import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
-import javafx.stage.Modality;
-import javafx.stage.Stage;
 
-public class QuanLyNhanVien extends BorderPane {
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
+public class QuanLyNhanVien extends VBox {
+
+    private final NhanVien_DAO dao = new NhanVien_DAO();
     private final ObservableList<NhanVien> data = FXCollections.observableArrayList();
-    private final NhanVien_DAO nhanVienDAO = new NhanVien_DAO();
-    private TableView<NhanVien> table;
-    private ComboBox<String> cbSort;
-    private TextField txtSearch;
+
+    private TableView<NhanVien> tableView;
+
+    // Form controls
+    private TextField txtMa, txtTen, txtSoDT, txtCCCD;
+    private ComboBox<String> cboChucVu;
+    private DatePicker dpNgaySinh, dpNgayVaoLam;
+    private Button btnThem, btnSua, btnThoiViec, btnTaiTuyen, btnClear;
+	private TextField txtNgayThoiViec;
 
     public QuanLyNhanVien() {
-        VBox mainLayout = new VBox(15);
-        mainLayout.setPadding(new Insets(20));
-        mainLayout.setStyle("-fx-background-color: #f9f9f9;");
-
-        // Thanh tìm kiếm
-        VBox searchSection = createSearchSection(new Stage());
-
-        // Bảng nhân viên
-        table = createEmployeeTable(new Stage());
-        VBox.setVgrow(table, Priority.ALWAYS);
-
-        mainLayout.getChildren().addAll(searchSection, table);
-
-        // Đặt layout này vào trung tâm BorderPane
-        this.setCenter(mainLayout);
-
-        // Load dữ liệu từ database
-        loadDataFromDatabase();
+        initializeUI();
+        loadData();
     }
 
-    // =============================================================
-    // 🔍 THANH TÌM KIẾM
-    // =============================================================
-    private VBox createSearchSection(Stage primaryStage) {
-        Label lblSearchTitle = new Label("Tìm kiếm nhân viên");
-        lblSearchTitle.setStyle("""
-            -fx-font-size: 13px;
-            -fx-font-weight: bold;
-            -fx-text-fill: #14274e;
-        """);
+    private void initializeUI() {
+        this.setSpacing(16);
+        this.setPadding(new Insets(16));
+        this.getStyleClass().add("quan-ly-nhan-vien");
 
-        txtSearch = new TextField();
-        txtSearch.setPromptText("Nhập mã hoặc tên nhân viên...");
-        txtSearch.setStyle("""
-            -fx-background-color: white;
-            -fx-border-color: #ccc;
-            -fx-border-radius: 8;
-            -fx-background-radius: 8;
-            -fx-padding: 8 10 8 30;
-        """);
+        // --- Title ---
+        Label mainTitle = new Label("Tìm kiếm nhân viên");
+        mainTitle.getStyleClass().add("main-title");
 
-        ImageView iconSearch = new ImageView(new Image(getClass().getResource("/img/search-normal.png").toExternalForm()));
-        iconSearch.setFitWidth(16);
-        iconSearch.setFitHeight(16);
+        // --- Body HBox ---
+        HBox body = new HBox(16);
+        VBox.setVgrow(body, Priority.ALWAYS);
 
-        StackPane searchBox = new StackPane(txtSearch, iconSearch);
-        StackPane.setAlignment(iconSearch, Pos.CENTER_LEFT);
-        StackPane.setMargin(iconSearch, new Insets(0, 0, 0, 8));
-        HBox.setHgrow(searchBox, Priority.ALWAYS);
-        txtSearch.setMaxWidth(Double.MAX_VALUE);
+        VBox leftPane = createLeftPane();
+        HBox.setHgrow(leftPane, Priority.ALWAYS);
 
-        cbSort = new ComboBox<>();
-        cbSort.getItems().addAll("Tất cả chức vụ", "Quản lý", "Nhân viên");
-        cbSort.getSelectionModel().selectFirst();
-        cbSort.setPrefHeight(38);
-        cbSort.setStyle("-fx-padding: 6; -fx-background-radius: 8;");
+        VBox rightPane = createRightPane();
+        HBox.setHgrow(rightPane, Priority.ALWAYS);
 
-        Button btnAdd = new Button("➕ Thêm nhân viên mới");
-        stylePrimaryButton(btnAdd);
-        btnAdd.setPrefHeight(38);
-        btnAdd.setOnAction(e -> openAddModal(primaryStage));
+        body.getChildren().addAll(leftPane, rightPane);
+        this.getChildren().addAll(mainTitle, body);
+    }
 
-        Separator sep = new Separator();
-        sep.setOrientation(javafx.geometry.Orientation.VERTICAL);
-        sep.setPrefHeight(28);
+    // ========== LEFT PANE ==========
+    private VBox createLeftPane() {
+        VBox box = new VBox(12);
+        box.getStyleClass().add("left-pane");
 
-        HBox searchBar = new HBox(20, searchBox, cbSort, sep, btnAdd);
+        // --- Search Bar ---
+        HBox searchBar = new HBox(8);
         searchBar.setAlignment(Pos.CENTER_LEFT);
-        searchBar.setPadding(new Insets(0, 0, 5, 0));
 
-        // Thêm sự kiện tìm kiếm và lọc
-        txtSearch.textProperty().addListener((obs, oldValue, newValue) -> {
-            applyFilters();
-        });
+        TextField txtSearch = new TextField();
+        txtSearch.setPromptText("Tìm mã, tên hoặc SĐT...");
+        txtSearch.getStyleClass().add("input");
+        HBox.setHgrow(txtSearch, Priority.ALWAYS);
 
-        cbSort.valueProperty().addListener((obs, oldValue, newValue) -> {
-            applyFilters();
-        });
+        Button btnSearch = new Button("Tìm kiếm");
+        btnSearch.getStyleClass().add("btn-outline");
 
-        return new VBox(5, lblSearchTitle, searchBar);
-    }
+        Button btnRefresh = new Button("Làm mới");
+        btnRefresh.getStyleClass().add("btn-outline");
 
-    // =============================================================
-    // 🔄 HÀM LOAD DỮ LIỆU VÀ LỌC
-    // =============================================================
-    private void loadDataFromDatabase() {
-        data.clear();
-        data.addAll(nhanVienDAO.getAllNhanVien());
-    }
+        searchBar.getChildren().addAll(txtSearch, btnSearch, btnRefresh);
 
-    private void applyFilters() {
-        String searchKeyword = txtSearch.getText().trim();
-        String filterType = cbSort.getValue();
-        
-        // Lấy tất cả dữ liệu từ database
-        java.util.List<NhanVien> allEmployees = nhanVienDAO.getAllNhanVien();
-        java.util.List<NhanVien> filteredEmployees = new ArrayList<>();
-        
-        // Áp dụng bộ lọc
-        for (NhanVien nv : allEmployees) {
-            boolean matchesSearch = searchKeyword.isEmpty() ||
-                    nv.getMaNhanVien().toLowerCase().contains(searchKeyword.toLowerCase()) ||
-                    nv.getTenNhanVien().toLowerCase().contains(searchKeyword.toLowerCase()) ||
-                    nv.getSoDienThoai().contains(searchKeyword);
-            
-            boolean matchesRole = filterType == null || 
-                    filterType.equals("Tất cả chức vụ") ||
-                    filterType.equals(nv.getChucVu());
-            
-            if (matchesSearch && matchesRole) {
-                filteredEmployees.add(nv);
+        btnSearch.setOnAction(e -> {
+            String kw = txtSearch.getText().trim();
+            if (kw.isEmpty()) {
+                loadData();
+            } else {
+                data.clear();
+                List<NhanVien> list = dao.searchNhanVien(kw);
+                data.addAll(list);
+                tableView.refresh();
             }
-        }
-        
-        // Cập nhật dữ liệu theo cách manual
-        data.clear();
-        if (!filteredEmployees.isEmpty()) {
-            data.addAll(filteredEmployees);
-        }
-        
-        // Force refresh table
-        table.getColumns().get(0).setVisible(false);
-        table.getColumns().get(0).setVisible(true);
-    }
-    // =============================================================
-    // 📋 BẢNG NHÂN VIÊN
-    // =============================================================
-    private TableView<NhanVien> createEmployeeTable(Stage primaryStage) {
-        TableView<NhanVien> table = new TableView<>();
-        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        });
+
+        btnRefresh.setOnAction(e -> {
+            txtSearch.clear();
+            loadData();
+        });
+
+        // --- Table ---
+        tableView = new TableView<>();
+        tableView.setItems(data);
+        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
+        tableView.getStyleClass().add("nhan-vien-table");
+        VBox.setVgrow(tableView, Priority.ALWAYS);
 
         TableColumn<NhanVien, Number> colSTT = new TableColumn<>("STT");
-        TableColumn<NhanVien, String> colID = new TableColumn<>("Mã nhân viên");
-        TableColumn<NhanVien, String> colName = new TableColumn<>("Tên nhân viên");
-        TableColumn<NhanVien, String> colPhone = new TableColumn<>("Số điện thoại");
-        TableColumn<NhanVien, String> colCCCD = new TableColumn<>("CCCD");
-        TableColumn<NhanVien, String> colRole = new TableColumn<>("Chức vụ");
-        TableColumn<NhanVien, LocalDate> colBirth = new TableColumn<>("Ngày sinh");
-        TableColumn<NhanVien, LocalDate> colStart = new TableColumn<>("Ngày vào làm");
-        TableColumn<NhanVien, LocalDate> colEnd = new TableColumn<>("Ngày thôi việc");
-        TableColumn<NhanVien, Void> colAction = new TableColumn<>("Hành động");
-
-        colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(table.getItems().indexOf(col.getValue()) + 1));
+        colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(tableView.getItems().indexOf(col.getValue()) + 1));
+        colSTT.setMaxWidth(60);
         colSTT.setStyle("-fx-alignment: CENTER;");
-        
-        colID.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getMaNhanVien()));
-        colName.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getTenNhanVien()));
-        colPhone.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getSoDienThoai()));
-        colCCCD.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getCCCD()));
-        colRole.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getChucVu()));
-        colBirth.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getNgaySinh()));
-        colStart.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getNgayVaoLam()));
-        colEnd.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().getNgayThoiViec()));
 
-        // Format ngày tháng
-        colBirth.setCellFactory(column -> new TableCell<NhanVien, LocalDate>() {
-            @Override
-            protected void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.toString());
-            }
+        TableColumn<NhanVien, String> colMa = new TableColumn<>("Mã");
+        colMa.setCellValueFactory(new PropertyValueFactory<>("maNhanVien"));
+        colMa.setStyle("-fx-alignment: CENTER;");
+
+        TableColumn<NhanVien, String> colTen = new TableColumn<>("Tên nhân viên");
+        colTen.setCellValueFactory(new PropertyValueFactory<>("tenNhanVien"));
+
+        TableColumn<NhanVien, String> colChucVu = new TableColumn<>("Chức vụ");
+        colChucVu.setCellValueFactory(new PropertyValueFactory<>("chucVu"));
+        colChucVu.setStyle("-fx-alignment: CENTER;");
+
+        TableColumn<NhanVien, String> colSDT = new TableColumn<>("SĐT");
+        colSDT.setCellValueFactory(new PropertyValueFactory<>("soDienThoai"));
+        colSDT.setStyle("-fx-alignment: CENTER;");
+
+        TableColumn<NhanVien, String> colCCCD = new TableColumn<>("CCCD");
+        colCCCD.setCellValueFactory(new PropertyValueFactory<>("CCCD"));
+        colCCCD.setStyle("-fx-alignment: CENTER;");
+
+        TableColumn<NhanVien, String> colTT = new TableColumn<>("Trạng Thái");
+        colTT.setCellValueFactory(cell -> {
+            NhanVien nv = cell.getValue();
+            String s = nv.getNgayThoiViec() == null ? "Đang làm" : "Đã nghỉ";
+            return new ReadOnlyObjectWrapper<>(s);
         });
-
-        colStart.setCellFactory(column -> new TableCell<NhanVien, LocalDate>() {
+        colTT.setCellFactory(col -> new TableCell<>() {
             @Override
-            protected void updateItem(LocalDate item, boolean empty) {
+            protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(empty || item == null ? "" : item.toString());
-            }
-        });
-
-        colEnd.setCellFactory(column -> new TableCell<NhanVien, LocalDate>() {
-            @Override
-            protected void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                
-                // QUAN TRỌNG: Luôn clear trước
-                setText(null);
-                setStyle("");
-                
-                if (!empty && getTableRow() != null && getTableRow().getItem() != null) {
-                    NhanVien nv = getTableRow().getItem();
-                    if (nv.getNgayThoiViec() == null) {
-                        setText("Đang làm việc");
-                        setStyle("-fx-text-fill: green; -fx-font-weight: bold;");
-                    } else {
-                        setText(nv.getNgayThoiViec().toString());
-                        setStyle("-fx-text-fill: red;");
-                    }
-                } else {
-                    setText("");
+                if (empty || item == null) {
+                    setText(null);
                     setStyle("");
+                    return;
+                }
+                setText(item);
+                if (item.equals("Đang làm")) {
+                    setStyle("-fx-text-fill: green; -fx-font-weight: bold; -fx-alignment: CENTER;");
+                } else {
+                    setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-alignment: CENTER;");
                 }
             }
         });
-        // Cột hành động
-        colAction.setCellFactory(param -> new TableCell<>() {
-            private final Button btnEdit = new Button();
-            private final HBox box = new HBox();
+        colTT.setMaxWidth(110);
 
-            {
-                box.setAlignment(Pos.CENTER);
-                box.setPadding(new Insets(5));
-                ImageView imgView = new ImageView(new Image(getClass().getResource("/img/ChinhSua.png").toExternalForm()));
-                imgView.setFitWidth(18);
-                imgView.setFitHeight(18);
-                btnEdit.setGraphic(imgView);
-                btnEdit.setStyle("-fx-background-color: transparent;");
-                btnEdit.setCursor(Cursor.HAND);
-                btnEdit.setOnAction(e -> {
-                    NhanVien nv = getTableView().getItems().get(getIndex());
-                    if (nv.getNgayThoiViec() == null) {
-                        openEditModal(primaryStage, nv);
-                    } else {
-                        showAlert(Alert.AlertType.INFORMATION, "Thông báo", "Nhân viên đã thôi việc, không thể chỉnh sửa!");
-                    }
-                });
-                box.getChildren().add(btnEdit);
-            }
+        tableView.getColumns().addAll(colSTT, colMa, colTen, colChucVu, colSDT, colCCCD, colTT);
 
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setGraphic(empty ? null : box);
-            }
-        });
-
-        table.getColumns().addAll(colSTT, colID, colName, colPhone, colCCCD, colRole, colBirth, colStart, colEnd, colAction);
-        table.setItems(data);
-
-        table.setStyle("""
-            -fx-background-color: white;
-            -fx-border-color: #ccc;
-            -fx-border-radius: 8;
-            -fx-font-size: 14px;
-        """);
-
-        return table;
-    }
-
-    // =============================================================
-    // ⚙️ MODAL THÊM / SỬA NHÂN VIÊN
-    // =============================================================
-    private void openAddModal(Stage owner) {
-        openEmployeeModal(owner, "Thêm nhân viên mới", null);
-    }
-
-    private void openEditModal(Stage owner, NhanVien nv) {
-        openEmployeeModal(owner, "Chỉnh sửa thông tin nhân viên", nv);
-    }
-
-    private void openEmployeeModal(Stage owner, String title, NhanVien nv) {
-        Stage modal = new Stage();
-        modal.initOwner(owner);
-        modal.initModality(Modality.APPLICATION_MODAL);
-        modal.setTitle(title);
-
-        Label lblTitle = new Label(title);
-        lblTitle.setStyle("-fx-font-size: 18px; -fx-font-weight: bold; -fx-text-fill: #14274e;");
-        Separator line = new Separator();
-
-        GridPane form = createEmployeeForm(nv);
-        Separator line1 = new Separator();
-
-        HBox buttons = createModalButtons(modal, nv, form);
-
-        VBox layout = new VBox(20, lblTitle, line, form, line1, buttons);
-        layout.setPadding(new Insets(25));
-        layout.setStyle("""
-            -fx-background-color: white;
-            -fx-border-color: #ddd;
-            -fx-border-radius: 10;
-            -fx-background-radius: 10;
-        """);
-
-        Scene scene = new Scene(layout, 520, 500);
-        modal.setScene(scene);
-        modal.showAndWait();
-    }
-
-    // =============================================================
-    // 🧩 GRIDPANE FORM NHÂN VIÊN
-    // =============================================================
-    private GridPane createEmployeeForm(NhanVien nv) {
-        Label lblMa = new Label("Mã nhân viên:");
-        Label lblTen = new Label("Họ tên nhân viên:");
-        Label lblSDT = new Label("Số điện thoại:");
-        Label lblCCCD = new Label("CCCD:");
-        Label lblChucVu = new Label("Chức vụ:");
-        Label lblNgaySinh = new Label("Ngày sinh:");
-
-        for (Label lbl : new Label[]{lblMa, lblTen, lblSDT, lblCCCD, lblChucVu, lblNgaySinh})
-            lbl.setStyle("-fx-font-weight: bold; -fx-text-fill: #333;");
-
-        // Tạo mã tự động nếu thêm mới
-        String maNhanVien = nv == null ? nhanVienDAO.generateMaNhanVien() : nv.getMaNhanVien();
+        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> onTableSelectionChanged(newV));
         
-        TextField txtMa = new TextField(maNhanVien);
+        box.getChildren().addAll(searchBar, new Label("Danh sách nhân viên"), tableView);
+        VBox.setVgrow(tableView, Priority.ALWAYS);
+
+        return box;
+    }
+
+    // ========== RIGHT PANE ==========
+    private VBox createRightPane() {
+        VBox box = new VBox(15);
+        box.setPadding(new Insets(20));
+        box.getStyleClass().add("right-pane-box");
+        box.setMaxWidth(380);
+
+        Label title = new Label("Thông tin nhân viên");
+        title.getStyleClass().add("panel-title");
+        title.setMaxWidth(Double.MAX_VALUE);
+        title.setAlignment(Pos.CENTER);
+
+        // --- Form Controls ---
+        txtMa = new TextField();
         txtMa.setEditable(false);
-        txtMa.setFocusTraversable(false);
-        styleReadonlyField(txtMa);
+        txtMa.getStyleClass().add("input");
+        txtMa.setPrefHeight(35);
 
-        TextField txtTen = new TextField(nv == null ? "" : nv.getTenNhanVien());
-        TextField txtSDT = new TextField(nv == null ? "" : nv.getSoDienThoai());
-        TextField txtCCCD = new TextField(nv == null ? "" : nv.getCCCD());
+        txtTen = new TextField(); 
+        txtTen.getStyleClass().add("input");
+        txtTen.setPrefHeight(35);
 
-        ComboBox<String> cbChucVu = new ComboBox<>();
-        cbChucVu.getItems().addAll("Nhân viên", "Quản lý");
-        cbChucVu.setValue(nv == null ? "Nhân viên" : nv.getChucVu());
-        cbChucVu.setMaxWidth(Double.MAX_VALUE);
-        GridPane.setHgrow(cbChucVu, Priority.ALWAYS);
-        cbChucVu.setStyle("""
-            -fx-background-color: #ffffff;
-            -fx-border-color: #bbb;
-            -fx-border-radius: 5;
-            -fx-background-radius: 5;
-            -fx-padding: 2 2;
-        """);
+        cboChucVu = new ComboBox<>();
+        cboChucVu.getItems().addAll("Nhân viên", "Quản lý");
+        cboChucVu.getStyleClass().add("input");
+        cboChucVu.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(cboChucVu, Priority.ALWAYS);
 
-        DatePicker dpNgaySinh = new DatePicker(nv == null ? null : nv.getNgaySinh());
-        dpNgaySinh.setStyle("""
-            -fx-background-color: #ffffff;
-            -fx-border-color: #bbb;
-            -fx-border-radius: 5;
-            -fx-background-radius: 5;
-            -fx-padding: 2 2;
-        """);
-        dpNgaySinh.setMaxWidth(Double.MAX_VALUE);
-        GridPane.setHgrow(dpNgaySinh, Priority.ALWAYS);
+        txtSoDT = new TextField(); 
+        txtSoDT.getStyleClass().add("input");
+        txtSoDT.setPrefHeight(35);
+        txtCCCD = new TextField(); 
+        txtCCCD.getStyleClass().add("input");
+        txtCCCD.setPrefHeight(35);
+        dpNgaySinh = new DatePicker(); 
+        dpNgaySinh.getStyleClass().add("input");
+        dpNgaySinh.setPrefHeight(35);
+        dpNgaySinh.getStyleClass().add("input");
+        //dpNgaySinh.setStyle("-fx-pref-width: 100%;");
+        dpNgayVaoLam = new DatePicker(); 
+        dpNgayVaoLam.getStyleClass().add("input");
+        dpNgayVaoLam.setPrefHeight(35);
+        
+        txtNgayThoiViec = new TextField();
+        txtNgayThoiViec.setEditable(false);
+        txtNgayThoiViec.getStyleClass().add("input-readonly");
+        txtNgayThoiViec.setPrefHeight(35);
+        txtNgayThoiViec.setMaxWidth(Double.MAX_VALUE);
+        
 
-        for (TextField tf : new TextField[]{txtTen, txtSDT, txtCCCD})
-            tf.setStyle("""
-                -fx-background-color: #ffffff;
-                -fx-border-color: #bbb;
-                -fx-border-radius: 5;
-                -fx-background-radius: 5;
-                -fx-padding: 6 10;
-            """);
-
+        // Tạo form với bố cục chặt chẽ hơn
         GridPane form = new GridPane();
-        form.setVgap(18);
-        form.setHgap(20);
-        form.setPadding(new Insets(10, 40, 10, 40));
+        form.setHgap(15);
+        form.setVgap(15);
+        form.setMaxWidth(Double.MAX_VALUE);
+        form.setPadding(new Insets(5));
 
-        form.addRow(0, lblMa, txtMa);
-        form.addRow(1, lblTen, txtTen);
-        form.addRow(2, lblSDT, txtSDT);
-        form.addRow(3, lblCCCD, txtCCCD);
-        form.addRow(4, lblChucVu, cbChucVu);
-        form.addRow(5, lblNgaySinh, dpNgaySinh);
+        // Add form labels + controls với label được căn phải
+        form.add(createFormLabel("Mã nhân viên:"), 0, 0); 
+        form.add(txtMa, 1, 0);
+        form.add(createFormLabel("Họ tên:"), 0, 1); 
+        form.add(txtTen, 1, 1);
+        form.add(createFormLabel("Chức vụ:"), 0, 2); 
+        form.add(cboChucVu, 1, 2);
+        form.add(createFormLabel("Số ĐT:"), 0, 3); 
+        form.add(txtSoDT, 1, 3);
+        form.add(createFormLabel("CCCD:"), 0, 4); 
+        form.add(txtCCCD, 1, 4);
+        form.add(createFormLabel("Ngày sinh:"), 0, 5); 
+        form.add(dpNgaySinh, 1, 5);
+        form.add(createFormLabel("Ngày vào làm:"), 0, 6); 
+        form.add(dpNgayVaoLam, 1, 6);
+        form.add(createFormLabel("Ngày thôi việc:"), 0, 7); 
+        form.add(txtNgayThoiViec, 1, 7);
 
+        // Column constraints - tối ưu tỷ lệ
         ColumnConstraints c1 = new ColumnConstraints();
-        c1.setPercentWidth(35);
+        c1.setPercentWidth(38);
+        c1.setHalignment(HPos.LEFT);
+        c1.setFillWidth(true);
+
         ColumnConstraints c2 = new ColumnConstraints();
-        c2.setPercentWidth(65);
+        c2.setPercentWidth(62);
+        c2.setHgrow(Priority.ALWAYS);
+
         form.getColumnConstraints().addAll(c1, c2);
 
-        return form;
-    }
+        // --- Buttons với bố cục gọn gàng và ĐẦY ĐỦ SỰ KIỆN ---
+        btnThem = createActionButton("Thêm", "btn-primary", 100);
+        btnSua = createActionButton("Sửa", "btn-accent", 100);
+        btnThoiViec = createActionButton("Thôi việc", "btn-danger", 100);
+        btnTaiTuyen = createActionButton("Tái tuyển", "btn-warning", 100);
+        btnClear = createActionButton("Làm mới", "btn-muted", 100);
 
-    // =============================================================
-    // 🎛️ NÚT TRONG MODAL
-    // =============================================================
-    private HBox createModalButtons(Stage modal, NhanVien nv, GridPane form) {
-        Button btnClose = new Button("Đóng");
-        Button btnSave = new Button("Lưu");
+        // === GẮN SỰ KIỆN CHO CÁC NÚT ===
+        btnThem.setOnAction(e -> handleAdd());
+        btnSua.setOnAction(e -> handleUpdate());
+        btnThoiViec.setOnAction(e -> handleThoiViec());
+        btnTaiTuyen.setOnAction(e -> handleTaiTuyen());
+        btnClear.setOnAction(e -> clearForm());
 
-        styleSecondaryButton(btnClose);
-        stylePrimaryDarkButton(btnSave);
+        // Sắp xếp buttons thành 2 hàng để tiết kiệm không gian
+        VBox buttonsContainer = new VBox(12);
+        buttonsContainer.setAlignment(Pos.CENTER);
+        buttonsContainer.setPadding(new Insets(15, 0, 170, 0));
 
-        btnClose.setOnAction(e -> modal.close());
-        btnSave.setOnAction(e -> {
-            TextField txtMa = (TextField) form.getChildren().get(1);
-            TextField txtTen = (TextField) form.getChildren().get(3);
-            TextField txtSDT = (TextField) form.getChildren().get(5);
-            TextField txtCCCD = (TextField) form.getChildren().get(7);
-            @SuppressWarnings("unchecked")
-            ComboBox<String> cbChucVu = (ComboBox<String>) form.getChildren().get(9);
-            DatePicker dpNgaySinh = (DatePicker) form.getChildren().get(11);
+        // Hàng 1: Thêm, Sửa, Làm mới
+        HBox topButtons = new HBox(10);
+        topButtons.setAlignment(Pos.CENTER);
+        topButtons.getChildren().addAll(btnThem, btnSua, btnClear);
 
-            String ma = txtMa.getText();
-            String ten = txtTen.getText().trim();
-            String sdt = txtSDT.getText().trim();
-            String cccd = txtCCCD.getText().trim();
-            String chucVu = cbChucVu.getValue();
-            LocalDate ngaySinh = dpNgaySinh.getValue();
+        // Hàng 2: Thôi việc, Tái tuyển
+        HBox bottomButtons = new HBox(10);
+        bottomButtons.setAlignment(Pos.CENTER);
+        bottomButtons.getChildren().addAll(btnThoiViec, btnTaiTuyen);
 
-            // Validation
-            if (ten.isEmpty() || sdt.isEmpty() || cccd.isEmpty() || ngaySinh == null) {
-                showAlert(Alert.AlertType.ERROR, "Lỗi", "Vui lòng nhập đầy đủ thông tin!");
-                return;
-            }
+        buttonsContainer.getChildren().addAll(topButtons, bottomButtons);
 
-            if (!sdt.matches("\\d{10,11}")) {
-                showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại phải có 10-11 chữ số!");
-                return;
-            }
-
-            if (!cccd.matches("\\d{12}")) {
-                showAlert(Alert.AlertType.ERROR, "Lỗi", "CCCD phải có đúng 12 chữ số!");
-                return;
-            }
-
-            try {
-                if (nv == null) {
-                    // Thêm mới - SỬA LẠI THỨ TỰ THAM SỐ THEO ENTITY
-                    if (nhanVienDAO.isSoDienThoaiExists(sdt)) {
-                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại đã tồn tại!");
-                        return;
-                    }
-
-                    if (nhanVienDAO.isCCCDExists(cccd)) {
-                        showAlert(Alert.AlertType.ERROR, "Lỗi", "CCCD đã tồn tại!");
-                        return;
-                    }
-
-                    // SỬA LẠI: Đúng thứ tự tham số theo entity
-                    NhanVien newNv = new NhanVien(ma, ten, chucVu, cccd, sdt, ngaySinh, LocalDate.now(), null);
-                    if (nhanVienDAO.addNhanVien(newNv)) {
-                        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Thêm nhân viên thành công!");
-                        loadDataFromDatabase();
-                        modal.close();
-                    }
-                } else {
-                    // Cập nhật
-                    if (nhanVienDAO.isSoDienThoaiExistsForOther(sdt, ma)) {
-                        showAlert(Alert.AlertType.ERROR, "Lỗi", "Số điện thoại đã tồn tại cho nhân viên khác!");
-                        return;
-                    }
-
-                    if (nhanVienDAO.isCCCDExistsForOther(cccd, ma)) {
-                        showAlert(Alert.AlertType.ERROR, "Lỗi", "CCCD đã tồn tại cho nhân viên khác!");
-                        return;
-                    }
-
-                    nv.setTenNhanVien(ten);
-                    nv.setChucVu(chucVu);
-                    nv.setCCCD(cccd);
-                    nv.setSoDienThoai(sdt);
-                    nv.setNgaySinh(ngaySinh);
-
-                    if (nhanVienDAO.updateNhanVien(nv)) {
-                        showAlert(Alert.AlertType.INFORMATION, "Thành công", "Cập nhật nhân viên thành công!");
-                        loadDataFromDatabase();
-                        modal.close();
-                    }
-                }
-            } catch (Exception ex) {
-                showAlert(Alert.AlertType.ERROR, "Lỗi", "Có lỗi xảy ra: " + ex.getMessage());
-                ex.printStackTrace();
-            }
-        });
-
+        // Thêm khoảng trống linh hoạt
         Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
+        VBox.setVgrow(spacer, Priority.SOMETIMES);
 
-        HBox buttons = new HBox(15, btnClose, spacer, btnSave);
-        buttons.setAlignment(Pos.CENTER);
-        buttons.setPadding(new Insets(15, 40, 25, 40));
+        box.getChildren().addAll(title, form, spacer, buttonsContainer);
 
-        return buttons;
+        // Khởi tạo trạng thái ban đầu cho các nút
+        clearForm();
+
+        return box;
     }
 
-    // =============================================================
-    // 🔔 HÀM HIỂN THỊ THÔNG BÁO
-    // =============================================================
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    // Helper method để tạo label cho form
+    private Label createFormLabel(String text) {
+        Label label = new Label(text);
+        label.getStyleClass().add("form-label");
+        label.setAlignment(Pos.CENTER_LEFT);
+        label.setPrefHeight(35);
+        label.setMaxWidth(Double.MAX_VALUE);
+        return label;
     }
 
-    // =============================================================
-    // 🎨 STYLE (giữ nguyên)
-    // =============================================================
-    private void stylePrimaryButton(Button btn) {
-        btn.setStyle("""
-            -fx-background-color: white;
-            -fx-border-color: #ccc;
-            -fx-border-radius: 8;
-            -fx-background-radius: 8;
-            -fx-font-weight: 600;
-            -fx-padding: 8 18;
-            -fx-cursor: hand;
-        """);
-        btn.setOnMouseEntered(e -> btn.setStyle("""
-            -fx-background-color: #1e90ff;
-            -fx-text-fill: white;
-            -fx-font-weight: bold;
-            -fx-border-radius: 8;
-            -fx-background-radius: 8;
-            -fx-padding: 8 18;
-        """));
-        btn.setOnMouseExited(e -> stylePrimaryButton(btn));
+    // Helper method để tạo button
+    private Button createActionButton(String text, String styleClass, double width) {
+        Button button = new Button(text);
+        button.getStyleClass().add(styleClass);
+        button.setPrefHeight(35);
+        button.setPrefWidth(width);
+        button.setMaxWidth(Double.MAX_VALUE);
+        return button;
     }
 
-    private void styleSecondaryButton(Button btn) {
-        btn.setStyle("""
-            -fx-background-color: #999;
-            -fx-text-fill: white;
-            -fx-font-weight: bold;
-            -fx-padding: 8 25;
-            -fx-background-radius: 6;
-        """);
+    // ========== Handlers ==========
+    private void onTableSelectionChanged(NhanVien nv) {
+        if (nv == null) { 
+            clearForm(); 
+            return; 
+        }
+
+        txtMa.setText(nv.getMaNhanVien());
+        txtTen.setText(nv.getTenNhanVien());
+        cboChucVu.setValue(nv.getChucVu());
+        txtSoDT.setText(nv.getSoDienThoai());
+        txtCCCD.setText(nv.getCCCD());
+        dpNgaySinh.setValue(nv.getNgaySinh());
+        dpNgayVaoLam.setValue(nv.getNgayVaoLam());
+        
+        LocalDate ngayThoiViec = dao.getNgayThoiViec(nv.getMaNhanVien());
+        txtNgayThoiViec.setText(
+        	    ngayThoiViec != null 
+        	        ? ngayThoiViec.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+        	        : ""
+        	);
+
+        btnThem.setDisable(true);
+        btnSua.setDisable(false);
+        btnThoiViec.setDisable(nv.getNgayThoiViec() != null);
+        btnTaiTuyen.setDisable(nv.getNgayThoiViec() == null);
     }
 
-    private void stylePrimaryDarkButton(Button btn) {
-        btn.setStyle("""
-            -fx-background-color: #14274e;
-            -fx-text-fill: white;
-            -fx-font-weight: bold;
-            -fx-padding: 8 25;
-            -fx-background-radius: 6;
-        """);
+    // --- Add, Update, Thôi việc, Tái tuyển ---
+    private void handleAdd() {
+        String ten = txtTen.getText().trim();
+        String chucVu = cboChucVu.getValue() != null ? cboChucVu.getValue() : "";
+        String sdt = txtSoDT.getText().trim();
+        String cccd = txtCCCD.getText().trim();
+        LocalDate sinh = dpNgaySinh.getValue();
+        LocalDate vao = dpNgayVaoLam.getValue() != null ? dpNgayVaoLam.getValue() : LocalDate.now();
+
+        // Validate
+        if (ten.isEmpty() || chucVu.isEmpty() || sdt.isEmpty() || cccd.isEmpty() || sinh == null) {
+            showAlert(Alert.AlertType.ERROR, "Vui lòng nhập đầy đủ thông tin bắt buộc!");
+            return;
+        }
+
+        if (!ten.matches("^[\\p{L} ]+$")) {
+            showAlert(Alert.AlertType.ERROR, "Họ tên chỉ được chứa chữ cái.");
+            return;
+        }
+        if (sinh.isAfter(LocalDate.now().minusYears(18))) {
+            showAlert(Alert.AlertType.ERROR, "Nhân viên phải đủ 18 tuổi.");
+            return;
+        }
+        if (vao.isAfter(LocalDate.now())) {
+            showAlert(Alert.AlertType.ERROR, "Ngày vào làm không được vượt quá hiện tại.");
+            return;
+        }
+
+        if (!sdt.matches("\\d{10,11}")) {
+            showAlert(Alert.AlertType.ERROR, "Số điện thoại không đúng định dạng (10-11 chữ số).");
+            return;
+        }
+
+        if (!cccd.matches("\\d{12}")) {
+            showAlert(Alert.AlertType.ERROR, "CCCD phải đúng 12 chữ số.");
+            return;
+        }
+
+        String ma = dao.generateMaNhanVien();
+        NhanVien nv = new NhanVien(ma, ten, chucVu, cccd, sdt, sinh, vao, null);
+
+        boolean ok = dao.addNhanVien(nv);
+        if (ok) {
+            showAlert(Alert.AlertType.INFORMATION, "Thêm nhân viên thành công.");
+            loadData();
+            clearForm();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Thêm nhân viên thất bại.");
+        }
     }
 
-    private void styleReadonlyField(TextField tf) {
-        tf.setStyle("""
-            -fx-opacity: 0.8;
-            -fx-background-color: #f3f3f3;
-            -fx-border-color: #ccc;
-            -fx-border-radius: 5;
-            -fx-background-radius: 5;
-            -fx-padding: 6 10;
-        """);
+    private void handleUpdate() {
+        String ma = txtMa.getText();
+        if (ma.isEmpty()) {
+            showAlert(Alert.AlertType.ERROR, "Vui lòng chọn nhân viên cần sửa.");
+            return;
+        }
+
+        String ten = txtTen.getText().trim();
+        String chucVu = cboChucVu.getValue();
+        String sdt = txtSoDT.getText().trim();
+        String cccd = txtCCCD.getText().trim();
+        LocalDate sinh = dpNgaySinh.getValue();
+        LocalDate vao = dpNgayVaoLam.getValue();
+
+        if (ten.isEmpty() || chucVu == null || sdt.isEmpty() || cccd.isEmpty() || sinh == null || vao == null) {
+            showAlert(Alert.AlertType.ERROR, "Vui lòng nhập đầy đủ thông tin!");
+            return;
+        }
+        if (!ten.matches("^[\\p{L} ]+$")) {
+            showAlert(Alert.AlertType.ERROR, "Họ tên chỉ được chứa chữ cái.");
+            return;
+        }
+        if (sinh.isAfter(LocalDate.now().minusYears(18))) {
+            showAlert(Alert.AlertType.ERROR, "Nhân viên phải đủ 18 tuổi.");
+            return;
+        }
+        if (vao.isAfter(LocalDate.now())) {
+            showAlert(Alert.AlertType.ERROR, "Ngày vào làm không được vượt quá hiện tại.");
+            return;
+        }
+
+        if (!sdt.matches("\\d{10,11}")) {
+            showAlert(Alert.AlertType.ERROR, "Số điện thoại không đúng định dạng (10-11 chữ số).");
+            return;
+        }
+
+        if (!cccd.matches("\\d{12}")) {
+            showAlert(Alert.AlertType.ERROR, "CCCD phải đúng 12 chữ số.");
+            return;
+        }
+
+        if (dao.isSoDienThoaiExistsForOther(sdt, ma)) {
+            showAlert(Alert.AlertType.ERROR, "Số điện thoại đã tồn tại cho nhân viên khác!");
+            return;
+        }
+        if (dao.isCCCDExistsForOther(cccd, ma)) {
+            showAlert(Alert.AlertType.ERROR, "CCCD đã tồn tại cho nhân viên khác!");
+            return;
+        }
+
+        NhanVien nv = dao.getNhanVienByMa(ma);
+        if (nv == null) {
+            showAlert(Alert.AlertType.ERROR, "Không tìm thấy nhân viên.");
+            return;
+        }
+
+        nv.setTenNhanVien(ten);
+        nv.setChucVu(chucVu);
+        nv.setSoDienThoai(sdt);
+        nv.setCCCD(cccd);
+        nv.setNgaySinh(sinh);
+        nv.setNgayVaoLam(vao);
+
+        boolean ok = dao.updateNhanVien(nv);
+        if (ok) {
+            showAlert(Alert.AlertType.INFORMATION, "Cập nhật thành công.");
+            loadData();
+            clearForm();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Cập nhật thất bại.");
+        }
+    }
+
+    private void handleThoiViec() {
+        NhanVien sel = tableView.getSelectionModel().getSelectedItem();
+        if (sel == null) {
+            showAlert(Alert.AlertType.ERROR, "Chọn nhân viên cần cho thôi việc.");
+            return;
+        }
+        if (sel.getNgayThoiViec() != null) {
+            showAlert(Alert.AlertType.INFORMATION, "Nhân viên đã nghỉ rồi.");
+            return;
+        }
+
+        boolean conf = confirmDialog("Bạn có chắc muốn cho nhân viên " + sel.getTenNhanVien() + " thôi việc?");
+        if (!conf) return;
+
+        boolean ok = dao.thoiViecNhanVien(sel.getMaNhanVien());
+        if (ok) {
+            showAlert(Alert.AlertType.INFORMATION, "Đã cho nghỉ.");
+            loadData();
+            clearForm();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Thao tác thất bại.");
+        }
+    }
+
+    private void handleTaiTuyen() {
+        NhanVien sel = tableView.getSelectionModel().getSelectedItem();
+        if (sel == null) {
+            showAlert(Alert.AlertType.ERROR, "Chọn nhân viên cần tái tuyển.");
+            return;
+        }
+        if (sel.getNgayThoiViec() == null) {
+            showAlert(Alert.AlertType.INFORMATION, "Nhân viên hiện đang làm việc.");
+            return;
+        }
+
+        boolean conf = confirmDialog("Bạn có chắc muốn tái tuyển nhân viên " + sel.getTenNhanVien() + " không?");
+        if (!conf) return;
+
+        boolean ok = dao.taiTuyenNhanVien(sel.getMaNhanVien());
+        if (ok) {
+            showAlert(Alert.AlertType.INFORMATION, "Đã tái tuyển.");
+            loadData();
+            clearForm();
+        } else {
+            showAlert(Alert.AlertType.ERROR, "Thao tác thất bại.");
+        }
+    }
+
+    // --- Helpers ---
+    private void loadData() {
+        Platform.runLater(() -> {
+            data.clear();
+            data.addAll(dao.getAllNhanVien());
+            tableView.refresh();
+        });
+    }
+
+    private void clearForm() {
+        txtMa.clear(); 
+        txtTen.clear(); 
+        cboChucVu.setValue(null);
+        txtSoDT.clear(); 
+        txtCCCD.clear(); 
+        dpNgaySinh.setValue(null); 
+        dpNgayVaoLam.setValue(null);
+        btnThem.setDisable(false); 
+        btnSua.setDisable(true); 
+        btnThoiViec.setDisable(true); 
+        btnTaiTuyen.setDisable(true);
+        tableView.getSelectionModel().clearSelection();
+    }
+
+    private void showAlert(Alert.AlertType type, String msg) {
+        Alert a = new Alert(type); 
+        a.setHeaderText(null); 
+        a.setContentText(msg); 
+        a.showAndWait();
+    }
+
+    private boolean confirmDialog(String msg) {
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION); 
+        a.setHeaderText(null); 
+        a.setContentText(msg);
+        return a.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
     }
 }
