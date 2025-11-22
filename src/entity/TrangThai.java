@@ -2,8 +2,8 @@ package entity;
 
 public enum TrangThai {
     TRONG ("Trống"),
-    DANG_SU_DUNG ("Đang dùng"), // Sửa CSDL hoặc Enum cho khớp ("Đang sử dụng")
-    DA_DAT ("Đang đặt"); // Phải khớp CSDL ("Đã đặt bàn"?)
+    DANG_SU_DUNG ("Đang dùng"), 
+    DA_DAT ("Đã đặt");
 
     private String thongTin;
 

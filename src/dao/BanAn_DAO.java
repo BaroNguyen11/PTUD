@@ -3,6 +3,7 @@ package dao;
 import ConnectDB.ConnectDB;
 import entity.BanAn;
 import entity.LoaiBan;
+import entity.PhieuDatBan;
 import entity.TrangThai;
 import entity.ViTri;
 
@@ -10,8 +11,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class BanAn_DAO {
 
@@ -49,7 +52,6 @@ public class BanAn_DAO {
         return dsBanAn;
     }
 
-    // Đổi tên hàm này lại thành getBanAnByViTri cho thống nhất
     public List<BanAn> getBanAnTheoViTri(ViTri viTri) {
         List<BanAn> dsBanAn = new ArrayList<>();
         String sql = "SELECT * FROM BanAn WHERE viTri = ?";
@@ -57,7 +59,6 @@ public class BanAn_DAO {
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            // Truy vấn dùng tên tiếng Việt từ Enum
             ps.setString(1, viTri.getTenViTri());
 
             try (ResultSet rs = ps.executeQuery()) {
@@ -75,7 +76,7 @@ public class BanAn_DAO {
                     if (loai == null || trangThai == null || vt == null) {
                          System.err.println("LỖI DAO (getBanAnTheoViTri): Dữ liệu không hợp lệ cho bàn '" + maBan +
                                            "'. Loai='" + rawLoai + "', TrangThai='" + rawTrangThai + "', ViTri='" + rawViTri + "'");
-                        continue; // Bỏ qua bàn này
+                        continue; 
                     }
 
                     BanAn ban = new BanAn(maBan, loai, trangThai, vt);
@@ -86,6 +87,118 @@ public class BanAn_DAO {
             e.printStackTrace();
         }
         return dsBanAn;
+    }
+    public List<BanAn> getTrangThaiBanTheoNgayVaViTri(ViTri viTri, LocalDate ngay) {
+        List<BanAn> dsBanAnKetQua = new ArrayList<>();
+        
+        // 1. Lấy trạng thái vật lý của bàn (từ bảng BanAn).
+        List<BanAn> dsBanGoc = getBanAnTheoViTri(viTri); 
+
+        // 2. Lấy tất cả PDB có trạng thái cần quan tâm (Đã đặt, Đang dùng) cho ngày đó
+        Map<String, PhieuDatBan> mapPDBTheoBan = getPhieuDatBanMapByNgay(ngay); 
+
+        for (BanAn ban : dsBanGoc) {
+            TrangThai trangThaiVatLy = ban.getTrangThai(); 
+            TrangThai trangThaiPDB = TrangThai.TRONG; 
+            PhieuDatBan pdb = mapPDBTheoBan.get(ban.getMaBan());
+
+            if (pdb != null) {
+                // LẤY STRING VÀ CHUYỂN ĐỔI SANG ENUM
+                String rawTrangThai = pdb.getTrangThai();
+                TrangThai trangThaiTuPDB = TrangThai.fromString(rawTrangThai); // <-- CHUYỂN ĐỔI CHÍNH
+
+                // Kiểm tra: Nếu chuyển đổi thành công VÀ là trạng thái quan trọng
+                if (trangThaiTuPDB != null) {
+                    // Các trạng thái DA_DAT và DANG_SU_DUNG là trạng thái quan trọng (như đã lọc trong SQL)
+                    trangThaiPDB = trangThaiTuPDB;
+                }
+            }
+            
+            // --- TỔNG HỢP TRẠNG THÁI CUỐI CÙNG ---
+            TrangThai trangThaiCuoiCung;
+
+            if (ngay.isEqual(LocalDate.now())) {
+                // A. TRÊN NGÀY HIỆN TẠI (Ưu tiên Trạng thái Vật lý)
+
+                if (trangThaiVatLy == TrangThai.DANG_SU_DUNG) {
+                    // Ưu tiên cao nhất: Nếu bàn đang thực sự ĐANG_SU_DUNG (theo bảng BanAn)
+                    trangThaiCuoiCung = TrangThai.DANG_SU_DUNG;
+                } else {
+                    // Nếu bàn trống, ta sử dụng trạng thái từ PDB (có thể là Đã đặt hoặc Đang dùng, hoặc Trống)
+                    trangThaiCuoiCung = trangThaiPDB;
+                }
+            } else {
+                // B. TRÊN NGÀY KHÁC (Chỉ dùng PDB)
+                trangThaiCuoiCung = trangThaiPDB;
+            }
+
+            // Gán trạng thái đã xác định
+            ban.setTrangThai(trangThaiCuoiCung);
+            dsBanAnKetQua.add(ban);
+        }
+        return dsBanAnKetQua;
+    }
+    public Map<String, PhieuDatBan> getPhieuDatBanMapByNgay(LocalDate ngay) {
+        Map<String, PhieuDatBan> mapPDB = new java.util.HashMap<>();
+        
+        String sql = "SELECT * FROM PhieuDatBan WHERE CONVERT(date, thoiGianBatDau) = ? AND trangThai IN (?, ?)"; 
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setDate(1, java.sql.Date.valueOf(ngay));
+            
+            // Chỉ lấy trạng thái cần quan tâm: Đã đặt và Đang dùng
+            ps.setString(2, "Đã đặt"); 
+            ps.setString(3, "Đang dùng"); 
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    // Lấy chuỗi trạng thái trực tiếp từ CSDL (vì Entity không được sửa)
+                    String rawTrangThai = rs.getString("trangThai"); 
+                    
+                    // TẠO OBJECT PDB
+                    PhieuDatBan pdb = new PhieuDatBan(
+                        rs.getString("maPhieu"),
+                        rs.getTimestamp("thoiGianBatDau").toLocalDateTime(), 
+                        rawTrangThai, 
+                        rs.getInt("soNguoi"),
+                        rs.getString("ghiChu"),
+                        null, // KhachHang
+                        null, // BanAn
+                        null, // NhanVien
+                        null  // HoaDon
+                    );
+                    
+                    String maBan = rs.getString("maBan"); 
+                    mapPDB.put(maBan, pdb);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("LỖI DAO: Lấy Phiếu Đặt Bàn theo ngày thất bại.");
+            e.printStackTrace();
+        }
+        return mapPDB;
+    }
+    
+    public boolean isBanDangSuDungHienTai(String maBan) {
+        String sql = "SELECT trangThai FROM BanAn WHERE maBan = ?";
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            
+            ps.setString(1, maBan);
+            
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    String rawTrangThai = rs.getString("trangThai");
+                    return TrangThai.fromString(rawTrangThai) == TrangThai.DANG_SU_DUNG;
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("LỖI DAO: Kiểm tra trạng thái vật lý thất bại.");
+            e.printStackTrace();
+        }
+        return false; 
     }
 
     public boolean updateTrangThaiBan(BanAn ban, TrangThai trangThaiMoi) {
