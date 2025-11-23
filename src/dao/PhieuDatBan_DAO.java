@@ -4,19 +4,28 @@ import java.sql.*;
 import entity.PhieuDatBan;
 import ConnectDB.ConnectDB;
 import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+
 
 public class PhieuDatBan_DAO {
     
     private static final DateTimeFormatter SQL_DATETIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     public boolean themPhieuDatBan(PhieuDatBan pdb, String trangThaiPhieu) {
-        String maPDBMoi = taoMaPhieuMoi();
+    	
+    	LocalDate ngayDat = pdb.getThoiGianBatDau().toLocalDate();
+        // 1. Tự sinh mã mới
+    	
+        String maPDBMoi = taoMaPhieuMoi(ngayDat);
         
+        // 2. CÂU LỆNH SQL ĐÃ SỬA: Thêm cột maPhieu
         String sql = "INSERT INTO PhieuDatBan (maPhieu, thoiGianBatDau, trangThai, soNguoi, ghiChu, maKhachHang, maBan, maNhanVien, maHoaDon) "
                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)"; 
         
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
+            
+            // --- Gán giá trị ---
             
             // 1. MaPhieu mới
             stmt.setString(1, maPDBMoi);
@@ -54,14 +63,20 @@ public class PhieuDatBan_DAO {
             return stmt.executeUpdate() > 0;
         } catch (SQLException e) {
             System.err.println("Lỗi SQL khi thêm Phiếu Đặt Bàn: " + e.getMessage());
-            e.printStackTrace();
+            e.printStackTrace(); // In chi tiết lỗi để kiểm tra ràng buộc khác
             return false;
         }
     }
     
-    public String getMaPhieuCuoiCung() {
+    public String getMaPhieuCuoiCung(LocalDate ngayDat) {
         String maCuoi = null;
-        String sql = "SELECT TOP 1 maPhieu FROM PhieuDatBan ORDER BY maPhieu DESC";
+        
+        // Định dạng ngày để sử dụng trong câu lệnh SQL LIKE
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
+        String ngayFormat = ngayDat.format(dtf);
+        
+        // SQL: Lọc các mã bắt đầu bằng "PDB-NGAYDAT-" và sắp xếp
+        String sql = "SELECT TOP 1 maPhieu FROM PhieuDatBan WHERE maPhieu LIKE 'PDB-" + ngayFormat + "-%' ORDER BY maPhieu DESC";
         
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql);
@@ -71,20 +86,41 @@ public class PhieuDatBan_DAO {
                 maCuoi = rs.getString("maPhieu");
             }
         } catch (SQLException e) {
-            System.err.println("Lỗi khi lấy mã phiếu cuối: " + e.getMessage());
+            System.err.println("Lỗi khi lấy mã phiếu cuối theo ngày: " + e.getMessage());
         }
         return maCuoi;
     }
 
-    public String taoMaPhieuMoi() {
-        String maCuoi = getMaPhieuCuoiCung();
+
+    public String taoMaPhieuMoi(LocalDate ngayDat) {
+        // 1. Định dạng ngày
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
+        String ngayFormat = ngayDat.format(dtf); // Ví dụ: "23112025"
+        
+        // 2. Định dạng tiền tố mã
+        String tienToMoi = "PDB-" + ngayFormat + "-"; // Ví dụ: "PDB-23112025-"
+        
+        // 3. Lấy mã cuối cùng cho ngày ĐẶT BÀN CỤ THỂ
+        String maCuoi = getMaPhieuCuoiCung(ngayDat);
+        
         if (maCuoi == null) {
-            return "PDB001";
+            // Trường hợp 1: Chưa có phiếu nào trong ngày này
+            return tienToMoi + "001"; 
         }
-        // Lấy phần số (ví dụ: 060 từ PDB060)
-        String phanSo = maCuoi.substring(3); 
-        int soMoi = Integer.parseInt(phanSo) + 1;
-        // Format lại thành PDBxxx
-        return String.format("PDB%03d", soMoi); 
+        
+        // Trường hợp 2: Có phiếu trong ngày này -> Tăng số thứ tự
+        try {
+            // Lấy phần số thứ tự (Ví dụ: từ PDB-23112025-005 lấy ra 005)
+            // Bắt đầu từ index 13 (sau "PDB-ddMMyyyy-")
+            String phanSo = maCuoi.substring(13); 
+            int soMoi = Integer.parseInt(phanSo) + 1;
+            
+
+            return tienToMoi + String.format("%03d", soMoi);
+        } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+            // Xử lý lỗi nếu mã cuối cùng bị sai định dạng số (nên trả về mã đầu tiên)
+            System.err.println("Lỗi định dạng mã phiếu cuối cùng: " + maCuoi);
+            return tienToMoi + "001";
+        }
     }
 }
