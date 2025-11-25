@@ -5,15 +5,17 @@ public class MonAn {
     private String loaiMon;
     private double giaTien;
     private String moTa;
-
+    private String hinhAnh;
+    
     public MonAn() {}
 
-    public MonAn(String maMonAn, String tenMonAn, String loaiMon, double giaTien, String moTa) {
+    public MonAn(String maMonAn, String tenMonAn, String loaiMon, double giaTien, String moTa, String hinhAnh) {
         this.maMonAn = maMonAn;
         this.tenMonAn = tenMonAn;
         this.loaiMon = loaiMon;
         this.giaTien = giaTien;
         this.moTa = moTa;
+        this.hinhAnh = hinhAnh;
     }
 
     public String getMaMonAn() {
@@ -56,7 +58,15 @@ public class MonAn {
         this.moTa = moTa;
     }
 
-    @Override
+    public String getHinhAnh() {
+		return hinhAnh;
+	}
+
+	public void setHinhAnh(String hinhAnh) {
+		this.hinhAnh = hinhAnh;
+	}
+
+	@Override
     public String toString() {
         return "MonAn{" +
                 "maMonAn='" + maMonAn + '\'' +

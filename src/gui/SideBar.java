@@ -1,5 +1,7 @@
 package gui;
 
+
+
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -35,15 +37,15 @@ public class SideBar extends VBox {
 
     private final String[] iconNames = {
             "home.png",
-            "booking.png",
+            "BanAnIcon.png",
             "food.png",
-            "customer.png",
+            "KhachHangIcon.png",
             "employee.png",
-            "promotion.png",
-            "invoice.png",
-            "payment.png",
+            "GiamGiaIcon.png",
+            "HoaDonIcon.png",
+            "money.png",
             "stats.png",
-            "settlement.png"
+            "KetCaIcon.png"
     };
 
     public SideBar(TrangChu trangChu) {
@@ -51,7 +53,6 @@ public class SideBar extends VBox {
 
         setPrefWidth(250);
         setPadding(new Insets(20, 0, 20, 0));
-        setSpacing(5);
         getStyleClass().add("sidebar");
 
         // Logo
@@ -87,12 +88,14 @@ public class SideBar extends VBox {
 
     // --- TẠO MENU ITEM CHÍNH ---
     private HBox createMenuItem(String text, String iconFileName) {
-        ImageView icon = createImageView("/icons/" + iconFileName, 20, 20);
+        ImageView icon = createImageView("/img/" + iconFileName, 20, 20);
         Label label = new Label(text);
-
-        HBox item = new HBox(10, icon, label);
+        //label.setStyle("-fx-font-size: 10px; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-color: black");
+        label.setPadding(Insets.EMPTY);
+        	
+        HBox item = new HBox(2, icon, label);
         item.setAlignment(Pos.CENTER_LEFT);
-        item.setPadding(new Insets(10, 0, 10, 20));
+        item.setPadding(new Insets(0, 0, 0, 10));
         item.setPrefWidth(Double.MAX_VALUE);
         item.getStyleClass().add("menu-item");
 
@@ -101,7 +104,7 @@ public class SideBar extends VBox {
             if (item != selectedItem) item.getStyleClass().add("menu-item-hover");
         });
         item.setOnMouseExited(e -> item.getStyleClass().remove("menu-item-hover"));
-
+        
         return item;
     }
 
@@ -139,8 +142,9 @@ public class SideBar extends VBox {
 
     // --- TẠO NÚT ĐĂNG XUẤT ---
     private HBox createLogoutButton() {
-        ImageView icon = createImageView("/icons/logout.png", 20, 20);
+        ImageView icon = createImageView("/img/Logout.png", 20, 20);
         Label label = new Label("Đăng xuất");
+        label.setStyle("-fx-text-fill: white");
 
         HBox item = new HBox(10, icon, label);
         item.setAlignment(Pos.CENTER_LEFT);
@@ -149,7 +153,8 @@ public class SideBar extends VBox {
         item.getStyleClass().add("logout-button");
 
         item.setOnMouseClicked(e -> handleLogout());
-
+        item.getStyleClass().add("btn-dangXuat");
+        
         return item;
     }
 
@@ -172,7 +177,7 @@ public class SideBar extends VBox {
                 trangChu.setMainContent(new Dashboard());
                 break;
             case "Quản lí món ăn":
-                trangChu.setMainContent(new Label("Giao diện Quản lí món ăn"));
+                trangChu.setMainContent(new Gui_QuanLiMon());
                 break;
             case "Thống kê":
                 trangChu.setMainContent(new ThongKe());

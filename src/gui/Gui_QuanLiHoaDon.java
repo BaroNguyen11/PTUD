@@ -339,22 +339,12 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         tableMonAn.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
         tableMonAn.setPrefHeight(400);
 
-        addMonAnTestData(tableMonAn.getItems());
 
         vboxAll.getChildren().addAll(lblTieuDe, tableMonAn);
         return vboxAll;
     }
 
 
-    private void addMonAnTestData(ObservableList<MonAn> items) {
-        items.addAll(
-                new MonAn("MA001", "Cơm gà xào sả ớt", "Món chính", 50000.0, "Món ngon, cay nồng"),
-                new MonAn("MA002", "Bò nướng lá lốt", "Món chính", 120000.0, "Thịt bò mềm, thơm"),
-                new MonAn("MA003", "Cá kho tộ", "Món chính", 80000.0, "Cá tươi, kho đậm đà"),
-                new MonAn("MA004", "Rau củ xào", "Món phụ", 30000.0, "Rau tươi, xào nhanh"),
-                new MonAn("MA005", "Nước cam tươi", "Đồ uống", 40000.0, "Cam tươi, ép tại chỗ")
-        );
-    }
     // Phần bảng hóa đơn 
     private VBox taoBangHoaDon() {
         VBox vbox = new VBox(5);

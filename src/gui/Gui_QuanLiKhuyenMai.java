@@ -599,7 +599,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
         // Thêm dữ liệu mẫu
         table.getItems().addAll(
-                new MonAn("M01", "Cơm gà ớt tỏi", "mon an",1000000, "test" )
+                new MonAn("M01", "Cơm gà ớt tỏi", "mon an",1000000, "test" ,"tsts")
         );
 
         table.setPrefHeight(100);
@@ -696,7 +696,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         //Danh sách món ăn giảm giá
 
         for(int i = 0; i < 20; i++) {
-            dsMonAn.add(new MonAn("M" + (i+1), "Cơm gà ớt tỏi", "mon an",1000000, "test" ));
+            dsMonAn.add(new MonAn("M" + (i+1), "Cơm gà ớt tỏi", "mon an",1000000, "test" ,"JSJJSj"));
         }
         ListView<MonAn> listMonAn = taoDanhSachMonBenTrai();
         listMonAn.setFixedCellSize(-1);

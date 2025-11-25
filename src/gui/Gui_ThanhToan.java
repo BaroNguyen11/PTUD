@@ -439,7 +439,7 @@ public class Gui_ThanhToan extends BorderPane {
         hbox6.setPadding(new Insets(0, 5, 0, 5));
 
         //
-        addMonAnTestData(tableMon.getItems());
+        //addMonAnTestData(tableMon.getItems());
 
         //
         vboxAll.setPrefHeight(500);
@@ -720,40 +720,40 @@ public class Gui_ThanhToan extends BorderPane {
 
         return vboxAll;
     }
-
-    private void addMonAnTestData(ObservableList<MonAn> items) {
-        items.addAll(
-                new MonAn("MA001", "Cơm gà xào sả ớt", "Món chính", 50000.0, "Món ngon, cay nồng"),
-                new MonAn("MA002", "Bò nướng lá lốt", "Món chính", 120000.0, "Thịt bò mềm, thơm"),
-                new MonAn("MA003", "Cá kho tộ", "Món chính", 80000.0, "Cá tươi, kho đậm đà"),
-                new MonAn("MA004", "Rau củ xào", "Món phụ", 30000.0, "Rau tươi, xào nhanh"),
-                new MonAn("MA005", "Nước cam tươi", "Đồ uống", 40000.0, "Cam tươi, ép tại chỗ"),
-                new MonAn("MA006", "Canh chua cá lóc", "Món chính", 70000.0, "Vị chua thanh mát"),
-                new MonAn("MA007", "Cơm chiên dương châu", "Món chính", 60000.0, "Cơm chiên trứng và xúc xích"),
-                new MonAn("MA008", "Mì xào hải sản", "Món chính", 85000.0, "Hải sản tươi, xào đậm vị"),
-                new MonAn("MA009", "Gỏi cuốn tôm thịt", "Món khai vị", 45000.0, "Cuốn tươi, chấm nước mắm chua ngọt"),
-                new MonAn("MA010", "Chè khúc bạch", "Tráng miệng", 35000.0, "Mát lạnh, ngọt dịu"),
-                new MonAn("MA011", "Cà phê sữa đá", "Đồ uống", 30000.0, "Đậm đà, truyền thống Việt"),
-                new MonAn("MA012", "Bánh flan caramel", "Tráng miệng", 25000.0, "Béo ngậy, thơm ngon"),
-                new MonAn("MA013", "Phở bò tái", "Món chính", 70000.0, "Nước lèo trong, thịt bò mềm"),
-                new MonAn("MA014", "Bún chả Hà Nội", "Món chính", 65000.0, "Chả nướng thơm lừng"),
-                new MonAn("MA015", "Gà hấp muối", "Món đặc biệt", 150000.0, "Gà ta hấp muối nguyên con"),
-                new MonAn("MA016", "Nước ép dưa hấu", "Đồ uống", 35000.0, "Giải khát, tự nhiên"),
-                new MonAn("MA017", "Trà đào cam sả", "Đồ uống", 40000.0, "Hương vị tươi mát"),
-                new MonAn("MA018", "Bánh mì thịt nướng", "Món phụ", 30000.0, "Thịt nướng thơm, pate béo"),
-                new MonAn("MA019", "Khoai tây chiên", "Món phụ", 25000.0, "Giòn tan, ăn kèm tương ớt"),
-                new MonAn("MA020", "Súp cua", "Món khai vị", 40000.0, "Sánh mịn, thơm vị cua"),
-                new MonAn("MA021", "Lẩu thái hải sản", "Món đặc biệt", 250000.0, "Cay nồng, hải sản tươi"),
-                new MonAn("MA022", "Lẩu gà lá giang", "Món đặc biệt", 180000.0, "Chua thanh, vị quê"),
-                new MonAn("MA023", "Bánh xèo miền Tây", "Món chính", 50000.0, "Giòn rụm, tôm thịt đầy đặn"),
-                new MonAn("MA024", "Gà rán giòn", "Món chính", 60000.0, "Giòn tan, thơm ngon"),
-                new MonAn("MA025", "Cá hồi nướng bơ tỏi", "Món đặc biệt", 220000.0, "Thơm béo, thịt cá mềm"),
-                new MonAn("MA026", "Sinh tố bơ", "Đồ uống", 35000.0, "Béo mịn, mát lạnh"),
-                new MonAn("MA027", "Soda chanh", "Đồ uống", 30000.0, "Có gas, chua nhẹ"),
-                new MonAn("MA028", "Bánh ngọt socola", "Tráng miệng", 40000.0, "Ngọt ngào, tan chảy"),
-                new MonAn("MA029", "Cơm tấm sườn bì chả", "Món chính", 65000.0, "Đặc sản Sài Gòn"),
-                new MonAn("MA030", "Nước suối", "Đồ uống", 15000.0, "Tinh khiết, không gas")
-        );
-
-    }
+//
+//    private void addMonAnTestData(ObservableList<MonAn> items) {
+//        items.addAll(
+//                new MonAn("MA001", "Cơm gà xào sả ớt", "Món chính", 50000.0, "Món ngon, cay nồng"),
+//                new MonAn("MA002", "Bò nướng lá lốt", "Món chính", 120000.0, "Thịt bò mềm, thơm"),
+//                new MonAn("MA003", "Cá kho tộ", "Món chính", 80000.0, "Cá tươi, kho đậm đà"),
+//                new MonAn("MA004", "Rau củ xào", "Món phụ", 30000.0, "Rau tươi, xào nhanh"),
+//                new MonAn("MA005", "Nước cam tươi", "Đồ uống", 40000.0, "Cam tươi, ép tại chỗ"),
+//                new MonAn("MA006", "Canh chua cá lóc", "Món chính", 70000.0, "Vị chua thanh mát"),
+//                new MonAn("MA007", "Cơm chiên dương châu", "Món chính", 60000.0, "Cơm chiên trứng và xúc xích"),
+//                new MonAn("MA008", "Mì xào hải sản", "Món chính", 85000.0, "Hải sản tươi, xào đậm vị"),
+//                new MonAn("MA009", "Gỏi cuốn tôm thịt", "Món khai vị", 45000.0, "Cuốn tươi, chấm nước mắm chua ngọt"),
+//                new MonAn("MA010", "Chè khúc bạch", "Tráng miệng", 35000.0, "Mát lạnh, ngọt dịu"),
+//                new MonAn("MA011", "Cà phê sữa đá", "Đồ uống", 30000.0, "Đậm đà, truyền thống Việt"),
+//                new MonAn("MA012", "Bánh flan caramel", "Tráng miệng", 25000.0, "Béo ngậy, thơm ngon"),
+//                new MonAn("MA013", "Phở bò tái", "Món chính", 70000.0, "Nước lèo trong, thịt bò mềm"),
+//                new MonAn("MA014", "Bún chả Hà Nội", "Món chính", 65000.0, "Chả nướng thơm lừng"),
+//                new MonAn("MA015", "Gà hấp muối", "Món đặc biệt", 150000.0, "Gà ta hấp muối nguyên con"),
+//                new MonAn("MA016", "Nước ép dưa hấu", "Đồ uống", 35000.0, "Giải khát, tự nhiên"),
+//                new MonAn("MA017", "Trà đào cam sả", "Đồ uống", 40000.0, "Hương vị tươi mát"),
+//                new MonAn("MA018", "Bánh mì thịt nướng", "Món phụ", 30000.0, "Thịt nướng thơm, pate béo"),
+//                new MonAn("MA019", "Khoai tây chiên", "Món phụ", 25000.0, "Giòn tan, ăn kèm tương ớt"),
+//                new MonAn("MA020", "Súp cua", "Món khai vị", 40000.0, "Sánh mịn, thơm vị cua"),
+//                new MonAn("MA021", "Lẩu thái hải sản", "Món đặc biệt", 250000.0, "Cay nồng, hải sản tươi"),
+//                new MonAn("MA022", "Lẩu gà lá giang", "Món đặc biệt", 180000.0, "Chua thanh, vị quê"),
+//                new MonAn("MA023", "Bánh xèo miền Tây", "Món chính", 50000.0, "Giòn rụm, tôm thịt đầy đặn"),
+//                new MonAn("MA024", "Gà rán giòn", "Món chính", 60000.0, "Giòn tan, thơm ngon"),
+//                new MonAn("MA025", "Cá hồi nướng bơ tỏi", "Món đặc biệt", 220000.0, "Thơm béo, thịt cá mềm"),
+//                new MonAn("MA026", "Sinh tố bơ", "Đồ uống", 35000.0, "Béo mịn, mát lạnh"),
+//                new MonAn("MA027", "Soda chanh", "Đồ uống", 30000.0, "Có gas, chua nhẹ"),
+//                new MonAn("MA028", "Bánh ngọt socola", "Tráng miệng", 40000.0, "Ngọt ngào, tan chảy"),
+//                new MonAn("MA029", "Cơm tấm sườn bì chả", "Món chính", 65000.0, "Đặc sản Sài Gòn"),
+//                new MonAn("MA030", "Nước suối", "Đồ uống", 15000.0, "Tinh khiết, không gas")
+//        );
+//
+//    }
 }
