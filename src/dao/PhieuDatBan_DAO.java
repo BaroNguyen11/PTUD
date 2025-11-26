@@ -1,10 +1,13 @@
 package dao;
 
 import java.sql.*;
+
+import entity.KhachHang;
 import entity.PhieuDatBan;
 import ConnectDB.ConnectDB;
 import java.time.format.DateTimeFormatter;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 public class PhieuDatBan_DAO {
@@ -122,5 +125,68 @@ public class PhieuDatBan_DAO {
             System.err.println("Lỗi định dạng mã phiếu cuối cùng: " + maCuoi);
             return tienToMoi + "001";
         }
+    }
+    public boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau) {
+        // Giả định: Bàn được coi là bị trùng nếu có PhieuDatBan trùng ngày và status là 'Đã đặt' hoặc 'Đang dùng'
+        
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String thoiGianSQL = thoiGianBatDau.format(dtf);
+        
+        // Sửa SQL để kiểm tra: chỉ cần tìm một bản ghi có trùng mã bàn VÀ trùng ngày/giờ.
+        // Việc so sánh giờ cần phải linh hoạt (ví dụ: đặt lúc 18h thì không bị trùng với đặt lúc 20h)
+        // Tạm thời, ta chỉ so sánh theo mã bàn và ngày (để đơn giản)
+        
+        // Nếu bạn muốn kiểm tra theo chính xác ngày và giờ:
+        // Tuy nhiên, việc so sánh giờ phức tạp, ta chỉ so sánh theo ngày
+        
+        String sql = "SELECT maPhieu FROM PhieuDatBan " +
+                     "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
+                     "AND (trangThai = N'Đã đặt' OR trangThai = N'Đang dùng')";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            
+            stmt.setString(1, maBan);
+            stmt.setString(2, thoiGianSQL);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                return rs.next(); // Trả về true nếu tìm thấy ít nhất một phiếu
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi kiểm tra trùng bàn: " + e.getMessage());
+            return true; // Giả định có lỗi CSDL là trùng để đảm bảo an toàn
+        }
+    }
+    public PhieuDatBan getPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) {
+        PhieuDatBan pdb = null;
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
+        String ngayFormat = ngayDat.format(dtf);
+
+        String sql = "SELECT p.*, kh.tenKhachHang, kh.soDienThoai FROM PhieuDatBan p " +
+                     "JOIN KhachHang kh ON p.maKhachHang = kh.maKhachHang " +
+                     "WHERE p.maBan = ? AND p.maPhieu LIKE 'PDB-" + ngayFormat + "-%' " +
+                     "AND (p.trangThai = N'Đã đặt' OR p.trangThai = N'Đang dùng')";
+        
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            
+            stmt.setString(1, maBan);
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    pdb = new PhieuDatBan();
+                    pdb.setGhiChu(rs.getString("ghiChu"));
+                    
+                    KhachHang kh = new KhachHang();
+                    kh.setTenKhachHang(rs.getString("tenKhachHang"));
+                    kh.setSoDienThoai(rs.getString("soDienThoai"));
+                    pdb.setKhachHang(kh);
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi tra cứu phiếu đặt bàn: " + e.getMessage());
+        }
+        return pdb;
     }
 }

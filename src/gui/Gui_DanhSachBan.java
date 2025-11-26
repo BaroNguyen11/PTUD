@@ -4,8 +4,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import dao.BanAn_DAO;
+import dao.PhieuDatBan_DAO;
 import entity.BanAn;
 import entity.LoaiBan;
+import entity.PhieuDatBan;
 import entity.TrangThai;
 import entity.ViTri;
 import javafx.geometry.Insets;
@@ -51,10 +53,12 @@ public class Gui_DanhSachBan extends BorderPane {
 	private ViTri viTriHienTai = ViTri.LAU_1;
 	private DatePicker datePicker; 
     private LocalDate ngayChon = LocalDate.now();
+    private PhieuDatBan_DAO phieuDatBan_DAO;
 
 	public Gui_DanhSachBan(BorderPane mainLayout) {
 		this.mainLayout = mainLayout;
 		banAn_DAO = new BanAn_DAO();
+		phieuDatBan_DAO = new PhieuDatBan_DAO();
 		this.setStyle("-fx-background-color: white;");
 		HBox phanTren = taoPhanTren();
 		HBox phanGiua = taoPhanGiua();
@@ -313,7 +317,6 @@ public class Gui_DanhSachBan extends BorderPane {
 
 		try {
 	        LocalDate ngayDat = datePicker.getValue(); 
-	        
 	        // SỬA: Thêm tham số ngayDat vào constructor
 	        datban guiDatBan = new datban(mainLayout, danhSachBanDaChon, ngayDat); 
 	        mainLayout.setCenter(guiDatBan);
@@ -406,6 +409,19 @@ public class Gui_DanhSachBan extends BorderPane {
 		headerPane.setStyle("-fx-background-color: #F7FAFC;");
 		Separator separator = new Separator();
 // Content
+		// Biến kiểm tra xem có cần hiển thị thông tin khách hàng không
+	    boolean isBookedOrInUse = (ban.getTrangThai() == TrangThai.DA_DAT || ban.getTrangThai() == TrangThai.DANG_SU_DUNG);
+	    
+	    PhieuDatBan pdbInfo = null;
+	    if (isBookedOrInUse) {
+	        // Lấy ngày đang chọn từ thuộc tính lớp DanhSachBan_Gui
+	        LocalDate ngayDat = datePicker.getValue(); 
+	        
+	        // Gọi DAO để tra cứu phiếu đặt bàn cho bàn và ngày đó
+	        // (Bạn cần đảm bảo PhieuDatBan_DAO.getPhieuDatBanByMaBanVaNgay có thể xử lý cả bàn đang dùng)
+	        pdbInfo = phieuDatBan_DAO.getPhieuDatBanByMaBanVaNgay(ban.getMaBan(), ngayDat);
+	    }
+	    
 		String statusText, subText, bgColor, textColor;
 		switch (ban.getTrangThai()) {
 		case DANG_SU_DUNG:
@@ -427,6 +443,7 @@ public class Gui_DanhSachBan extends BorderPane {
 			textColor = "#975A16";
 			break;
 		}
+		
 		Label lblStatus = new Label(statusText);
 		lblStatus.setStyle("-fx-font-weight: bold; -fx-font-size: 16px; -fx-text-fill: " + textColor + ";");
 		Label lblSubText = new Label(subText);
@@ -434,15 +451,40 @@ public class Gui_DanhSachBan extends BorderPane {
 		VBox statusBox = new VBox(5, lblStatus, lblSubText);
 		statusBox.setPadding(new Insets(15));
 		statusBox.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 8;");
+		
 		Label lblLoaiBan = new Label("Loại bàn: " + ban.getLoai().name());
 		lblLoaiBan.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 		Label lblViTri = new Label("Vị trí: " + ban.getViTri().name().replace("_", " "));
 		lblViTri.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
 		VBox extraInfoBox = new VBox(5, lblLoaiBan, lblViTri);
 		extraInfoBox.setPadding(new Insets(15, 0, 0, 0));
+		
+		VBox bookingInfoBox = new VBox(5);
+	    bookingInfoBox.setPadding(new Insets(5, 0, 0, 0));
+	    if (pdbInfo != null) {
+	        bookingInfoBox.getChildren().add(new Label("Tên khách hàng: " + pdbInfo.getKhachHang().getTenKhachHang()));
+	        bookingInfoBox.getChildren().add(new Label("SĐT: " + pdbInfo.getKhachHang().getSoDienThoai()));
+	        
+	        String ghiChu = (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().trim().isEmpty()) 
+	                        ? pdbInfo.getGhiChu() : "Không có ghi chú.";
+	        bookingInfoBox.getChildren().add(new Label("Ghi chú: " + ghiChu));
+	        
+	        for(Node node : bookingInfoBox.getChildren()) {
+	            if (node instanceof Label) {
+	                ((Label) node).setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
+	            }
+	        }
+	    }
+	    
+	    
 		VBox mainLayout = new VBox(headerPane, separator, statusBox, extraInfoBox);
 		mainLayout.setSpacing(0);
 		mainLayout.setPrefWidth(350);
+		
+		if (pdbInfo != null) {
+	         mainLayout.getChildren().add(bookingInfoBox);
+	    }
+		
 		dialog.getDialogPane().setContent(mainLayout);
 		dialog.getDialogPane().getStylesheets().add("data:text/css,"
 				+ ".dialog-pane { -fx-background-color: white; -fx-padding: 0; "

@@ -7,6 +7,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,5 +59,33 @@ public class MonAn_DAO {
             e.printStackTrace();
         }
         return dsMonAn;
+    }
+    public double layGiaSauKhuyenMai(String maMonAn, LocalDate ngayDat, double giaMacDinh) {
+
+        String sql = 
+            "SELECT TOP 1 c.giaSauKhuyenMai " +
+            "FROM ChiTietKMMonAn c JOIN KhuyenMai k ON c.maKhuyenMai = k.maKhuyenMai " +
+            "WHERE c.maMonAn = ? " +
+            "AND ? BETWEEN k.ngayBatDau AND k.ngayKetThuc " +
+            "ORDER BY c.giaSauKhuyenMai ASC"; // Lấy khuyến mãi có giá tốt nhất 
+
+        double giaCuoiCung = giaMacDinh;
+        
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            
+            stmt.setString(1, maMonAn);
+            // Chuyển LocalDate sang java.sql.Date hoặc String phù hợp với SQL
+            stmt.setDate(2, java.sql.Date.valueOf(ngayDat)); 
+            
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    giaCuoiCung = rs.getDouble("giaSauKhuyenMai");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi tra cứu giá khuyến mãi: " + e.getMessage());
+        }
+        return giaCuoiCung;
     }
 }
