@@ -1,6 +1,6 @@
 /* CSS THANH TOÁN */
 .btn-thanhToan-guiThanhToan{
-    -fx-background-color: #4E558C;
+    -fx-background-color: linear-gradient(to top right, #43e97b, #38f9d7);
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-radius: 8;
@@ -15,14 +15,14 @@
 .font-lblThanhToan{
     -fx-font-size: 15px;
     -fx-font-weight: bold;
-    -fx-font-family:    'Tai Heritage Pro';
+    -fx-font-family:    'Segoe UI';
     -fx-font-color: black;
 }
 
 .font-txtThanhToan{
     -fx-font-size: 18px;
     -fx-font-weight: bold;
-    -fx-font-family:    'Tai Heritage Pro';
+    -fx-font-family:  'Segoe UI';
     -fx-font-color: black;
     -fx-background-color: white;
 }
@@ -46,7 +46,7 @@
 }
 
 .btn-banPhimTien{
-    -fx-font-size: 20px;
+    -fx-font-size: 15px;
     -fx-text-fill: white;
     -fx-border-radius: 10;
     -fx-background-color: #082744;
@@ -66,11 +66,26 @@
     -fx-background-color: green;
     -fx-background-radius: 5;
     -fx-text-fill: white;
-    -fx-font-size: 20px;
-    -fx-pref-width: 160;
+    -fx-font-size: 15px;
+    -fx-pref-width: 190;
     -fx-pref-height: 50;
     -fx-font-weight: bold;
     -fx-cursor: hand;
+}
+
+.btn-QuayLai{
+    -fx-background-color: gray;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-pref-width: 190;
+    -fx-pref-height: 50;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-QuayLai:hover{
+    -fx-opacity: 0.9;
 }
 
 .btn-ThanhToan:hover{
@@ -91,4 +106,51 @@
     -fx-font-size: 18px;
     -fx-font-weight: bold;
     -fx-cursor: hand;
+}
+
+.textFieldNhapDuoc{
+    -fx-background-color: white;
+    -fx-border-color: #3498db;
+    -fx-border-width: 1.5;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-padding: 10;
+    -fx-font-size: 15px;
+    -fx-cursor: hand
+}
+
+.textFieldNhapDuoc:hover{
+    -fx-background-color: #ecf0f1;
+}
+
+.btnPhimDacBiet{
+	-fx-font-size: 20px;
+	-fx-text-fill: white;
+	-fx-border-width: 1;
+	-fx-border-radius: 4;
+	-fx-border-color: #082744;
+	-fx-background-color:  #082744;
+	-fx-pref-width: 70;
+	-fx-font-weight: bold;
+	-fx-cursor: hand;
+	-fx-pref-height: 70;
+}
+
+.btnPhimDacBiet:hover{
+	-fx-opacity: 0.9;
+}
+
+.btn-In{
+    -fx-background-color: #082744;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-pref-width: 190;
+    -fx-pref-height: 24;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-In:hover{
+    -fx-opacity: 0.9;
 }

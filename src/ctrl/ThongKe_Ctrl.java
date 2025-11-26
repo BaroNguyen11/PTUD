@@ -6,6 +6,7 @@ package ctrl;
 
 import dao.ThongKe_DAO;
 
+import java.util.List;
 import java.util.Map;
 
 /*
@@ -29,7 +30,44 @@ public class ThongKe_Ctrl {
     public double getDoanhThuCaToi(){
         return thongKeDao.getDoanhThuCaToi();
     }
-    public Map<String, Double> thongKeDoanhThuTheoThang(){
-        return thongKeDao.getDoanhThuTheoThang();
+    public Map<String, Double> thongKeDoanhThuTheoThang(int nam){
+        return thongKeDao.getDoanhThuTheoThang(nam);
+    }
+    public  Map<String,Double> getDoanhThuTheoCa() {
+        return thongKeDao.getDoanhThuTheoCa();
+    }
+    public Map<String,Integer> getTopMonAnBanChay(){
+        return thongKeDao.getTopMonAnBanChay();
+    }
+    public Map<String,Double> getDoanhThuTheoNhomMon(){
+        return  thongKeDao.getDoanhThuTheoNhomMon();
+    }
+    public List<String[]> getTopKhachHang() {
+        return thongKeDao.getTopKhachHang();
+    }
+
+    public int[] getThongKeKhachHang() {
+        return thongKeDao.getThongKeKhachHang();
+    }
+
+    public double getChiTieuTrungBinh() {
+        return thongKeDao.getChiTieuTrungBinh();
+    }
+
+    public double getTanSuatTrungBinh() {
+        return thongKeDao.getTanSuatTrungBinh();
+    }
+    // Trong ThongKe_Ctrl.java
+
+    public String[] getMonBanChayNhat() {
+        return thongKeDao.getMonBanChayNhat();
+    }
+
+    public String[] getMonDoanhThuCaoNhat() {
+        return thongKeDao.getMonDoanhThuCaoNhat();
+    }
+
+    public double[] getThongKeDoUong() {
+        return thongKeDao.getThongKeDoUong();
     }
 }

@@ -1,6 +1,7 @@
 
 package gui;
 
+import entity.NhanVien;
 import javafx.animation.FadeTransition;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
@@ -21,12 +22,11 @@ import javafx.util.Duration;
  * - Cố định kích thước Sidebar
  */
 public class SideBar extends VBox {
-
     private TrangChu trangChu;
     private HBox selectedItem;
     private VBox bookingSubmenu;
     private boolean isBookingMenuExpanded = false;
-
+    private KetCa ketCaScreen;
     private final String[] menuItems = {
             "Dashboard",
             "Quản lí đặt bàn",
@@ -240,10 +240,19 @@ public class SideBar extends VBox {
             case "Dashboard" -> trangChu.setMainContent(new Dashboard());
             case "Quản lí món ăn" -> trangChu.setMainContent(new Label("Giao diện Quản lí món ăn"));
             case "Thống kê" -> trangChu.setMainContent(new ThongKe());
-            case "Kết ca" -> trangChu.setMainContent(new KetCa());
+            case "Kết ca" -> {
+                if (ketCaScreen == null) {
+                    // Lần đầu tiên bấm: Tạo mới (Dữ liệu sẽ tự load trong Constructor)
+                    ketCaScreen = new KetCa();
+                } else {
+                    // Những lần sau: Gọi hàm refresh để cập nhật số liệu mới nhất
+                    ketCaScreen.loadDuLieuCa();
+                }
+                trangChu.setMainContent(ketCaScreen);
+            }
             case "Quản lí khách hàng" -> trangChu.setMainContent(new QuanLyKhachHang());
             case "Quản lí nhân viên" -> trangChu.setMainContent(new QuanLyNhanVien());
-            case "Thanh toán" -> trangChu.setMainContent(new Gui_ThanhToan());
+            case "Thanh toán" -> trangChu.setMainContent(new Gui_ThanhToan(new NhanVien()));
             case "Quản lí khuyến mãi" -> trangChu.setMainContent(new Gui_QuanLiKhuyenMai());
             case "Quản lí hóa đơn" -> trangChu.setMainContent(new Gui_QuanLiHoaDon());
             default -> trangChu.setMainContent(new Label("Giao diện " + menuText + " chưa triển khai"));
@@ -258,7 +267,7 @@ public class SideBar extends VBox {
         clickedItem.setStyle("-fx-background-color: rgba(255,255,255,0.1);");
 
         switch (subMenuText) {
-            case "Đặt bàn" -> trangChu.setMainContent(new datban());
+            case "Đặt bàn" -> trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
             case "Đổi bàn" -> trangChu.setMainContent(new Gui_DoiBan());
             case "Hủy bàn" -> trangChu.setMainContent(new Gui_HuyBan());
             case "Check-in" -> trangChu.setMainContent(new Gui_CheckIn());

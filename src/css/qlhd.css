@@ -59,7 +59,34 @@
     -fx-text-fill: white;
 }
 
+.timKiem {
+	-fx-pref-width: 300px;
+    -fx-pref-height: 20px;
+    -fx-border-width: 1;
+    -fx-border-color: #D2D2D2;
+    -fx-border-radius: 5px;
+    -fx-font-family: 'Tai Heritage Pro';
+    -fx-background-color: white;
+    -fx-font-size: 15;
+}
 
+.timKiem:hover{
+	-fx-border-color: blue;
+}
+
+.button-timKiem{
+	-fx-background-color: white;
+	-fx-border-color: #D2D2D2;
+	-fx-border-width: 1;
+	-fx-border-radius: 5px;
+	-fx-text-fill: black;
+	-fx-cursor: hand;
+	-fx-font-size: 15
+}
+
+.button-timKiem:hover{
+	-fx-border-color: blue;
+}
 
 
 /* hoc ve font */
@@ -118,70 +145,34 @@
     -fx-pref-width: 0;
 }
 
-
-/*
-.radio-button:hover {
-    -fx-text-fill: #082744;
-}
-
-
-
-.radio-button {
-	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 15;
-	-fx-background-color: white;
-}
-
-
-.radio-button:selected .radio {
-    -fx-background-color: #082744;
-    -fx-min-width: 10px;
-    -fx-min-height: 10px;
-    -fx-background-color: white;
-}
-	*/
-
 .radio-button{
 	-fx-cursor: hand;
 	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 15;
+	-fx-font-size: 15px;
 	-fx-background-color: white;
 
 }
 
 .radio-button:disabled{
-	-fx-opacity: 0.4;
+	-fx-opacity: 1.0;
 }
 
 .radio-button:disabled .radio {
 	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 15px;
+	-fx-font-size: 15;
 	-fx-background-color: white;
 }
 
 
 .radio-button .radio {
     -fx-background-color: transparent;
-    -fx-border-color: #333;
+    -fx-border-color: black;
     -fx-border-width: 1.5;
     -fx-border-radius: 50%;
     -fx-min-width: 14px;
     -fx-min-height: 14px;
 }
 
-/*
-.radio-button:selected .radio {
-    -fx-background-color: #082744;
-    -fx-border-color: transparent;
-    -fx-background-radius: 50%;
-    -fx-min-width: 8px;
-    -fx-min-height: 8px;
-    -fx-max-width: 8px;
-    -fx-max-height: 8px;
-    -fx-effect: none;
-}
-*/
 
 
 .button-checkin{
@@ -210,13 +201,13 @@
 
 
 .button-chonMon{
-	-fx-background-color: #667eea;
-	-fx-text-fill: white;
+	-fx-background-color: #0F1F1F;
+	-fx-text-fill: black;
 	-fx-font-weight: bold;
-	-fx-background-radius: 6;
+	-fx-background-radius: 5;
 	-fx-cursor: hand;
 	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 15px;
+	-fx-font-size: 20;
 }
 
 .button-chonMon:hover{
@@ -244,15 +235,9 @@
     -fx-background-insets: 0;
     -fx-border-color: transparent;
     -fx-effect: none;
-    -fx-border-weight: 1;
     -fx-border-color: #D9D9D9;
-    -fx-border-radius: 3px;
-    -fx-font-size: 15px;
-}
-
-
-.date-picker:hover{
-	-fx-border-color: blue;
+	-fx-border-weight: 0.3px;
+    -fx-font-size: 15;
 }
 
 .date-picker > .arrow-button {
@@ -262,7 +247,6 @@
     -fx-background-size: 20px;
     -fx-background-color: white;
     -fx-effect: none;
-    -fx-border-color: #D9D9D9;
 }
 
 /* Nếu muốn ẩn luôn icon lịch (nếu còn hiện) */
@@ -279,7 +263,7 @@
     -fx-text-fill: black;
     -fx-font-weight: bold;
     -fx-font-size: 14px;
-    -fx-alignment: center-left;
+    -fx-alignment: CENTER;
 }
 
 .table-view .column-header {
@@ -290,45 +274,21 @@
 .btn-them {
 	-fx-background-radius: 5;
 	-fx-background-color: #2FB129;
-	-fx-font-size: 15px;
+	-fx-font-size: 20;
 	-fx-text-fill: white;
-	-fx-pref-width: 80px;
+	-fx-pref-width: 150px;
 	-fx-cursor: hand;
 	-fx-font-weight: bold;
-	-fx-padding: 5;
-}
-
-.btn-sua {
-	-fx-background-radius: 5;
-	-fx-background-color: #F4C430;
-	-fx-font-size: 15px;
-	-fx-text-fill: white;
-	-fx-pref-width: 80px;
-	-fx-cursor: hand;
-	-fx-font-weight: bold;
-	-fx-padding: 5;
 }
 
 .btn-luu{
 	-fx-background-radius: 5;
 	-fx-background-color: #082744;
-	-fx-font-size: 15px;
+	-fx-font-size: 20;
 	-fx-text-fill: white;
-	-fx-pref-width: 80px;
+	-fx-pref-width: 150px;
 	-fx-cursor: hand;
 	-fx-font-weight: bold;
-	-fx-padding: 5;
-}
-
-.btn-ngung{
-	-fx-background-radius: 5;
-	-fx-background-color: red;
-	-fx-font-size: 15px;
-	-fx-text-fill: white;
-	-fx-pref-width: 100px;
-	-fx-cursor: hand;
-	-fx-font-weight: bold;
-	-fx-padding: 5;
 }
 
 .btn-luu:hover {
@@ -348,43 +308,13 @@
 	-fx-opacity: 0.9
 }
 
-.timKiem {
-	-fx-pref-width: 200px;
-    -fx-pref-height: 20px;
-    -fx-border-width: 1;
-    -fx-border-color: #D2D2D2;
-    -fx-border-radius: 6px;
-    -fx-font-family: 'Tai Heritage Pro';
-    -fx-background-color: white;
-    -fx-font-size: 15;
-}
-
-.timKiem:hover{
-	-fx-border-color: blue;
-}
-
-.button-timKiem{
-	-fx-background-color: white;
-	-fx-border-color: #D2D2D2;
-	-fx-border-width: 1;
-	-fx-border-radius: 6px;
-	-fx-text-fill: black;
-	-fx-cursor: hand;
-	-fx-font-size: 15
-}
-
-.button-timKiem:hover{
-	-fx-border-color: blue;
-}
-
 .combo-box {
     -fx-background-color: white;
-    -fx-border-color: #D2D2D2;
-    -fx-border-radius: 6;
-    -fx-background-radius: 6;
+    -fx-border-color: black;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
     -fx-font-size: 15px;
     -fx-font-family:	'Tai Heritage Pro' ;
-    -fx-cursor: hand;
 }
 
 .list-view .list-cell:selected {
@@ -394,50 +324,47 @@
 .list-view .list-cell:focused {
     -fx-background-color: transparent;
 }
-/* =========================================
-   STYLE CHO MENU GỢI Ý (AUTO-SUGGESTION)
-   ========================================= */
 
-/* 1. Khung chứa danh sách gợi ý (ContextMenu) */
-.goi-y-menu {
-    -fx-background-color: white;
-    /* Bo góc dưới để khớp với ô tìm kiếm (nếu ô tìm kiếm vuông thì chỉnh về 0) */
-    -fx-background-radius: 0 0 8px 8px;
-    /* Đổ bóng nhẹ giống Google */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 8, 0, 0, 4);
-    -fx-padding: 5px 0; /* Khoảng cách trên dưới */
-    -fx-border-color: #dfe1e5; /* Viền xám nhạt */
-    -fx-border-width: 0 1px 1px 1px; /* Chỉ hiện viền 3 cạnh dưới */
-    -fx-border-radius: 0 0 8px 8px;
-}
-
-/* Ẩn cái viền xanh mặc định xấu xí của JavaFX khi focus */
-.goi-y-menu .menu-item:focused {
-    -fx-background-color: #f1f3f4; /* Màu xám nhạt khi di chuột vào */
-}
-
-/* 2. Từng dòng gợi ý (MenuItem) */
-.goi-y-item {
-    -fx-padding: 8px 15px; /* Khoảng cách chữ so với viền */
-    -fx-background-color: transparent;
+.btn-In{
+    -fx-background-color: #082744;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-pref-width: 100;
+    -fx-pref-height: 35;
+    -fx-font-weight: bold;
     -fx-cursor: hand;
 }
 
-/* 3. Chữ trong menu (Label) */
-.goi-y-item .label {
-    -fx-text-fill: #202124; /* Màu chữ đen xám Google */
-    -fx-font-family: "Segoe UI", Arial, sans-serif;
+.btn-In:hover{
+    -fx-opacity: 0.9;
+}
+/* Popup container */
+.context-menu {
+    -fx-background-color: white;
+    -fx-background-radius: 0 0 5px 5px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);
+    -fx-padding: 5px 0;
+    -fx-border-color: #D9D9D9;
+    -fx-border-width: 1px;
+    -fx-min-width: 220px; /* Khớp với độ rộng TextField */
+}
+
+/* Từng dòng gợi ý */
+.menu-item {
+    -fx-padding: 8px 15px;
+    -fx-background-color: transparent;
+}
+
+/* Chữ trong gợi ý */
+.menu-item .label {
+    -fx-text-fill: #333;
     -fx-font-size: 14px;
-    -fx-font-weight: normal;
+    -fx-font-family: "Segoe UI";
 }
 
-/* Khi di chuột vào dòng gợi ý (Hover/Focus) */
-.goi-y-item:focused .label {
-    -fx-text-fill: #000000; /* Chữ đậm hơn tí khi hover */
-}
-
-/* (Tùy chọn) Nếu bạn muốn thêm icon kính lúp đằng trước */
-/* Bạn cần setGraphic cho MenuItem trong code Java thì CSS này mới tác dụng */
-.goi-y-item .image-view {
-    -fx-opacity: 0.6;
+/* Hiệu ứng khi di chuột vào */
+.menu-item:focused, .menu-item:hover {
+    -fx-background-color: #f1f3f4; /* Màu xám nhạt giống Google */
+    -fx-cursor: hand;
 }

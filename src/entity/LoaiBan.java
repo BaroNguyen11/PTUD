@@ -1,13 +1,37 @@
 package entity;
 
+import java.text.DecimalFormat;
+
 public enum LoaiBan {
 
-	VIP (450000),
-	THUONG (300000);
-	
-	private double tienCoc;
+    VIP (450000, "VIP"),
+    THUONG (300000, "Thường");
 
-	private LoaiBan(double tienCoc) {
-		this.tienCoc = tienCoc;
-	}
+    private double tienCoc;
+    private String tenLoai;
+
+    private LoaiBan(double tienCoc, String tenLoai) {
+        this.tienCoc = tienCoc;
+        this.tenLoai = tenLoai;
+    }
+
+    public double getTienCoc() {
+        return tienCoc;
+    }
+
+    public String getTenLoai() {
+        return tenLoai;
+    }
+
+    public static LoaiBan fromString(String text) {
+        if (text != null) {
+            for (LoaiBan b : LoaiBan.values()) {
+                if (text.equalsIgnoreCase(b.tenLoai)) {
+                    return b;
+                }
+            }
+        }
+        System.err.println("Cảnh báo: Không tìm thấy LoaiBan cho chuỗi: '" + text + "'");
+        return null;
+    }
 }

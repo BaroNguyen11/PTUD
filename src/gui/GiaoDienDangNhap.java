@@ -1,6 +1,9 @@
 package gui;
 
+import dao.Ca_DAO;
 import dao.DangNhap_DAO;
+import entity.Ca;
+import entity.NhanVien;
 import javafx.application.Application;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -19,90 +22,288 @@ public class GiaoDienDangNhap extends Application {
     private static final String SPICES_IMAGE_PATH = "/img/spices_background.jpg";
     private static final String USER_ICON_PATH = "/img/user_icon.png";
     private static final String LOCK_ICON_PATH = "/img/lock_icon.png";
-
+    private static final String EYE_CLOSED_PATH = "/img/eye_closed.png";
+    private static final String EYE_OPEN_PATH = "/img/eye_open.png";
     // Lưu thông tin đăng nhập
     private static String currentUsername;
     private static String currentMaNhanVien;
     private static boolean currentIsAdmin;
 
-    private HBox createInputControl(String promptText, boolean isPassword, String iconPath) {
-        StackPane inputStack = new StackPane();
-        Control inputControl;
+//    private HBox createInputControl(String iconPath, boolean isPassword, String promptText) {
+//        StackPane inputStack = new StackPane();
+//        Control inputControl;
+//
+//        if (isPassword) {
+//            PasswordField passwordField = new PasswordField();
+//            passwordField.setPromptText(promptText);
+//            inputControl = passwordField;
+//        } else {
+//            TextField textField = new TextField();
+//            textField.setPromptText(promptText);
+//            inputControl = textField;
+//        }
+//
+//        inputControl.setPrefWidth(300);
+//        inputControl.setPrefHeight(45);
+//        inputControl.setMaxWidth(300);
+//
+//        inputControl.setStyle(
+//                "-fx-background-radius: 20;" +
+//                        "-fx-background-color: white;" +
+//                        "-fx-border-color: #A9A9A9;" +
+//                        "-fx-border-width: 0.5;" +
+//                        "-fx-border-radius: 20;" +
+//                        "-fx-padding: 10 20 10 40;" +
+//                        "-fx-font-family: 'Arial';" +
+//                        "-fx-font-size: 16px;" +
+//                        "-fx-font-weight: normal;"
+//        );
+//
+//        ImageView iconView = new ImageView();
+//        try {
+//            iconView.setImage(new Image(getClass().getResource(iconPath).toExternalForm()));
+//            iconView.setFitWidth(18);
+//            iconView.setFitHeight(18);
+//
+//            StackPane.setAlignment(iconView, Pos.CENTER_LEFT);
+//            StackPane.setMargin(iconView, new Insets(0, 0, 0, 15));
+//
+//            inputStack.getChildren().addAll(inputControl, iconView);
+//        } catch (Exception e) {
+//            inputStack.getChildren().add(inputControl);
+//        }
+//
+//        HBox container = new HBox(inputStack);
+//        container.setAlignment(Pos.CENTER);
+//        return container;
+//    }
 
-        if (isPassword) {
-            PasswordField passwordField = new PasswordField();
-            passwordField.setPromptText(promptText);
-            inputControl = passwordField;
-        } else {
-            TextField textField = new TextField();
-            textField.setPromptText(promptText);
-            inputControl = textField;
-        }
+private HBox createInputControl(String iconPath, boolean isPassword, String promptText) {
+    StackPane inputStack = new StackPane();
+    Control inputControl;
 
-        inputControl.setPrefWidth(300);
-        inputControl.setPrefHeight(45);
-        inputControl.setMaxWidth(300);
+    // ⭐️ Biến lưu padding, sẽ thay đổi nếu là password
+    String paddingStyle;
 
-        inputControl.setStyle(
-                "-fx-background-radius: 20;" +
-                        "-fx-background-color: white;" +
-                        "-fx-border-color: #A9A9A9;" +
-                        "-fx-border-width: 0.5;" +
-                        "-fx-border-radius: 20;" +
-                        "-fx-padding: 10 40 10 20;" +
-                        "-fx-font-family: 'Arial';" +
-                        "-fx-font-size: 16px;" +
-                        "-fx-font-weight: normal;"
-        );
+    // ⭐️ Cần một TextField để hiển thị mật khẩu khi nhấn vào mắt
+    TextField visiblePasswordField = null;
 
-        ImageView iconView = new ImageView();
-        try {
-            iconView.setImage(new Image(getClass().getResource(iconPath).toExternalForm()));
-            iconView.setFitWidth(18);
-            iconView.setFitHeight(18);
+    if (isPassword) {
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText(promptText);
+        inputControl = passwordField; // ⭐️ Đây là control chính (ẩn)
 
-            StackPane.setAlignment(iconView, Pos.CENTER_RIGHT);
-            StackPane.setMargin(iconView, new Insets(0, 15, 0, 0));
+        // ⭐️ Tạo một TextField "song sinh" để hiển thị mật khẩu
+        visiblePasswordField = new TextField();
+        visiblePasswordField.setPromptText(promptText);
+        visiblePasswordField.setVisible(false); // Ẩn nó đi lúc đầu
 
-            inputStack.getChildren().addAll(inputControl, iconView);
-        } catch (Exception e) {
-            inputStack.getChildren().add(inputControl);
-        }
+        // ⭐️ Liên kết nội dung của 2 trường: gõ ở 1 bên, bên kia tự cập nhật
+        visiblePasswordField.textProperty().bindBidirectional(passwordField.textProperty());
 
-        HBox container = new HBox(inputStack);
-        container.setAlignment(Pos.CENTER);
-        return container;
+        // ⭐️ Cần chừa 40px ở cả 2 bên (trái cho khóa, phải cho mắt)
+        paddingStyle = "-fx-padding: 10 40 10 40;";
+
+    } else {
+        TextField textField = new TextField();
+        textField.setPromptText(promptText);
+        inputControl = textField;
+
+        // ⭐️ Chỉ cần chừa 40px bên trái cho icon user
+        paddingStyle = "-fx-padding: 10 20 10 40;";
     }
 
-    private void openMainScreen(Stage currentStage) {
+    inputControl.setPrefWidth(300);
+    inputControl.setPrefHeight(45);
+    inputControl.setMaxWidth(300);
+
+    // ⭐️ Tách style ra để dùng chung
+    String baseStyle = "-fx-background-radius: 20;" +
+            "-fx-background-color: white;" +
+            "-fx-border-color: #A9A9A9;" +
+            "-fx-border-width: 0.5;" +
+            "-fx-border-radius: 20;" +
+            "-fx-font-family: 'Arial';" +
+            "-fx-font-size: 16px;" +
+            "-fx-font-weight: normal;";
+
+    // ⭐️ Áp dụng style với padding tương ứng
+    inputControl.setStyle(baseStyle + paddingStyle);
+
+    // ⭐️ Thêm control chính vào stack (nó sẽ là child 0)
+    inputStack.getChildren().add(inputControl);
+
+    if (visiblePasswordField != null) {
+        // ⭐️ Áp dụng style cho cả trường "song sinh"
+        visiblePasswordField.setStyle(baseStyle + paddingStyle);
+        visiblePasswordField.setPrefSize(300, 45);
+        visiblePasswordField.setMaxWidth(300);
+
+        // ⭐️ Thêm trường "song sinh" vào stack
+        inputStack.getChildren().add(visiblePasswordField);
+    }
+
+    // ⭐️ Xử lý icon bên trái (User/Lock)
+    try {
+        ImageView leftIconView = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
+        leftIconView.setFitWidth(18);
+        leftIconView.setFitHeight(18);
+
+        StackPane.setAlignment(leftIconView, Pos.CENTER_LEFT);
+        StackPane.setMargin(leftIconView, new Insets(0, 0, 0, 15));
+
+        inputStack.getChildren().add(leftIconView); // Thêm icon trái
+
+    } catch (Exception e) {
+        System.err.println("Không tải được icon trái: " + iconPath);
+    }
+
+    // ⭐️ Xử lý thêm icon mắt (bên phải) NẾU là password
+    if (isPassword) {
         try {
-            currentStage.close();
+            Image eyeClosedImg = new Image(getClass().getResource(EYE_CLOSED_PATH).toExternalForm());
+            Image eyeOpenImg = new Image(getClass().getResource(EYE_OPEN_PATH).toExternalForm());
+            ImageView eyeIconView = new ImageView(eyeClosedImg); // Ban đầu là nhắm mắt
+            eyeIconView.setFitWidth(18);
+            eyeIconView.setFitHeight(18);
+            eyeIconView.setCursor(Cursor.HAND);
 
-            Stage mainStage = new Stage();
-            TrangChu root = new TrangChu();
-            Scene scene = new Scene(root);
+            // ⭐️ Căn lề phải
+            StackPane.setAlignment(eyeIconView, Pos.CENTER_RIGHT);
+            StackPane.setMargin(eyeIconView, new Insets(0, 15, 0, 0));
 
+            // ⭐️ Logic bấm vào mắt
+            // Cần khai báo final để dùng trong lambda
+            final Control finalInputControl = inputControl;
+            final TextField finalVisiblePasswordField = visiblePasswordField;
+
+            eyeIconView.setOnMouseClicked(e -> {
+                if (finalVisiblePasswordField.isVisible()) {
+                    // Đang hiện -> Giấu đi
+                    finalVisiblePasswordField.setVisible(false);
+                    finalInputControl.setVisible(true); // Hiện PasswordField
+                    eyeIconView.setImage(eyeClosedImg);
+                } else {
+                    // Đang giấu -> Hiện lên
+                    finalVisiblePasswordField.setVisible(true);
+                    finalInputControl.setVisible(false); // Giấu PasswordField
+                    eyeIconView.setImage(eyeOpenImg);
+                }
+            });
+
+            // ⭐️ Thêm icon mắt vào stack
+            inputStack.getChildren().add(eyeIconView);
+
+        } catch (Exception e) {
+            System.err.println("Không thể tải icon mắt: " + e.getMessage());
+        }
+    }
+
+    HBox container = new HBox(inputStack);
+    container.setAlignment(Pos.CENTER);
+    return container;
+}
+//    private void openMainScreen(Stage currentStage) {
+//        try {
+//            currentStage.close();
+//
+//            Stage mainStage = new Stage();
+//            TrangChu root = new TrangChu();
+//            Scene scene = new Scene(root);
+//
+//            try {
+//                scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+//            } catch (Exception e) {
+//                System.out.println("Không tìm thấy file CSS");
+//            }
+//
+//            mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
+//            mainStage.setMaximized(true);
+//            mainStage.setScene(scene);
+//            mainStage.show();
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            Alert alert = new Alert(Alert.AlertType.ERROR);
+//            alert.setTitle("Lỗi");
+//            alert.setHeaderText(null);
+//            alert.setContentText("Không thể mở màn hình chính!\n" + e.getMessage());
+//            alert.showAndWait();
+//        }
+//    }
+private void openMainScreen(Stage currentStage) {
+    try {
+        currentStage.close();
+
+        Stage mainStage = new Stage();
+        TrangChu root = new TrangChu();
+        Scene scene = new Scene(root);
+
+        try {
+            scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+        } catch (Exception e) {
+            System.out.println("Không tìm thấy file CSS");
+        }
+
+        mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
+        mainStage.setMaximized(true);
+        mainStage.setScene(scene);
+
+        // ⭐️⭐️⭐️ ĐOẠN CODE QUAN TRỌNG ĐÂY ⭐️⭐️⭐️
+        // Bắt sự kiện khi người dùng bấm nút X để đóng cửa sổ
+        mainStage.setOnCloseRequest(event -> {
             try {
-                scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+                // 1. Lấy mã nhân viên hiện tại
+                String maNhanVienHienTai = getCurrentMaNhanVien();
+                if (maNhanVienHienTai == null || maNhanVienHienTai.isEmpty()) {
+                    // Nếu không có thông tin đăng nhập (lạ), cứ cho đóng
+                    return;
+                }
+
+                // 2. Kiểm tra xem nhân viên này còn ca đang làm không
+                Ca_DAO caDAO = new Ca_DAO();
+                Ca caDangLam = caDAO.getCaDangLam(maNhanVienHienTai);
+
+                if (caDangLam != null) {
+                    // 3. NẾU CÒN CA -> KHÔNG CHO ĐÓNG
+                    Alert alert = new Alert(Alert.AlertType.WARNING);
+                    alert.setTitle("Chưa kết ca");
+                    alert.setHeaderText("Bạn chưa kết ca làm việc!");
+                    alert.setContentText("Vui lòng vào mục 'Kết Ca' để hoàn tất ca của bạn trước khi tắt ứng dụng.");
+                    alert.showAndWait();
+
+                    // 4. Hủy sự kiện đóng cửa sổ (quan trọng nhất)
+                    event.consume();
+
+                } else {
+                    // 5. NẾU ĐÃ KẾT CA -> CHO ĐÓNG BÌNH THƯỜNG
+                    // Không làm gì cả, cửa sổ sẽ tự đóng
+                }
+
             } catch (Exception e) {
-                System.out.println("Không tìm thấy file CSS");
+                e.printStackTrace();
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("Lỗi");
+                alert.setHeaderText("Lỗi khi kiểm tra ca làm việc");
+                alert.setContentText("Không thể xác minh trạng thái ca: " + e.getMessage());
+                alert.showAndWait();
+                // Hủy sự kiện để an toàn, phòng lỗi
+                event.consume();
             }
+        });
+        // ⭐️⭐️⭐️ HẾT ĐOẠN CODE MỚI ⭐️⭐️⭐️
 
-            mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
-            mainStage.setMaximized(true);
-            mainStage.setScene(scene);
-            mainStage.show();
+        mainStage.show();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Lỗi");
-            alert.setHeaderText(null);
-            alert.setContentText("Không thể mở màn hình chính!\n" + e.getMessage());
-            alert.showAndWait();
-        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle("Lỗi");
+        alert.setHeaderText(null);
+        alert.setContentText("Không thể mở màn hình chính!\n" + e.getMessage());
+        alert.showAndWait();
     }
-
+}
     @Override
     public void start(Stage stage) {
         double IMAGE_WIDTH = 380;
@@ -114,8 +315,8 @@ public class GiaoDienDangNhap extends Application {
         lblLogin.setFont(Font.font("Arial", FontWeight.BOLD, 28));
         lblLogin.setTextFill(Color.BLACK);
 
-        HBox usernameBox = createInputControl("Tên đăng nhập", false, USER_ICON_PATH);
-        HBox passwordBox = createInputControl("Mật khẩu", true, LOCK_ICON_PATH);
+        HBox usernameBox = createInputControl(USER_ICON_PATH, false, "Tên đăng nhập");
+        HBox passwordBox = createInputControl(LOCK_ICON_PATH, true, "Mật khẩu");
 
         TextField usernameField = (TextField) ((StackPane) usernameBox.getChildren().get(0)).getChildren().get(0);
         PasswordField passwordField = (PasswordField) ((StackPane) passwordBox.getChildren().get(0)).getChildren().get(0);
@@ -141,8 +342,6 @@ public class GiaoDienDangNhap extends Application {
         btnLogin.setOnMouseEntered(e -> btnLogin.setStyle("-fx-background-color: #123E63; -fx-text-fill: white; " +
                 "-fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; " ));
         btnLogin.setOnMouseExited(e -> btnLogin.setStyle("-fx-background-color: #0A2940; -fx-text-fill: white; -fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px;"));
-
-        // XỬ LÝ ĐĂNG NHẬP
 //        btnLogin.setOnAction(e -> {
 //            String username = usernameField.getText().trim();
 //            String password = passwordField.getText().trim();
@@ -163,15 +362,29 @@ public class GiaoDienDangNhap extends Application {
 //                    currentUsername = username;
 //                    currentIsAdmin = dangNhapDAO.isAdmin(username);
 //                    currentMaNhanVien = dangNhapDAO.getMaNhanVien(username);
+//                    stage.hide();
+//                    // ✅ HIỂN THỊ MODAL VÀO CA
+//                    NhanVien nhanVien = new NhanVien();
+//                    nhanVien.setMaNhanVien(currentMaNhanVien);
+//                    nhanVien.setTenNhanVien(currentUsername); // hoặc lấy tên thật từ DAO
 //
-//                    Alert alert = new Alert(Alert.AlertType.INFORMATION);
-//                    alert.setTitle("Đăng nhập thành công");
-//                    alert.setHeaderText(null);
-//                    alert.setContentText("Chào mừng " + (currentIsAdmin ? "Quản trị viên" : "Nhân viên") +
-//                            "\nMã nhân viên: " + currentMaNhanVien);
-//                    alert.showAndWait();
+//                    // ✅ Truyền object NhanVien vào VaoCaModal
+//                    VaoCaModal vaoCaModal = new VaoCaModal(nhanVien);
+//                    vaoCaModal.showAndWait();
 //
-//                    openMainScreen(stage);
+//                    // Kiểm tra xem user đã xác nhận vào ca chưa
+//                    if (vaoCaModal.isConfirmed()) {
+//                        long tienDauCa = vaoCaModal.getTongTienDauCa();
+//
+//                        openMainScreen(stage);
+//                    } else {
+//                        // Nếu chưa xác nhận, không cho vào hệ thống
+//                        Alert alert = new Alert(Alert.AlertType.WARNING);
+//                        alert.setTitle("Chưa vào ca");
+//                        alert.setHeaderText(null);
+//                        alert.setContentText("Bạn cần xác nhận vào ca để sử dụng hệ thống!");
+//                        alert.showAndWait();
+//                    }
 //
 //                } else {
 //                    Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -193,7 +406,6 @@ public class GiaoDienDangNhap extends Application {
 //                alert.showAndWait();
 //            }
 //        });
-// XỬ LÝ ĐĂNG NHẬP
         btnLogin.setOnAction(e -> {
             String username = usernameField.getText().trim();
             String password = passwordField.getText().trim();
@@ -211,34 +423,79 @@ public class GiaoDienDangNhap extends Application {
                 DangNhap_DAO dangNhapDAO = new DangNhap_DAO();
 
                 if (dangNhapDAO.authenticate(username, password)) {
-                    currentUsername = username;
-                    currentIsAdmin = dangNhapDAO.isAdmin(username);
-                    currentMaNhanVien = dangNhapDAO.getMaNhanVien(username);
-                    stage.hide();
-                    // ✅ HIỂN THỊ MODAL VÀO CA
-                    VaoCaModal vaoCaModal = new VaoCaModal(currentUsername, currentMaNhanVien);
-                    vaoCaModal.showAndWait();
+                    // Lấy thông tin người vừa đăng nhập
+                    String maNvVuaDangNhap = dangNhapDAO.getMaNhanVien(username);
+                    String tenNvVuaDangNhap = username; // TODO: Nên lấy tên đầy đủ từ DAO
+                    boolean laAdmin = dangNhapDAO.isAdmin(username);
 
-                    // Kiểm tra xem user đã xác nhận vào ca chưa
-                    if (vaoCaModal.isConfirmed()) {
-                        long tienDauCa = vaoCaModal.getTongTienDauCa();
+                    // ✅✅✅ LOGIC KIỂM TRA MỚI ✅✅✅
+                    Ca_DAO caDAO = new Ca_DAO();
+                    Ca caBiTreo = caDAO.getCaDangMo(); // Lấy ca bất kỳ đang mở
 
-                        System.out.println("✅ Vào ca thành công!");
-                        System.out.println("💰 Tiền đầu ca: " + String.format("%,d VND", tienDauCa));
+                    if (caBiTreo != null) {
+                        // --- TÌNH HUỐNG 1: CÓ CA ĐANG MỞ ---
+                        String maNvCuaCaTreo = caBiTreo.getMaNhanVien().getMaNhanVien();
 
-                        // TODO: Lưu thông tin vào ca vào database
-                        // VaoCa_DAO.luuThongTinVaoCa(currentMaNhanVien, tienDauCa);
+                        if (maNvCuaCaTreo.equals(maNvVuaDangNhap)) {
+                            // A. Đây chính là nhân viên đó đăng nhập lại
+                            // Bỏ qua VaoCaModal, đi thẳng vào màn hình chính
 
-                        // Mở màn hình chính
-                        openMainScreen(stage);
+                            // Lưu thông tin session
+                            currentUsername = tenNvVuaDangNhap;
+                            currentIsAdmin = laAdmin;
+                            currentMaNhanVien = maNvVuaDangNhap;
+
+                            stage.hide();
+                            openMainScreen(stage); // Đi thẳng vào
+
+                        } else {
+                            // B. Một nhân viên KHÁC đã để treo ca
+                            // Báo lỗi và không cho vào
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle("Lỗi Ca Làm Việc");
+                            alert.setHeaderText("Ca trước chưa được kết thúc!");
+                            alert.setContentText("Nhân viên có mã [" + maNvCuaCaTreo + "] chưa kết ca.\n" +
+                                    "Vui lòng yêu cầu nhân viên đó đăng nhập và KẾT CA trước.");
+                            alert.showAndWait();
+                            // Giữ nguyên ở màn hình đăng nhập
+                        }
+
                     } else {
-                        // Nếu chưa xác nhận, không cho vào hệ thống
-                        Alert alert = new Alert(Alert.AlertType.WARNING);
-                        alert.setTitle("Chưa vào ca");
-                        alert.setHeaderText(null);
-                        alert.setContentText("Bạn cần xác nhận vào ca để sử dụng hệ thống!");
-                        alert.showAndWait();
+                        // --- TÌNH HUỐNG 2: KHÔNG CÓ CA NÀO BỊ TREO ---
+                        // Quy trình vào ca mới bình thường
+
+                        // Lưu thông tin session
+                        currentUsername = tenNvVuaDangNhap;
+                        currentIsAdmin = laAdmin;
+                        currentMaNhanVien = maNvVuaDangNhap;
+
+                        stage.hide();
+                        NhanVien nhanVien = new NhanVien();
+                        nhanVien.setMaNhanVien(currentMaNhanVien);
+                        nhanVien.setTenNhanVien(currentUsername);
+
+                        VaoCaModal vaoCaModal = new VaoCaModal(nhanVien);
+                        vaoCaModal.showAndWait();
+
+                        if (vaoCaModal.isConfirmed()) {
+                            // User xác nhận vào ca, mở màn hình chính
+                            openMainScreen(stage);
+                        } else {
+                            // User đóng modal (không vào ca), hiển thị lại màn hình đăng nhập
+                            // và xóa session
+                            stage.show();
+                            currentUsername = null;
+                            currentMaNhanVien = null;
+                            currentIsAdmin = false;
+
+                            Alert alert = new Alert(Alert.AlertType.WARNING);
+                            alert.setTitle("Chưa vào ca");
+                            alert.setHeaderText(null);
+                            alert.setContentText("Bạn cần xác nhận vào ca để sử dụng hệ thống!");
+                            alert.showAndWait();
+                        }
                     }
+                    // ✅✅✅ KẾT THÚC LOGIC MỚI ✅✅✅
 
                 } else {
                     Alert alert = new Alert(Alert.AlertType.ERROR);

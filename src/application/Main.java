@@ -11,6 +11,7 @@ public class Main extends Application {
             GiaoDienDangNhap loginScreen = new GiaoDienDangNhap();
             loginScreen.start(primaryStage);
 
+
         } catch(Exception e) {
             e.printStackTrace();
         }

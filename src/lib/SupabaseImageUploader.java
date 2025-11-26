@@ -11,11 +11,21 @@ public class SupabaseImageUploader {
     private static final String BUCKET_NAME = "image";
 
     /**
-     * Upload ảnh lên Supabase và trả về URL công khai (public)
+     * Upload ảnh lên Supabase vào folder theo loại món
+     * @param file File ảnh cần upload
+     * @param loaiMon Tên folder (vd: "ankem", "khaivi", "monchinh")
+     * @return Đường dẫn tương đối (vd: "ankem/1732467890123_banhmibotoi.jpg")
+     * @throws IOException Nếu upload thất bại
      */
-    public String uploadImage(File file) throws IOException {
+    public String uploadImage(File file, String loaiMon) throws IOException {
+        // Tạo tên file unique với timestamp
         String fileName = System.currentTimeMillis() + "_" + file.getName();
-        String uploadUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET_NAME + "/" + fileName;
+
+        // Đường dẫn đầy đủ: loaiMon/fileName
+        String folderPath = loaiMon + "/" + fileName;
+
+        // URL upload
+        String uploadUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET_NAME + "/" + folderPath;
 
         HttpURLConnection conn = (HttpURLConnection) new URL(uploadUrl).openConnection();
         conn.setRequestMethod("POST");
@@ -28,11 +38,54 @@ public class SupabaseImageUploader {
         }
 
         int responseCode = conn.getResponseCode();
+
         if (responseCode == 200 || responseCode == 201) {
-            // ✅ Nếu bucket là Public (enable public access trong Supabase)
-            return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_NAME + "/" + fileName;
+            // ✅ Trả về đường dẫn tương đối để lưu vào database
+            System.out.println("✅ Upload thành công: " + folderPath);
+            return folderPath; // vd: "ankem/1732467890123_banhmibotoi.jpg"
+
         } else {
-            throw new IOException("Upload thất bại, mã lỗi: " + responseCode);
+            // Đọc error message từ response
+            String errorMsg = "";
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getErrorStream()))) {
+                errorMsg = br.lines().reduce("", (acc, line) -> acc + line + "\n");
+            } catch (Exception e) {
+                errorMsg = "Không đọc được error message";
+            }
+
+            throw new IOException("Upload thất bại, mã lỗi: " + responseCode + "\nChi tiết: " + errorMsg);
+        }
+    }
+
+    /**
+     * Lấy URL công khai từ đường dẫn tương đối
+     * @param relativePath Đường dẫn tương đối (vd: "ankem/banhmibotoi.jpg")
+     * @return URL đầy đủ
+     */
+    public static String getPublicUrl(String relativePath) {
+        return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_NAME + "/" + relativePath;
+    }
+
+    /**
+     * Xóa ảnh trên Supabase
+     * @param relativePath Đường dẫn tương đối (vd: "ankem/banhmibotoi.jpg")
+     * @return true nếu xóa thành công
+     */
+    public boolean deleteImage(String relativePath) throws IOException {
+        String deleteUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET_NAME + "/" + relativePath;
+
+        HttpURLConnection conn = (HttpURLConnection) new URL(deleteUrl).openConnection();
+        conn.setRequestMethod("DELETE");
+        conn.setRequestProperty("Authorization", "Bearer " + SUPABASE_API_KEY);
+
+        int responseCode = conn.getResponseCode();
+
+        if (responseCode == 200) {
+            System.out.println("✅ Đã xóa ảnh: " + relativePath);
+            return true;
+        } else {
+            System.err.println("❌ Xóa ảnh thất bại, mã lỗi: " + responseCode);
+            return false;
         }
     }
 }

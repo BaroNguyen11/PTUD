@@ -34,51 +34,53 @@ public class KhachHang_DAO {
     }
 
     // Lấy khách hàng theo mã
-    public KhachHang getKhachHangByMa(String maKhachHang) {
+    public KhachHang getKhachHangById(String maKH) {
+        KhachHang kh = null;
         String sql = "SELECT * FROM KhachHang WHERE maKhachHang = ?";
-
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, maKhachHang);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("tenKhachHang"),
-                        rs.getString("soDienThoai"),
-                        rs.getDouble("diemTichLuy")
-                );
+            ps.setString(1, maKH);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    kh = new KhachHang(
+                            rs.getString("maKhachHang"),
+                            rs.getString("tenKhachHang"),
+                            rs.getString("soDienThoai"),
+                            rs.getDouble("diemTichLuy")
+                    );
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
-        return null;
+        return kh;
     }
 
     // Lấy khách hàng theo số điện thoại
-    public KhachHang getKhachHangBySoDienThoai(String soDienThoai) {
+    public KhachHang getKhachHangBySdt(String sdt) {
+        KhachHang kh = null;
         String sql = "SELECT * FROM KhachHang WHERE soDienThoai = ?";
 
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, soDienThoai);
-            ResultSet rs = ps.executeQuery();
+            ps.setString(1, sdt);
 
-            if (rs.next()) {
-                return new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("tenKhachHang"),
-                        rs.getString("soDienThoai"),
-                        rs.getDouble("diemTichLuy")
-                );
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    kh = new KhachHang(
+                            rs.getString("maKhachHang"),
+                            rs.getString("tenKhachHang"),
+                            rs.getString("soDienThoai"),
+                            rs.getDouble("diemTichLuy")
+                    );
+                }
             }
         } catch (SQLException e) {
+            System.err.println("Lỗi truy vấn SQL khi tìm khách hàng theo SĐT: " + sdt);
             e.printStackTrace();
         }
-        return null;
+        return kh;
     }
 
     // Tìm kiếm khách hàng theo tên hoặc số điện thoại
