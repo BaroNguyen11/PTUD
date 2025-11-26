@@ -51,7 +51,8 @@ public class datban extends BorderPane {
 	private ObservableList<BanAn> dsBanDaChon;
 	private ObservableList<ChiTietHoaDon> dsMonDaChon;
 	private final DecimalFormat df = new DecimalFormat("###,###đ");
-	private BorderPane mainLayout;
+	private TrangChu trangChu; 
+//	private BorderPane mainLayout;
 	private List<BanAn> cacBanDuocChon;
 	private Label lblTongCoc;
 	private Label lblTongTienMon;
@@ -71,8 +72,9 @@ public class datban extends BorderPane {
 	private RadioButton radioDatTruoc;
 	private TextField txtGhiChu;
 
-	public datban(BorderPane mainLayout, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
-		this.mainLayout = mainLayout;
+	public datban(TrangChu trangChu, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
+		this.trangChu = trangChu;
+//		this.mainLayout = mainLayout;
 		this.cacBanDuocChon = cacBanDaChon;
 		this.ngayDatBan = ngayDatBan;
 
@@ -646,12 +648,7 @@ public class datban extends BorderPane {
 		TableColumn<ChiTietHoaDon, Integer> colSoLuong = new TableColumn<>("Số lượng");
 		colSoLuong.setCellValueFactory(new PropertyValueFactory<>("soLuong"));
 
-		// 3. Cột Đơn giá
-//		TableColumn<ChiTietHoaDon, String> colDonGia = new TableColumn<>("Đơn giá");
-//		colDonGia.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-//				df.format(cellData.getValue().getMonAn().getGiaTien())));
-
-		
+		// 3. Cột Đơn giá		
 		final LocalDate ngayDat = dpNgayDen.getValue();
 		TableColumn<ChiTietHoaDon, String> colDonGia = new TableColumn<>("Đơn giá");
 		colDonGia.setCellValueFactory(cellData -> {
@@ -739,7 +736,8 @@ public class datban extends BorderPane {
 		btnXacNhan.getStyleClass().add("button-checkin");
 		btnXacNhan.setStyle("-fx-background-color: #2D3748; -fx-text-fill: white; -fx-font-weight: bold;");
 		btnQuayLai.setOnAction(e -> {
-			mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+//			mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+			trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
 		});
 
 		btnXacNhan.setOnAction(e -> {
@@ -925,7 +923,8 @@ public class datban extends BorderPane {
 				// ---------------------------------------------
 				if (success) {
 					showAlert(AlertType.INFORMATION, "Thành công", "Đã đặt bàn thành công! Mã hóa đơn: " + maHDChung);
-					mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+//					mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+					trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
 				} else {
 					showAlert(AlertType.ERROR, "Lỗi Nghiệp vụ",
 							"Đã xảy ra lỗi khi ghi dữ liệu. Vui lòng kiểm tra lại hệ thống.");

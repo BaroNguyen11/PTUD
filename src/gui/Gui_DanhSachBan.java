@@ -44,7 +44,8 @@ import javafx.stage.StageStyle;
 public class Gui_DanhSachBan extends BorderPane {
 	private GridPane luoiBan;
 	private BanAn_DAO banAn_DAO;
-	private BorderPane mainLayout;
+//	private BorderPane mainLayout;
+	private TrangChu trangChu; 
 	private List<BanAn> danhSachBanDaChon = new ArrayList<>();
 	private TextField timKiem;
 	private ComboBox<String> cmbTatCa;
@@ -55,8 +56,9 @@ public class Gui_DanhSachBan extends BorderPane {
     private LocalDate ngayChon = LocalDate.now();
     private PhieuDatBan_DAO phieuDatBan_DAO;
 
-	public Gui_DanhSachBan(BorderPane mainLayout) {
-		this.mainLayout = mainLayout;
+	public Gui_DanhSachBan(TrangChu trangChu) {
+//		this.mainLayout = mainLayout;
+		this.trangChu = trangChu;
 		banAn_DAO = new BanAn_DAO();
 		phieuDatBan_DAO = new PhieuDatBan_DAO();
 		this.setStyle("-fx-background-color: white;");
@@ -317,13 +319,17 @@ public class Gui_DanhSachBan extends BorderPane {
 
 		try {
 	        LocalDate ngayDat = datePicker.getValue(); 
-	        // SỬA: Thêm tham số ngayDat vào constructor
-	        datban guiDatBan = new datban(mainLayout, danhSachBanDaChon, ngayDat); 
-	        mainLayout.setCenter(guiDatBan);
+
+//	        datban guiDatBan = new datban(mainLayout, danhSachBanDaChon, ngayDat); 
+	        datban guiDatBan = new datban(trangChu, danhSachBanDaChon, ngayDat); 
+	        
+//	        mainLayout.setCenter(guiDatBan);
+	        trangChu.setMainContent(guiDatBan);
 	    } catch (Exception e) {
 	        e.printStackTrace();
 	        // Cần đảm bảo constructor dự phòng cũng có tham số ngayDat
-	        new datban(mainLayout, danhSachBanDaChon, datePicker.getValue());
+//	        new datban(mainLayout, danhSachBanDaChon, datePicker.getValue());
+	        new datban(trangChu, danhSachBanDaChon, datePicker.getValue());
 	    }
 		
 	}
@@ -414,7 +420,7 @@ public class Gui_DanhSachBan extends BorderPane {
 	    
 	    PhieuDatBan pdbInfo = null;
 	    if (isBookedOrInUse) {
-	        // Lấy ngày đang chọn từ thuộc tính lớp DanhSachBan_Gui
+	        // Lấy ngày đang chọn từ thuộc tính lớp Gui_DanhSachBan
 	        LocalDate ngayDat = datePicker.getValue(); 
 	        
 	        // Gọi DAO để tra cứu phiếu đặt bàn cho bàn và ngày đó
