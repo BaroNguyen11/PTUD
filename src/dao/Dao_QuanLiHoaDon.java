@@ -385,109 +385,112 @@ public class Dao_QuanLiHoaDon {
         return dsChiTiet;
     }
 
-    public List<String> loadDanhSachHoaDon() {
-        List<String> ds = new ArrayList<>();
+	public List<String> loadDanhSachHoaDon() {
+		List<String> ds = new ArrayList<>();
 
-        String sql = """
-                SELECT
-                    hd.maHoaDon,
-                    kh.tenKhachHang,
-                    nv.tenNhanVien,
+		String sql = """
+					SELECT
+				    hd.maHoaDon,
+				    kh.tenKhachHang,
+				    nv.tenNhanVien,
 
-                    SUM(CASE
-                            WHEN kmma.giaSauKhuyenMai IS NOT NULL
-                                THEN kmma.giaSauKhuyenMai * cthd.soLuong
-                            ELSE ma.giaTien * cthd.soLuong
-                        END) AS tongTien,
+				    SUM(
+				        CASE
+				            WHEN kmma.giaSauKhuyenMai IS NOT NULL
+				                THEN kmma.giaSauKhuyenMai * cthd.soLuong
+				            ELSE ma.giaTien * cthd.soLuong
+				        END
+				    ) AS tongTien,
 
-                    ISNULL(ctkmhd.soTienGiam, 0) AS giamGiaHD,
+				    ISNULL(ctkmhd.soTienGiam, 0) AS giamGiaHD,
 
-                    hd.phuongThuc,
-                    hd.ngayTao,
-                    hd.trangThai,
-                    pdb.ghiChu,
+				    hd.phuongThuc,
+				    hd.ngayTao,
+				    hd.trangThai,
+				    pdb.ghiChu,
 
-                    ba.loai AS loaiBan,
+				    ba.loai AS loaiBan,
 
-                    STRING_AGG(pdb.maBan, ',') AS danhSachBan
+				    pdb_gop.danhSachBan
 
-                FROM HoaDon hd
-                LEFT JOIN KhachHang kh ON hd.maKhachHang = kh.maKhachHang
-                LEFT JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien
-                LEFT JOIN ChiTietHoaDon cthd ON hd.maHoaDon = cthd.maHoaDon
-                LEFT JOIN MonAn ma ON cthd.maMonAn = ma.maMonAn
+				FROM HoaDon hd
+				LEFT JOIN KhachHang kh ON hd.maKhachHang = kh.maKhachHang
+				LEFT JOIN NhanVien nv ON hd.maNhanVien = nv.maNhanVien
+				LEFT JOIN ChiTietHoaDon cthd ON hd.maHoaDon = cthd.maHoaDon
+				LEFT JOIN MonAn ma ON cthd.maMonAn = ma.maMonAn
 
-                LEFT JOIN ChiTietKMMonAn kmma
-                    ON kmma.maMonAn = ma.maMonAn
-                    AND hd.ngayTao BETWEEN
-                        (SELECT ngayBatDau FROM KhuyenMai WHERE maKhuyenMai = kmma.maKhuyenMai)
-                        AND
-                        (SELECT ngayKetThuc FROM KhuyenMai WHERE maKhuyenMai = kmma.maKhuyenMai)
+				LEFT JOIN ChiTietKMMonAn kmma
+				    ON kmma.maMonAn = ma.maMonAn
+				    AND hd.ngayTao BETWEEN
+				        (SELECT ngayBatDau FROM KhuyenMai WHERE maKhuyenMai = kmma.maKhuyenMai)
+				        AND
+				        (SELECT ngayKetThuc FROM KhuyenMai WHERE maKhuyenMai = kmma.maKhuyenMai)
 
-                LEFT JOIN ChiTietKMHD ctkmhd ON hd.maHoaDon = ctkmhd.maHoaDon
+				LEFT JOIN ChiTietKMHD ctkmhd ON hd.maHoaDon = ctkmhd.maHoaDon
+				LEFT JOIN PhieuDatBan pdb ON hd.maHoaDon = pdb.maHoaDon
+				LEFT JOIN BanAn ba ON ba.maBan = pdb.maBan
 
-                LEFT JOIN PhieuDatBan pdb ON hd.maHoaDon = pdb.maHoaDon
-                LEFT JOIN BanAn ba ON ba.maBan = pdb.maBan
+				-- Subquery gộp bàn duy nhất
+				LEFT JOIN (
+				    SELECT maHoaDon, STRING_AGG(maBan, ',') AS danhSachBan
+				    FROM (
+				        SELECT DISTINCT maHoaDon, maBan
+				        FROM PhieuDatBan
+				    ) AS pdb_distinct
+				    GROUP BY maHoaDon
+				) AS pdb_gop ON hd.maHoaDon = pdb_gop.maHoaDon
 
-                WHERE ba.loai IS NOT NULL
-                GROUP BY
-                    hd.maHoaDon,
-                    kh.tenKhachHang,
-                    nv.tenNhanVien,
-                    ctkmhd.soTienGiam,
-                    hd.phuongThuc,
-                    hd.ngayTao,
-                    hd.trangThai,
-                    ba.loai,
-                    pdb.ghiChu
-                """;
+				WHERE ba.loai IS NOT NULL
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+				GROUP BY
+				    hd.maHoaDon,
+				    kh.tenKhachHang,
+				    nv.tenNhanVien,
+				    ctkmhd.soTienGiam,
+				    hd.phuongThuc,
+				    hd.ngayTao,
+				    hd.trangThai,
+				    ba.loai,
+				    pdb.ghiChu,
+				    pdb_gop.danhSachBan;
+				                """;
 
-            while (rs.next()) {
+		try (Connection con = ConnectDB.getConnection();
+				PreparedStatement ps = con.prepareStatement(sql);
+				ResultSet rs = ps.executeQuery()) {
 
-                String maHD       = rs.getString("maHoaDon");
-                String tenKH      = rs.getString("tenKhachHang");
-                String tenNV      = rs.getString("tenNhanVien");
+			while (rs.next()) {
 
-                String danhSachBan = rs.getString("danhSachBan"); 
-                String loaiBan     = rs.getString("loaiBan");      
-                String ghiChu      = rs.getString("ghiChu");       
+				String maHD = rs.getString("maHoaDon");
+				String tenKH = rs.getString("tenKhachHang");
+				String tenNV = rs.getString("tenNhanVien");
 
-                double tongTien    = rs.getDouble("tongTien");
-                double giamGia     = rs.getDouble("giamGiaHD");
+				String danhSachBan = rs.getString("danhSachBan");
+				String loaiBan = rs.getString("loaiBan");
+				String ghiChu = rs.getString("ghiChu");
 
-                String phuongThuc  = rs.getString("phuongThuc");
-                String trangThai   = rs.getString("trangThai");
-                Timestamp ngayTao  = rs.getTimestamp("ngayTao");
+				double tongTien = rs.getDouble("tongTien");
+				double giamGia = rs.getDouble("giamGiaHD");
 
-                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                
-                String dong = String.join(",",
-                        maHD,                           
-                        tenKH,                         
-                        tenNV,                         
-                        String.valueOf(tongTien),       
-                        String.valueOf(giamGia),        
-                        phuongThuc,                     
-                        dtf.format(ngayTao.toLocalDateTime()),   
-                        trangThai,                      
-                        ghiChu == null ? "" : ghiChu,   
-                        loaiBan == null ? "" : loaiBan, 
-                        danhSachBan == null ? "" : danhSachBan 
-                );
+				String phuongThuc = rs.getString("phuongThuc");
+				String trangThai = rs.getString("trangThai");
+				Timestamp ngayTao = rs.getTimestamp("ngayTao");
 
-                ds.add(dong);
-            }
+				DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+				String dong = String.join(",", maHD, tenKH, tenNV, String.valueOf(tongTien), String.valueOf(giamGia),
+						phuongThuc, dtf.format(ngayTao.toLocalDateTime()), trangThai, ghiChu == null ? "" : ghiChu,
+						loaiBan == null ? "" : loaiBan, danhSachBan == null ? "" : danhSachBan);
 
-        return ds;
-    }
+				ds.add(dong);
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return ds;
+	}
 
 
     

@@ -381,3 +381,19 @@
 .btn-In:hover{
     -fx-opacity: 0.9;
 }
+
+
+.btn-QuayLai{
+    -fx-background-color: gray;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-pref-width: 100;
+    -fx-pref-height: 35;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}
+
+.btn-QuayLai:hover{
+    -fx-opacity: 0.9;
+}

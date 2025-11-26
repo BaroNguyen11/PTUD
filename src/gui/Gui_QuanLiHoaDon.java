@@ -42,6 +42,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Separator;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
@@ -57,6 +58,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
 
 public class Gui_QuanLiHoaDon extends BorderPane {
@@ -743,9 +745,9 @@ public class Gui_QuanLiHoaDon extends BorderPane {
 			int itemsPerPage = (pageNum == 1) ? 19 : 25;
 			int remaining = danhSach.size() - currentIndex;
 			int itemsThisPage = Math.min(itemsPerPage, remaining);
-			hasMore = remaining > itemsThisPage;
+			
 
-			if (itemsThisPage > 0) {
+			if (itemsThisPage > 0 && remaining >= 0) {
 				int from = currentIndex;
 				int to = currentIndex + itemsThisPage;
 				List<String> subList = danhSach.subList(from, to);
@@ -758,19 +760,26 @@ public class Gui_QuanLiHoaDon extends BorderPane {
 				sttGlobal += itemsThisPage;
 			}
 
-			pageBox.getChildren().add(taoFooter(!hasMore, hoaDon)); // Footer chỉ trang cuối
-
+			hasMore = remaining > itemsThisPage;
+			
+			if((pageNum == 1 && (itemsThisPage > 10 && itemsThisPage <= 19)) || (pageNum > 1 && (itemsThisPage > 16 && itemsThisPage <= 25)))
+				hasMore = true;
+			
+			pageBox.getChildren().add(taoFooter(!hasMore, hoaDon));
+			
 			pageBox.setAlignment(Pos.CENTER);
 			pageBox.applyCss();
 			pageBox.layout();
 
-			// Scale nếu page cao quá (hiếm vì itemsPerPage fit)
-			double pageHeight = pageBox.getBoundsInLocal().getHeight();
-			if (pageHeight > maxHeight) {
-				double scale = maxHeight / pageHeight;
-				pageBox.setScaleX(scale);
-				pageBox.setScaleY(scale);
-			}
+//			// Scale nếu page cao quá (hiếm vì itemsPerPage fit)
+//			double pageHeight = pageBox.getBoundsInLocal().getHeight();
+//			if (pageHeight > maxHeight) {
+//				double scale = maxHeight / pageHeight;
+//				pageBox.setScaleX(scale);
+//				pageBox.setScaleY(scale);
+//			}
+			
+			
 
 			job.printPage(layout, pageBox);
 			pageNum++;
@@ -1026,19 +1035,192 @@ public class Gui_QuanLiHoaDon extends BorderPane {
 	}
 	
 	public void thucHienIn() {
-		String maHoaDon = txtMaHoaDon.getText();
-		
-		if(maHoaDon == null || maHoaDon.isBlank()) {
-			showAlert(AlertType.ERROR, "Lỗi", "Vui lòng chọn một hóa đơn trước khi in");
-			return;
-		}
-		
-		List<String> dsMon = new ArrayList<String>(dsThongTinMonAn);
-		
-		String hoaDonChuoi = tableHoaDon.getSelectionModel().getSelectedItem();
-		
-		inHoaDon((Stage) this.getScene().getWindow(), dsMon, hoaDonChuoi);
+	    String maHoaDon = txtMaHoaDon.getText();
+
+	    if (maHoaDon == null || maHoaDon.isBlank()) {
+	        showAlert(AlertType.ERROR, "Lỗi", "Vui lòng chọn một hóa đơn trước khi in");
+	        return;
+	    }
+
+	    List<String> dsMon = new ArrayList<>(dsThongTinMonAn);
+	    String hoaDonChuoi = tableHoaDon.getSelectionModel().getSelectedItem();
+
+	    // Gọi xem trước
+	    xemTruocHoaDonIn((Stage) this.getScene().getWindow(), dsMon, hoaDonChuoi);
 	}
+	
+	public void xemTruocHoaDonIn(Stage owner, List<String> danhSach, String hoaDon) {
+
+	    // Tạo Stage xem trước
+	    Stage previewStage = new Stage();
+	    previewStage.initOwner(owner);
+	    previewStage.initModality(Modality.APPLICATION_MODAL);
+	    previewStage.setTitle("Xem trước hóa đơn");
+
+	    VBox root = new VBox(20);
+	    root.setPadding(new Insets(20));
+	    root.setAlignment(Pos.CENTER);
+
+	    // Tạo nội dung giống hệt trang in
+	    ScrollPane scroll = new ScrollPane();
+	    scroll.setFitToWidth(true);
+
+	    VBox previewContent = new VBox(20);
+	    previewContent.setAlignment(Pos.TOP_CENTER);
+	    previewContent.setStyle("-fx-background-color: white; -fx-padding: 20;");
+
+	    // Header
+	    previewContent.getChildren().add(taoHeader(1, 1, hoaDon));
+
+	    // Bảng món ăn
+	    TableView<String> table = new TableView<String>();
+
+		table.setItems(FXCollections.observableArrayList(danhSach));
+
+		// Cột STT
+		TableColumn<String, Void> colSTT = new TableColumn<>("STT");
+		colSTT.setPrefWidth(30);
+		colSTT.setSortable(false);
+		colSTT.setCellFactory(col -> new TableCell<String, Void>() {
+			@Override
+			protected void updateItem(Void item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty ? null : String.valueOf(getIndex() + 1));
+				setAlignment(Pos.CENTER);
+			}
+		});
+
+		// Cột tên món
+		TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
+
+		// Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
+		colTenMon.setCellValueFactory(cellData -> {
+			String tenMon = cellData.getValue().split(",")[0];
+			return new SimpleStringProperty(tenMon);
+		});
+
+		colTenMon.setCellFactory(tc -> new TableCell<String, String>() {
+			@Override
+			protected void updateItem(String item, boolean empty) {
+				super.updateItem(item, empty);
+
+				if (empty || item == null) {
+					setText(null);
+					setStyle("");
+				} else {
+					setText(item);
+					setAlignment(Pos.CENTER_LEFT);
+				}
+			}
+		});
+
+		colTenMon.setPrefWidth(200);
+
+		// Cột số lượng
+		TableColumn<String, Integer> colSoLuong = new TableColumn<>("SL");
+
+		colSoLuong.setCellValueFactory(cellData -> {
+			int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
+			return new SimpleIntegerProperty(soLuong).asObject();
+		});
+
+		colSoLuong.setCellFactory(tc -> new TableCell<String, Integer>() {
+			@Override
+			protected void updateItem(Integer item, boolean empty) {
+				super.updateItem(item, empty);
+				if (empty || item == null) {
+					setText(null);
+					setStyle("");
+				} else {
+					setText(String.valueOf(item));
+					setAlignment(Pos.CENTER);
+					setStyle("-fx-font-size: 13px;");
+				}
+			}
+		});
+
+		colSoLuong.setPrefWidth(40);
+
+		// Cột giá
+		TableColumn<String, Double> colGia = new TableColumn<>("Giá");
+		colGia.setCellValueFactory(cellData -> {
+			double giaTien = Double.parseDouble(cellData.getValue().split(",")[2]);
+			return new SimpleDoubleProperty(giaTien).asObject();
+		});
+		colGia.setPrefWidth(120);
+		colGia.setCellFactory(tc -> new TableCell<String, Double>() {
+			@Override
+			protected void updateItem(Double item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty || item == null ? null : String.format("%,.0fđ", item));
+				setAlignment(Pos.CENTER);
+			}
+
+		});
+
+		// Cột tổng tiền
+		TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
+		colTong.setPrefWidth(120);
+		colTong.setCellValueFactory(cellData -> {
+			double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
+			return new SimpleDoubleProperty(tongTien).asObject();
+		});
+		colTong.setCellFactory(tc -> new TableCell<String, Double>() {
+			@Override
+			protected void updateItem(Double item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty || item == null ? null : String.format("%,.0fđ", item));
+				setAlignment(Pos.CENTER);
+			}
+
+		});
+		
+		table.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
+
+		int rowCount = table.getItems().size();
+		double rowHeight = 26; 
+		double headerHeight = 28;
+		table.setPrefHeight(rowCount * rowHeight + headerHeight - 5);
+	    
+	    previewContent.getChildren().add(table);
+
+	    // Footer
+	    previewContent.getChildren().add(taoFooter(true, hoaDon));
+
+	    scroll.setContent(previewContent);
+
+	    // Nút Quay lại + In
+	    HBox buttons = new HBox(20);
+	    buttons.setAlignment(Pos.CENTER);
+
+	    Button btnBack = new Button("Quay lại");
+	    btnBack.setPrefWidth(120);
+	    btnBack.getStyleClass().add("btn-QuayLai");
+
+	    Button btnPrint = new Button("In hóa đơn");
+	    btnPrint.setPrefWidth(120);
+	    btnPrint.getStyleClass().add("btn-In");
+
+	    buttons.getChildren().addAll(btnBack, btnPrint);
+
+	    root.getChildren().addAll(scroll, buttons);
+
+	    Scene scene = new Scene(root, 600, 600);
+	    scene.getStylesheets().add(getClass().getResource("/css/qlhd.css").toExternalForm());
+	    previewStage.setScene(scene);
+
+	    // ----- SỰ KIỆN NÚT -----
+
+	    btnBack.setOnAction(e -> previewStage.close());
+
+	    btnPrint.setOnAction(e -> {
+	        previewStage.close();
+	        inHoaDon(owner, danhSach, hoaDon);  
+	    });
+
+	    previewStage.show();
+	}
+
   
 }
 
