@@ -1,0 +1,8 @@
+.btn-checkIn{
+	-fx-cursor: hand;
+	-fx-background-color: #2DCE89;
+	-fx-text-fill: white;
+	-fx-font-size: 15px;
+	-fx-background-radius: 6px;
+	
+}

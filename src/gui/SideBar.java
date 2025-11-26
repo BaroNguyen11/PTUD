@@ -270,7 +270,7 @@ public class SideBar extends VBox {
             case "Đặt bàn" -> trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
             case "Đổi bàn" -> trangChu.setMainContent(new Gui_DoiBan());
             case "Hủy bàn" -> trangChu.setMainContent(new Gui_HuyBan());
-            case "Check-in" -> trangChu.setMainContent(new Gui_CheckIn());
+//            case "Check-in" -> trangChu.setMainContent(new Gui_CheckIn());
             default -> trangChu.setMainContent(new Label("Submenu " + subMenuText));
         }
     }

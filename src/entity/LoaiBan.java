@@ -1,6 +1,5 @@
 package entity;
 
-import java.text.DecimalFormat;
 
 public enum LoaiBan {
 
@@ -34,4 +33,5 @@ public enum LoaiBan {
         System.err.println("Cảnh báo: Không tìm thấy LoaiBan cho chuỗi: '" + text + "'");
         return null;
     }
+
 }

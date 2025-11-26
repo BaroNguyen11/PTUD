@@ -3,6 +3,8 @@ package gui;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+
+import ctrl.CheckIn_Ctrl;
 import dao.BanAn_DAO;
 import entity.BanAn;
 import entity.LoaiBan;
@@ -51,8 +53,16 @@ public class Gui_DanhSachBan extends BorderPane {
     private ViTri viTriHienTai = ViTri.LAU_1;
     private DatePicker datePicker;
     private LocalDate ngayChon = LocalDate.now();
+    
+    private Button btnThanhToan = new Button("Thanh toán");
+    private Button btnCheckIn = new Button("Check-In");
+    private Button btnHuy = new Button("Hủy bàn");
+    private Button btnDoiBan = new Button("Đổi bàn");
+    private Button btnGoiMon = new Button("Gọi món");
+    private CheckIn_Ctrl controlCheckIn = new CheckIn_Ctrl();
 
     public Gui_DanhSachBan(BorderPane mainLayout) {
+    		this.getStylesheets().add(getClass().getResource("/css/checkin.css").toExternalForm());
         this.mainLayout = mainLayout;
         banAn_DAO = new BanAn_DAO();
         this.setStyle("-fx-background-color: white;");
@@ -394,10 +404,16 @@ public class Gui_DanhSachBan extends BorderPane {
     }
 
     private void showTableInfoDialog(BanAn ban) {
+    		
         Dialog<Void> dialog = new Dialog<>();
+        VBox mainLayout = new VBox();
+        
         dialog.initOwner(luoiBan.getScene().getWindow());
         dialog.initStyle(StageStyle.TRANSPARENT);
         dialog.getDialogPane().getScene().setFill(Color.TRANSPARENT);
+        
+        luoiBan.getScene().getStylesheets().add(getClass().getResource("/css/checkin.css").toExternalForm());
+        
 // Header
         dialog.setHeaderText(null);
         dialog.setGraphic(null);
@@ -416,24 +432,36 @@ public class Gui_DanhSachBan extends BorderPane {
         Separator separator = new Separator();
 // Content
         String statusText, subText, bgColor, textColor;
+        VBox vboxBtn = new VBox(5);
         switch (ban.getTrangThai()) {
+        		
             case DANG_SU_DUNG:
                 statusText = "Đang phục vụ";
                 subText = "Bàn đang có khách sử dụng";
                 bgColor = "#F0FFF4";
                 textColor = "#22543D";
+                
+                vboxBtn.getChildren().addAll(btnGoiMon, btnThanhToan);
+                
                 break;
             case DA_DAT:
                 statusText = "Bàn đã đặt";
                 subText = "Bàn đã được khách đặt trước";
                 bgColor = "#FFF5F5";
                 textColor = "#9B2C2C";
+                
+                vboxBtn.getChildren().addAll(btnHuy, btnDoiBan, btnCheckIn);
+                
+                btnCheckIn.getStyleClass().add("btn-checkIn");
+                btnCheckIn.setOnAction(e -> hanhDongCheckIn());
+                
                 break;
             default: // TRONG
                 statusText = "Bàn trống";
                 subText = "Sẵn sàng phục vụ khách";
                 bgColor = "#FFFBEB";
                 textColor = "#975A16";
+                
                 break;
         }
         Label lblStatus = new Label(statusText);
@@ -449,7 +477,8 @@ public class Gui_DanhSachBan extends BorderPane {
         lblViTri.setStyle("-fx-font-weight: bold; -fx-font-size: 14px;");
         VBox extraInfoBox = new VBox(5, lblLoaiBan, lblViTri);
         extraInfoBox.setPadding(new Insets(15, 0, 0, 0));
-        VBox mainLayout = new VBox(headerPane, separator, statusBox, extraInfoBox);
+        
+        mainLayout.getChildren().addAll(headerPane, separator, statusBox, extraInfoBox, vboxBtn);
         mainLayout.setSpacing(0);
         mainLayout.setPrefWidth(350);
         dialog.getDialogPane().setContent(mainLayout);
@@ -462,6 +491,11 @@ public class Gui_DanhSachBan extends BorderPane {
         Node closeNode = dialog.getDialogPane().lookupButton(ButtonType.CLOSE);
         closeNode.setVisible(false);
         closeNode.setManaged(false);
+        
         dialog.showAndWait();
     }
+    
+    
+    	
+    
 }

@@ -1,5 +1,5 @@
 package gui;
-import control.QLHD_Ctrl;
+import ctrl.QLHD_Ctrl;
 import javafx.print.PageLayout;
 import javafx.print.Paper;
 import javafx.print.PageOrientation;
@@ -51,7 +51,7 @@ import javafx.geometry.Side;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 public class Gui_QuanLiHoaDon extends BorderPane {
-    private control.QLHD_Ctrl control;
+    private ctrl.QLHD_Ctrl control;
     // Dữ liệu test cho món ăn
     private ObservableList<String> dsThongTinMonAn = FXCollections.observableArrayList();
     // Dữ liệu test cho hóa đơn
