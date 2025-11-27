@@ -706,7 +706,7 @@ public class Gui_ThanhToan extends BorderPane {
                 loadTienThanhToan(tienTT, txtTongTien, lblTongTien, txtTienNhan, txtTienThua, tienCoc);
                 tienThanhToan = tienTT;
                 Tooltip.install(cboKM, taoToolTipKhuyenMai(selected));
-                System.out.println("đã load");
+
 
             } else {
                 txtGiamGia.setText("0 VND");
@@ -1381,7 +1381,6 @@ public class Gui_ThanhToan extends BorderPane {
         Printer printer = Printer.getDefaultPrinter();
         PrinterJob job = PrinterJob.createPrinterJob(printer);
         if (job == null || !job.showPrintDialog(owner)) {
-            System.out.println("❌ Hủy in.");
             return;
         }
 

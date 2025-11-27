@@ -2,11 +2,12 @@ package gui;
 
 import java.util.List;
 import java.text.DecimalFormat;
+
 import dao.BanAn_DAO;
 import dao.KhachHang_DAO;
 import dao.MonAn_DAO;
-import dao.PhieuDatBan_DAO; // Cần thêm import này
-import dao.HoaDon_DAO;       // Cần thêm import này
+import dao.PhieuDatBan_DAO;
+import dao.HoaDon_DAO;
 import dao.ChiTietHoaDon_DAO;
 import entity.KhachHang;
 import entity.MonAn;
@@ -19,10 +20,12 @@ import gui.Gui_DanhSachBan;
 import entity.ChiTietHoaDon;
 import entity.HoaDon;
 import javafx.scene.control.Alert.AlertType;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -52,7 +55,8 @@ public class datban extends BorderPane {
     private ObservableList<BanAn> dsBanDaChon;
     private ObservableList<ChiTietHoaDon> dsMonDaChon;
     private final DecimalFormat df = new DecimalFormat("###,###đ");
-    private BorderPane mainLayout;
+    private TrangChu trangChu;
+    //	private BorderPane mainLayout;
     private List<BanAn> cacBanDuocChon;
     private Label lblTongCoc;
     private Label lblTongTienMon;
@@ -70,9 +74,11 @@ public class datban extends BorderPane {
     private TextField txtSoNguoi;
     private RadioButton radioDungNgay;
     private RadioButton radioDatTruoc;
+    private TextField txtGhiChu;
 
-    public datban(BorderPane mainLayout, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
-        this.mainLayout = mainLayout;
+    public datban(TrangChu trangChu, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
+        this.trangChu = trangChu;
+//		this.mainLayout = mainLayout;
         this.cacBanDuocChon = cacBanDaChon;
         this.ngayDatBan = ngayDatBan;
 
@@ -97,6 +103,7 @@ public class datban extends BorderPane {
         VBox phanBenPhai = taoPhanBenPhai();
         mainContent.getChildren().addAll(phanBenTrai, separator, phanBenPhai);
         this.setCenter(mainContent);
+        themLogicGioiHanSoNguoi();
         try {
             this.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
         } catch (Exception e) {
@@ -107,7 +114,7 @@ public class datban extends BorderPane {
     private VBox taoPhanBenTrai() {
         VBox vbox = new VBox(0);
         vbox.setPadding(Insets.EMPTY);
-        vbox.setPrefWidth(500);
+        vbox.setPrefWidth(500); // Cố định chiều rộng
         vbox.setStyle("-fx-background-color: white;");
         VBox boxThongTin = taoThongTinKhachVaDat();
         VBox boxBanDaChon = taoBanDaChon();
@@ -154,7 +161,7 @@ public class datban extends BorderPane {
         btnTimKiem.getStyleClass().add("button-timKiem");
         btnTimKiem.setPrefWidth(120);
 
-        lblTrangThaiTimKiem = new Label("Tìm thấy khách hàng");
+        lblTrangThaiTimKiem = new Label("");
         lblTrangThaiTimKiem.setStyle("-fx-text-fill: #38A169; -fx-font-weight: bold;");
 
         HBox boxTimKiem = new HBox(10, txtTimKiemSdt, btnTimKiem);
@@ -176,21 +183,23 @@ public class datban extends BorderPane {
         txtMaKh.setPrefWidth(250);
         txtMaKh.setStyle(styleFixed);
 
-        txtTenKH.setEditable(true);
+        txtTenKH.setEditable(true); // Cho phép nhập tên vãng lai ngay từ đầu
         txtTenKH.setPrefWidth(250);
         txtTenKH.setStyle(styleEditable);
 
-        txtSdt.setEditable(true);
+        txtSdt.setEditable(false); // Cho phép nhập SĐT vãng lai ngay từ đầu
         txtSdt.setPrefWidth(250);
-        txtSdt.setStyle(styleEditable);
+        txtSdt.setStyle(styleFixed);
 
         txtDiem.setEditable(false);
         txtDiem.setPrefWidth(250);
         txtDiem.setStyle(styleFixed);
 
+        // --- TẠO CÁC HBOX THÔNG TIN (Sử dụng thuộc tính lớp) ---
+
         Label lblMaKH = new Label("Mã khách hàng:");
         lblMaKH.getStyleClass().add("fontTieuDeNho");
-        HBox hbox1 = new HBox(lblMaKH, spacer1, txtMaKh);
+        HBox hbox1 = new HBox(lblMaKH, spacer1, txtMaKh); // Dùng this.txtMaKh
         hbox1.setPadding(new Insets(5));
 
         Label lblTenKH = new Label("Tên khách hàng:");
@@ -225,8 +234,10 @@ public class datban extends BorderPane {
         Label lblNgayGio = new Label("Ngày giờ đến:");
         lblNgayGio.getStyleClass().add("fontTieuDeNho");
 
+        // moi
+
         cmbGioDen = new ComboBox<>();
-        //  từ 00:00 đến 23:30
+        // từ 00:00 đến 23:30
         for (int h = 0; h < 24; h++) {
             cmbGioDen.getItems().add(String.format("%02d:00", h));
             cmbGioDen.getItems().add(String.format("%02d:30", h));
@@ -236,28 +247,40 @@ public class datban extends BorderPane {
         cmbGioDen.setPrefWidth(110);
         cmbGioDen.setStyle("-fx-font-size: 15; -fx-background-radius: 3 0 0 3");
 
-        dpNgayDen = new DatePicker(ngayDatBan); // GÁN NGÀY MẶC ĐỊNH TỪ CONSTRUCTOR
+        dpNgayDen = new DatePicker(ngayDatBan);
         dpNgayDen.setPrefWidth(140);
         dpNgayDen.setStyle("-fx-font-size: 15; -fx-background-radius: 0 3 3 0");
 
+        dpNgayDen.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+                // Vô hiệu hóa các ngày trước ngày hiện tại
+                setDisable(empty || date.isBefore(LocalDate.now()));
+            }
+        });
 
-        HBox hboxNgayGio = new HBox(0); // Khoảng cách giữa 0 để chúng dính liền
+        HBox hboxNgayGio = new HBox(0);
         hboxNgayGio.getChildren().addAll(cmbGioDen, dpNgayDen);
         hboxNgayGio.setAlignment(Pos.CENTER_LEFT);
 
-        cmbGioDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
-        dpNgayDen.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
+        cmbGioDen.setStyle(
+                "-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
+        dpNgayDen.setStyle(
+                "-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; -fx-background-radius: 3 0 0 3");
 
         HBox hbox5 = new HBox(lblNgayGio, spacer5, hboxNgayGio);
         hbox5.setPadding(new Insets(5));
 // So nguoi
-        Label lblSoNguoi = new Label("Số người:");
+        Label lblSoNguoi = new Label("Số người: ");
         lblSoNguoi.getStyleClass().add("fontTieuDeNho");
         txtSoNguoi = new TextField("0");
-        txtSoNguoi.setEditable(false);
+
+        txtSoNguoi.setEditable(true);
         txtSoNguoi.setPrefWidth(250);
+
         txtSoNguoi.setStyle(
-                "-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: #D9D9D9; -fx-font-size: 15; ");
+                "-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-border-color: #082744; -fx-font-size: 15; ");
         HBox hbox6 = new HBox(lblSoNguoi, spacer6, txtSoNguoi);
         hbox6.setPadding(new Insets(5));
 // Kiểu đặt bàn
@@ -265,6 +288,7 @@ public class datban extends BorderPane {
         lblKieuDatBan.getStyleClass().add("fontTieuDeNho");
         radioDatTruoc = new RadioButton("Đặt trước");
         radioDungNgay = new RadioButton("Dùng ngay");
+
         ToggleGroup radioGroup = new ToggleGroup();
         radioDatTruoc.setToggleGroup(radioGroup);
         radioDungNgay.setToggleGroup(radioGroup);
@@ -278,9 +302,26 @@ public class datban extends BorderPane {
         hboxRadio.getChildren().addAll(radioDatTruoc, spaceRadio, radioDungNgay);
         HBox hbox7 = new HBox(lblKieuDatBan, spacer7, hboxRadio);
         hbox7.setPadding(new Insets(5));
+
+//		String styleEditable = "-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: white; -fx-border-color: #082744; -fx-border-width: 1px; -fx-border-radius: 3; -fx-font-size: 15";
+
+        Label lblGhiChu = new Label("Ghi chú:");
+        lblGhiChu.getStyleClass().add("fontTieuDeNho");
+
+        txtGhiChu = new TextField(); // KHỞI TẠO
+        txtGhiChu.setPromptText("ví dụ: ghế em bé, tiệc sinh nhật,...");
+        txtGhiChu.setPrefWidth(250);
+        txtGhiChu.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-background-color: white; -fx-border-color: #082744; -fx-border-width: 1px; -fx-border-radius: 3; -fx-font-size: 15");
+
+        Region spacerGhiChu = new Region();
+        HBox.setHgrow(spacerGhiChu, Priority.ALWAYS);
+
+        HBox hboxGhiChu = new HBox(lblGhiChu, spacerGhiChu, txtGhiChu);
+        hboxGhiChu.setPadding(new Insets(5));
+
 // Vbox all - 2
         VBox vboxAll2 = new VBox(5);
-        vboxAll2.getChildren().addAll(lblThongTinDatBan, hbox5, hbox6, hbox7);
+        vboxAll2.getChildren().addAll(lblThongTinDatBan, hbox5, hbox6, hbox7, hboxGhiChu);
 // Vbox All
         VBox vboxALL = new VBox(25);
         vboxALL.getChildren().addAll(vboxAll1, vboxAll2);
@@ -410,7 +451,6 @@ public class datban extends BorderPane {
             ChiTietHoaDon cthdDaChon = timMonChon(mon);
 
             if (cthdDaChon != null) {
-                // Lấy số lượng từ thuộc tính soLuong của ChiTietHoaDon
                 soLuongHienTai = cthdDaChon.getSoLuong();
             }
 
@@ -489,6 +529,7 @@ public class datban extends BorderPane {
         btnCong.getStyleClass().add("button-dieu-chinh-menu");
 
         btnCong.setOnAction(e -> {
+            System.out.println("click");
             themMonVaoGio(mon);
             ChiTietHoaDon cthdDaChon = timMonChon(mon);
             if (cthdDaChon != null) {
@@ -521,6 +562,7 @@ public class datban extends BorderPane {
             imgView.setStyle("-fx-background-color: #E2E8F0;");
         }
     }
+
     private ChiTietHoaDon timMonChon(MonAn mon) {
         for (ChiTietHoaDon cthd : dsMonDaChon) {
             if (cthd.getMonAn().getMaMonAn().equals(mon.getMaMonAn())) {
@@ -533,17 +575,18 @@ public class datban extends BorderPane {
     private void themMonVaoGio(MonAn mon) {
         ChiTietHoaDon monCoSan = timMonChon(mon);
         if (monCoSan != null) {
+            // Giả định ChiTietHoaDon có setter/getter cho soLuong
             monCoSan.setSoLuong(monCoSan.getSoLuong() + 1);
             dsMonDaChon.set(dsMonDaChon.indexOf(monCoSan), monCoSan);
         } else {
             // Tạo ChiTietHoaDon mới
             ChiTietHoaDon cthd = new ChiTietHoaDon();
-            cthd.setMonAn(mon);
+            cthd.setMonAn(mon); // Giả định có setter
             cthd.setSoLuong(1);
             dsMonDaChon.add(cthd);
         }
         capNhatTongTienMon();
-        taiLaiDanhSachMonAn(null);
+        // Sau khi thêm, cập nhật lại TilePane (cần tìm lại)
     }
 
     private void botMonKhoiGio(MonAn mon) {
@@ -557,19 +600,51 @@ public class datban extends BorderPane {
             }
             capNhatTongTienMon();
             // Sau khi bớt, cập nhật lại TilePane
-            taiLaiDanhSachMonAn(null);
+//            taiLaiDanhSachMonAn(null);
         }
+    }
+
+    private void capNhatGioHangTheoSoLuongNhap(MonAn mon, int soLuongMoi) {
+        ChiTietHoaDon monCoSan = timMonChon(mon);
+
+        if (soLuongMoi > 0) {
+            if (monCoSan != null) {
+                monCoSan.setSoLuong(soLuongMoi);
+                dsMonDaChon.set(dsMonDaChon.indexOf(monCoSan), monCoSan);
+            } else {
+                // Thêm mới nếu số lượng > 0
+                ChiTietHoaDon cthd = new ChiTietHoaDon();
+                cthd.setMonAn(mon);
+                cthd.setSoLuong(soLuongMoi);
+                dsMonDaChon.add(cthd);
+            }
+        } else {
+            // Xóa khỏi giỏ nếu số lượng = 0
+            if (monCoSan != null) {
+                dsMonDaChon.remove(monCoSan);
+            }
+        }
+        capNhatTongTienMon();
+        // Không cần gọi taiLaiDanhSachMonAn(null) vì chỉ cập nhật thẻ hiện tại
+        // và dsMonDaChon sẽ tự cập nhật TableView (nếu ObservableList được binding đúng)
     }
 
     private void capNhatTongTienMon() {
         double tong = 0;
+        LocalDate ngayDat = dpNgayDen.getValue();
+
         for (ChiTietHoaDon cthd : dsMonDaChon) {
-            tong += cthd.getMonAn().getGiaTien() * cthd.getSoLuong();
+            MonAn mon = cthd.getMonAn();
+
+            double giaApDung = monAnDAO.layGiaSauKhuyenMai(mon.getMaMonAn(), ngayDat, mon.getGiaTien());
+
+            tong += giaApDung * cthd.getSoLuong();
         }
         lblTongTienMon.setText(df.format(tong));
     }
 
     private VBox taoMonDaChon() {
+
         VBox vbox = new VBox(10);
         Label tieuDe = new Label("Món đã chọn");
         tieuDe.setStyle("-fx-font-weight: bold; -fx-font-size: 20; -fx-text-fill: gray");
@@ -578,6 +653,16 @@ public class datban extends BorderPane {
         TableView<ChiTietHoaDon> table = new TableView<>();
         table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
         VBox.setVgrow(table, Priority.ALWAYS);
+
+        // 0. Cột Số thứ tự
+        TableColumn<ChiTietHoaDon, Integer> colSTT = new TableColumn<>("STT");
+
+        colSTT.setCellValueFactory(cellData -> {
+            int index = table.getItems().indexOf(cellData.getValue());
+            return new javafx.beans.property.SimpleObjectProperty<>(index + 1);
+        });
+        colSTT.setPrefWidth(20);
+        colSTT.setSortable(false);
 
         // 1. Cột Tên món
         TableColumn<ChiTietHoaDon, String> colTen = new TableColumn<>("Tên món");
@@ -589,19 +674,29 @@ public class datban extends BorderPane {
         colSoLuong.setCellValueFactory(new PropertyValueFactory<>("soLuong"));
 
         // 3. Cột Đơn giá
+        final LocalDate ngayDat = dpNgayDen.getValue();
         TableColumn<ChiTietHoaDon, String> colDonGia = new TableColumn<>("Đơn giá");
-        colDonGia.setCellValueFactory(cellData -> new javafx.beans.property.SimpleStringProperty(
-                df.format(cellData.getValue().getMonAn().getGiaTien())));
+        colDonGia.setCellValueFactory(cellData -> {
+            MonAn mon = cellData.getValue().getMonAn();
+
+            double giaApDung = monAnDAO.layGiaSauKhuyenMai(mon.getMaMonAn(), ngayDat, mon.getGiaTien());
+
+            return new javafx.beans.property.SimpleStringProperty(df.format(giaApDung));
+        });
 
         // 4. Cột Tổng
         TableColumn<ChiTietHoaDon, String> colTong = new TableColumn<>("Tổng");
         colTong.setCellValueFactory(cellData -> {
-            double tong = cellData.getValue().getMonAn().getGiaTien() * cellData.getValue().getSoLuong();
+            MonAn mon = cellData.getValue().getMonAn();
+
+            double giaApDung = monAnDAO.layGiaSauKhuyenMai(mon.getMaMonAn(), ngayDat, mon.getGiaTien());
+
+            double tong = giaApDung * cellData.getValue().getSoLuong();
             return new javafx.beans.property.SimpleStringProperty(df.format(tong));
         });
 
-        table.getColumns().addAll(colTen, colSoLuong, colDonGia, colTong);
-        table.setItems(dsMonDaChon); // dsMonDaChon là ObservableList<ChiTietHoaDon>
+        table.getColumns().addAll(colSTT, colTen, colSoLuong, colDonGia, colTong);
+        table.setItems(dsMonDaChon);
 
         vbox.getChildren().addAll(table);
         return vbox;
@@ -666,7 +761,8 @@ public class datban extends BorderPane {
         btnXacNhan.getStyleClass().add("button-checkin");
         btnXacNhan.setStyle("-fx-background-color: #2D3748; -fx-text-fill: white; -fx-font-weight: bold;");
         btnQuayLai.setOnAction(e -> {
-            mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+//			mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+            trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
         });
 
         btnXacNhan.setOnAction(e -> {
@@ -674,27 +770,96 @@ public class datban extends BorderPane {
             boolean success = true;
 
             try {
+                // ---------------------------------------------
+                // BƯẨY DỮ LIỆU ĐẦU VÀO VÀ TẠO ENTITY
+                // ---------------------------------------------
 
+                // 1. Lấy dữ liệu từ UI
+                String sdtMoi = txtSdt.getText().trim();
+                String tenKHMoi = txtTenKH.getText().trim();
                 String maKH = txtMaKh.getText();
                 KhachHang khachHangDat;
-                if (maKH.equals("000")) {
-                    // Khách vãng lai
-                    khachHangDat = new KhachHang();
-                    khachHangDat.setMaKhachHang("000");
-                } else {
-                    khachHangDat = new KhachHang();
-                    khachHangDat.setMaKhachHang(maKH);
+
+                // KIỂM TRA BẮT BUỘC NHẬP
+                if (tenKHMoi.isEmpty() || sdtMoi.isEmpty()) {
+                    showAlert(AlertType.ERROR, "Lỗi dữ liệu", "Vui lòng nhập đầy đủ Tên và Số điện thoại khách hàng.");
+                    return;
                 }
 
+                // 2. Xử lý logic Khách hàng
+                if (maKH.equals("000")) {
+                    // Trường hợp 2A: Khách vãng lai -> Kiểm tra SĐT có trùng trong CSDL không
+                    KhachHang khDaTonTai = khachHangDAO.getKhachHangBySdt(sdtMoi);
+
+                    if (khDaTonTai != null) {
+                        // Lỗi: SĐT đã tồn tại nhưng không được tìm thấy ở bước tìm kiếm
+                        showAlert(AlertType.ERROR, "Lỗi trùng SĐT", "Số điện thoại này đã tồn tại trong hệ thống.");
+                        return;
+                    }
+
+                    // Khách hàng mới (hoặc khách vãng lai đã tìm kiếm)
+                    khachHangDat = new KhachHang();
+                    khachHangDat.setTenKhachHang(tenKHMoi);
+                    khachHangDat.setSoDienThoai(sdtMoi);
+                    khachHangDat.setDiemTichLuy(0.0); // Điểm mặc định
+
+                    // Lưu khách hàng mới vào CSDL
+                    boolean themKHSuccess = khachHangDAO.themKhachHangMoi(khachHangDat);
+
+                    if (themKHSuccess) {
+                    } else {
+                        showAlert(AlertType.ERROR, "Lỗi hệ thống", "Không thể thêm khách hàng mới vào CSDL.");
+                        return;
+                    }
+
+                } else {
+                    // Trường hợp 2B: Khách hàng đã có trong hệ thống (đã tìm thấy trước đó)
+                    khachHangDat = new KhachHang();
+                    khachHangDat.setMaKhachHang(maKH);
+                    // Các thông tin khác không cần thiết vì ta chỉ cần mã KH cho các bảng liên
+                    // quan.
+                }
+
+                //2. Nhân viên: Giả định có Entity NhanVien đang đăng nhập
+                // **THAY "NV001" bằng mã NV đang đăng nhập của bạn**
                 NhanVien nvDangNhap = new NhanVien();
                 nvDangNhap.setMaNhanVien("NV001");
 
-                //  Thời gian đến
-                LocalDateTime thoiGianDen = dpNgayDen.getValue().atStartOfDay().withHour(Integer.parseInt(cmbGioDen.getValue().substring(0, 2)))
+                // 3. Thời gian đến
+                LocalDateTime thoiGianDen = dpNgayDen.getValue().atStartOfDay()
+                        .withHour(Integer.parseInt(cmbGioDen.getValue().substring(0, 2)))
                         .withMinute(Integer.parseInt(cmbGioDen.getValue().substring(3, 5)));
-                String ghiChu = "Khách đặt trước - " + txtTenKH.getText();
-                int soNguoiTong = Integer.parseInt(txtSoNguoi.getText());
+                if (thoiGianDen.isBefore(LocalDateTime.now())) {
+                    showAlert(AlertType.ERROR, "Lỗi Thời gian", "Ngày giờ đến không được là ngày trong quá khứ.");
+                    return;
+                }
+
+                String ghiChu = txtGhiChu.getText().trim();
+
+
+//				int soNguoiTong = Integer.parseInt(txtSoNguoi.getText());
+                int soNguoiDaNhap = 0;
+                try {
+                    soNguoiDaNhap = Integer.parseInt(txtSoNguoi.getText().trim());
+                } catch (NumberFormatException ex) {
+                    showAlert(AlertType.ERROR, "Lỗi dữ liệu", "Số người không hợp lệ.");
+                    return;
+                }
                 String maBanDauTien = cacBanDuocChon.get(0).getMaBan();
+
+                List<String> banBiTrung = new ArrayList<>();
+                for (BanAn ban : cacBanDuocChon) {
+                    // Gọi DAO để kiểm tra cho từng bàn
+                    if (phieuDatBanDAO.kiemTraBanDaDatTrongNgay(ban.getMaBan(), thoiGianDen)) {
+                        banBiTrung.add(ban.getMaBan());
+                    }
+                }
+
+                if (!banBiTrung.isEmpty()) {
+                    showAlert(AlertType.ERROR, "Trùng lịch đặt",
+                            "Các bàn sau đã có lịch đặt trong ngày " + thoiGianDen.toLocalDate() + ": " + String.join(", ", banBiTrung));
+                    return; // Dừng quá trình đặt bàn
+                }
 
                 // ---------------------------------------------
                 // BƯỚC 1: TẠO MỘT HÓA ĐƠN DUY NHẤT
@@ -704,6 +869,7 @@ public class datban extends BorderPane {
                 hdChung.setKhachHang(khachHangDat);
                 hdChung.setNhanVien(nvDangNhap);
 
+                // Sử dụng DAO để tạo Hóa đơn và nhận lại mã HD
                 maHDChung = hoaDonDAO.themHoaDon(hdChung);
 
                 if (maHDChung == null) {
@@ -732,8 +898,9 @@ public class datban extends BorderPane {
                     pdb.setThoiGianBatDau(thoiGianDen);
                     pdb.setTrangThai("Đã đặt");
 
+                    // Số người của bàn đó (4 hoặc 6)
                     int soNguoiCuaBan = ban.getLoai().getTenLoai().equalsIgnoreCase("VIP") ? 6 : 4;
-                    pdb.setSoNguoi(soNguoiCuaBan);
+                    pdb.setSoNguoi(soNguoiDaNhap);
 
                     pdb.setGhiChu(ghiChu);
 
@@ -741,14 +908,15 @@ public class datban extends BorderPane {
                     pdb.setKhachHang(khachHangDat);
                     pdb.setBan(ban);
                     pdb.setNhanVien(nvDangNhap);
-                    pdb.setHoaDon(hdChung);
+                    pdb.setHoaDon(hdChung); // <<<< LIÊN KẾT VỚI HÓA ĐƠN CHUNG
 
                     String trangThaiPhieu;
-                    if (radioDatTruoc.isSelected()) {
+                    if (radioDatTruoc.isSelected()) { // Kiểm tra radio button "Đặt trước"
                         trangThaiPhieu = "Đã đặt";
-                    } else if (radioDungNgay.isSelected()) {
+                    } else if (radioDungNgay.isSelected()) { // Kiểm tra radio button "Dùng ngay"
                         trangThaiPhieu = "Đang dùng";
                     } else {
+                        // Trường hợp mặc định (nên chọn một)
                         trangThaiPhieu = "Đã đặt";
                     }
 
@@ -764,6 +932,7 @@ public class datban extends BorderPane {
                 // -----------------------------------------------------
                 if (success && !dsMonDaChon.isEmpty()) {
                     for (ChiTietHoaDon cthd : dsMonDaChon) {
+                        // Entity cthd đã có MonAn, chỉ cần gán HoaDon chung
                         cthd.setHoaDon(hdChung);
 
                         boolean themCTHD = chiTietHoaDonDAO.themChiTietHoaDon(cthd);
@@ -779,9 +948,12 @@ public class datban extends BorderPane {
                 // ---------------------------------------------
                 if (success) {
                     showAlert(AlertType.INFORMATION, "Thành công", "Đã đặt bàn thành công! Mã hóa đơn: " + maHDChung);
-                    mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+//					mainLayout.setCenter(new Gui_DanhSachBan(mainLayout));
+                    trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
                 } else {
-                    showAlert(AlertType.ERROR, "Lỗi Nghiệp vụ", "Đã xảy ra lỗi khi ghi dữ liệu. Vui lòng kiểm tra lại hệ thống.");
+                    showAlert(AlertType.ERROR, "Lỗi Nghiệp vụ",
+                            "Đã xảy ra lỗi khi ghi dữ liệu. Vui lòng kiểm tra lại hệ thống.");
+                    // **Thực tế cần thêm logic ROLLBACK tại đây**
                 }
 
             } catch (Exception ex) {
@@ -792,6 +964,7 @@ public class datban extends BorderPane {
         hbox.getChildren().addAll(spacer, btnQuayLai, btnXacNhan);
         return hbox;
     }
+
     private void showAlert(AlertType alertType, String title, String content) {
         Alert alert = new Alert(alertType);
         alert.setTitle(title);
@@ -820,8 +993,23 @@ public class datban extends BorderPane {
     private void timKiemKhachHang() {
         String sdt = txtTimKiemSdt.getText().trim();
 
+        final String SDT_REGEX = "^0[0-9]{9}$";
+
         if (sdt.isEmpty()) {
             showAlert(AlertType.WARNING, "Cảnh báo", "Vui lòng nhập số điện thoại để tìm kiếm.");
+
+            // Xóa trạng thái và thông tin khách vãng lai
+            lblTrangThaiTimKiem.setText("");
+            capNhatThongTinKhachHang("000", "", "", "0");
+            return;
+        }
+
+        if (!sdt.matches(SDT_REGEX)) {
+            showAlert(AlertType.ERROR, "Lỗi định dạng", "Số điện thoại phải bắt đầu bằng '0' và có đủ 10 chữ số.");
+
+            // Xóa trạng thái và thông tin khách vãng lai
+            lblTrangThaiTimKiem.setText("");
+            capNhatThongTinKhachHang("000", "", sdt, "0"); // Giữ lại SDT vừa nhập
             return;
         }
 
@@ -831,9 +1019,9 @@ public class datban extends BorderPane {
             capNhatThongTinKhachHang(kh.getMaKhachHang(), kh.getTenKhachHang(), kh.getSoDienThoai(),
                     String.format("%.0f", kh.getDiemTichLuy()));
             lblTrangThaiTimKiem.setText("Tìm thấy khách hàng");
-            lblTrangThaiTimKiem.setStyle("-fx-text-fill: #38A169; -fx-font-weight: bold;"); // Màu xanh
+            lblTrangThaiTimKiem.setStyle("-fx-text-fill: #38A169; -fx-font-weight: bold;");
         } else {
-            capNhatThongTinKhachHang("000", "Khách vãng lai", sdt, // Giữ lại SDT vừa tìm kiếm
+            capNhatThongTinKhachHang("000", "Khách vãng lai", sdt,
                     "0");
             lblTrangThaiTimKiem.setText("Không tìm thấy khách hàng.");
             lblTrangThaiTimKiem.setStyle("-fx-text-fill: #E53E3E; -fx-font-weight: bold;"); // Màu đỏ
@@ -856,9 +1044,9 @@ public class datban extends BorderPane {
 
         if (ma.equals("000")) {
             txtTenKH.setEditable(true);
-            txtSdt.setEditable(true);
+            txtSdt.setEditable(false);
             txtTenKH.setStyle(styleEditable);
-            txtSdt.setStyle(styleEditable);
+            txtSdt.setStyle(styleFixed);
             txtTenKH.setText("");
         } else {
             txtTenKH.setEditable(false);
@@ -868,6 +1056,36 @@ public class datban extends BorderPane {
         }
         txtMaKh.setStyle(styleFixed);
         txtDiem.setStyle(styleFixed);
+    }
+
+    private void themLogicGioiHanSoNguoi() {
+        txtSoNguoi.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (!newValue.matches("\\d*")) {
+                // Chỉ cho phép nhập số
+                txtSoNguoi.setText(oldValue);
+                return;
+            }
+
+            // Lấy tổng số người tối đa của các bàn đã chọn (mặc định)
+            int tongMax = 0;
+            for (BanAn ban : cacBanDuocChon) {
+                int soNguoiToiDa = ban.getLoai().getTenLoai().equalsIgnoreCase("VIP") ? 6 : 4;
+                tongMax += soNguoiToiDa;
+            }
+
+            try {
+                if (!newValue.isEmpty()) {
+                    int soNhap = Integer.parseInt(newValue);
+                    if (soNhap > tongMax) {
+                        // Cảnh báo và đặt lại giá trị tối đa
+                        showAlert(AlertType.WARNING, "Lỗi số lượng", "Số người không được vượt quá tối đa (" + tongMax + " người).");
+                        txtSoNguoi.setText(String.valueOf(tongMax));
+                    }
+                }
+            } catch (NumberFormatException e) {
+                // Không xảy ra nếu đã lọc regex ở trên
+            }
+        });
     }
 
 }

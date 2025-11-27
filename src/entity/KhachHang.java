@@ -43,7 +43,7 @@ public class KhachHang {
         return diemTichLuy;
     }
 
-    public void setDiemTichLuy(int diemTichLuy) {
+    public void setDiemTichLuy(double diemTichLuy) {
         this.diemTichLuy = diemTichLuy;
     }
 

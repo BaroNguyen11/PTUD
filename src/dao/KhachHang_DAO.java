@@ -129,27 +129,68 @@ public class KhachHang_DAO {
         return false;
     }
 
+    public String getMaKhachHangCuoiCung() {
+        String maCuoi = null;
+        String sql = "SELECT TOP 1 maKhachHang FROM KhachHang WHERE maKhachHang LIKE 'KH%' ORDER BY maKhachHang DESC";
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+            if (rs.next()) {
+                maCuoi = rs.getString("maKhachHang");
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy mã KH cuối: " + e.getMessage());
+        }
+        return maCuoi;
+    }
+
+    public String taoMaKhachHangMoi() {
+        String maCuoi = getMaKhachHangCuoiCung();
+        if (maCuoi == null) {
+            return "KH001";
+        }
+
+        try {
+            String phanSo = maCuoi.substring(2);
+            int soMoi = Integer.parseInt(phanSo) + 1;
+
+            return String.format("KH%03d", soMoi);
+        } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
+            System.err.println("Lỗi định dạng mã KH cuối: " + maCuoi);
+            return "KH001";
+        }
+    }
+
     // Thêm khách hàng mới với mã tự động
-    public boolean addKhachHangAutoID(KhachHang kh) {
+    public boolean themKhachHangMoi(KhachHang kh) {
+
+        String maKHMoi = taoMaKhachHangMoi();
+
         String sql = "INSERT INTO KhachHang (maKhachHang, tenKhachHang, soDienThoai, diemTichLuy) VALUES (?, ?, ?, ?)";
 
         try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+             PreparedStatement stmt = con.prepareStatement(sql)) {
 
-            // Tự động sinh mã
-            String newMa = generateMaKhachHang();
-            kh.setMaKhachHang(newMa);
+            stmt.setString(1, maKHMoi);
+            stmt.setString(2, kh.getTenKhachHang());
+            stmt.setString(3, kh.getSoDienThoai());
 
-            ps.setString(1, kh.getMaKhachHang());
-            ps.setString(2, kh.getTenKhachHang());
-            ps.setString(3, kh.getSoDienThoai());
-            ps.setDouble(4, kh.getDiemTichLuy());
+            if (kh.getDiemTichLuy() == 0.0) {
+                stmt.setDouble(4, 0.0);
+            } else {
+                stmt.setDouble(4, kh.getDiemTichLuy());
+            }
 
-            return ps.executeUpdate() > 0;
+            if (stmt.executeUpdate() > 0) {
+                kh.setMaKhachHang(maKHMoi);
+                return true;
+            }
+            return false;
+
         } catch (SQLException e) {
-            e.printStackTrace();
+            System.err.println("Lỗi SQL khi thêm khách hàng mới: " + e.getMessage());
+            return false;
         }
-        return false;
     }
 
     // Cập nhật thông tin khách hàng

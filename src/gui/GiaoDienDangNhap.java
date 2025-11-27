@@ -203,34 +203,7 @@ private HBox createInputControl(String iconPath, boolean isPassword, String prom
     container.setAlignment(Pos.CENTER);
     return container;
 }
-//    private void openMainScreen(Stage currentStage) {
-//        try {
-//            currentStage.close();
-//
-//            Stage mainStage = new Stage();
-//            TrangChu root = new TrangChu();
-//            Scene scene = new Scene(root);
-//
-//            try {
-//                scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
-//            } catch (Exception e) {
-//                System.out.println("Không tìm thấy file CSS");
-//            }
-//
-//            mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
-//            mainStage.setMaximized(true);
-//            mainStage.setScene(scene);
-//            mainStage.show();
-//
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            Alert alert = new Alert(Alert.AlertType.ERROR);
-//            alert.setTitle("Lỗi");
-//            alert.setHeaderText(null);
-//            alert.setContentText("Không thể mở màn hình chính!\n" + e.getMessage());
-//            alert.showAndWait();
-//        }
-//    }
+
 private void openMainScreen(Stage currentStage) {
     try {
         currentStage.close();

@@ -180,7 +180,6 @@ public class Gui_CheckIn extends BorderPane {
 
         // Kiểm tra nếu không có dữ liệu
         if (chuoi == null || chuoi.isBlank() || chuoi.equals("N/A")) {
-            //System.out.println("❌ Không tìm thấy bàn đặt cho SĐT: " + soDienThoai);
             JOptionPane.showMessageDialog(null, "Không tìm thấy bàn đặt !", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
             txtTiemKiem.requestFocus();
             txtTiemKiem.selectAll();
@@ -210,7 +209,6 @@ public class Gui_CheckIn extends BorderPane {
     // Tạo phần giữa với phần trái (tìm kiếm và danh sách bàn) và phần phải (thông tin khách hàng)
     private HBox taoPhanGiua() {
         dsBanDat = control.layThongTinDatBan(LocalDate.now());
-        System.out.println("dsBanDat: " + dsBanDat);
         HBox giua = new HBox(20);
         giua.setPadding(new Insets(10));
 
@@ -224,7 +222,6 @@ public class Gui_CheckIn extends BorderPane {
 
         // Lưới bàn
         luoiBan = taoLuoiBan(control.chiaTang(dsBanDat,"Tầng 1"));
-        System.out.println("Số lượng node trong luoiBan: " + luoiBan.getChildren().size());
 
         cuonLuoi = new ScrollPane(luoiBan);
         cuonLuoi.setFitToWidth(true);

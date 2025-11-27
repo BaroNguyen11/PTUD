@@ -773,7 +773,7 @@ public class Gui_QuanLiHoaDon extends BorderPane {
         Printer printer = Printer.getDefaultPrinter();
         PrinterJob job = PrinterJob.createPrinterJob(printer);
         if (job == null || !job.showPrintDialog(owner)) {
-            System.out.println("Hủy in.");
+
             return;
         }
 

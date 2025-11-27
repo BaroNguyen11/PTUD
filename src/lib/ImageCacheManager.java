@@ -25,7 +25,6 @@ public class ImageCacheManager {
 
         // Nếu đã có trong cache → dùng luôn
         if (localFile.exists()) {
-            System.out.println("✅ Dùng ảnh cache: " + fileName);
             return localFile.toURI().toString();
         }
 
