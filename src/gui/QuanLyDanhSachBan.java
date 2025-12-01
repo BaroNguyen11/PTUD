@@ -24,7 +24,7 @@ import javafx.scene.image.ImageView;
 
 import java.util.List;
 
-public class QuanLyDanhSachBan extends Application {
+public class QuanLyDanhSachBan extends BorderPane {
 
     private final QuanLyDanhSachBan_DAO dao = new QuanLyDanhSachBan_DAO();
     private final ObservableList<BanAn> data = FXCollections.observableArrayList();
@@ -44,10 +44,13 @@ public class QuanLyDanhSachBan extends Application {
     private ComboBox<LoaiBan> cboLocLoai;
     private ComboBox<TrangThai> cboLocTrangThai;
 
-    @Override
-    public void start(Stage primaryStage) {
-        primaryStage.setTitle("Quản lý Bàn Ăn - Flat Modern");
-
+    // Constructor thay vì start()
+    public QuanLyDanhSachBan() {
+        initializeUI();
+    }
+    private void initializeUI() {
+        this.getStyleClass().add("quan-ly-ban-an-root");
+        
         VBox root = new VBox(12);
         root.setPadding(new Insets(14));
         root.getStyleClass().add("root");
@@ -67,12 +70,14 @@ public class QuanLyDanhSachBan extends Application {
         body.getChildren().addAll(left, right);
         root.getChildren().addAll(title, body);
 
-        Scene scene = new Scene(root, 1100, 720);
-        // load CSS from resources; adjust if yours is different
-        scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+        this.setCenter(root);
 
-        primaryStage.setScene(scene);
-        primaryStage.show();
+        // Tải CSS
+        try {
+            this.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+        } catch (Exception e) {
+            System.err.println("Không tìm thấy CSS: " + e.getMessage());
+        }
 
         loadData();
     }
@@ -429,7 +434,4 @@ public class QuanLyDanhSachBan extends Application {
         return a.showAndWait().orElse(ButtonType.CANCEL) == ButtonType.OK;
     }
 
-    public static void main(String[] args) {
-        launch(args);
-    }
 }

@@ -13,6 +13,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.util.Duration;
+import gui.QuanLyDanhSachBan;
 
 /**
  * Thanh SideBar (menu bên trái) - FIXED & OPTIMIZED VERSION
@@ -30,6 +31,7 @@ public class SideBar extends VBox {
     private final String[] menuItems = {
             "Dashboard",
             "Quản lí đặt bàn",
+            "Quản lí bàn ăn",
             "Quản lí món ăn",
             "Quản lí khách hàng",
             "Quản lí nhân viên",
@@ -43,6 +45,7 @@ public class SideBar extends VBox {
     private final String[] iconNames = {
             "home.png",
             "booking.png",
+            "table.png",
             "food.png",
             "customer.png",
             "employee.png",
@@ -241,6 +244,7 @@ public class SideBar extends VBox {
             case "Quản lí món ăn" -> trangChu.setMainContent(new Label("Giao diện Quản lí món ăn"));
             case "Thống kê" -> trangChu.setMainContent(new ThongKe());
             case "Kết ca" -> trangChu.setMainContent(new KetCa());
+            case "Quản lí bàn ăn" -> trangChu.setMainContent(new QuanLyDanhSachBan());
             case "Quản lí khách hàng" -> trangChu.setMainContent(new QuanLyKhachHang());
             case "Quản lí nhân viên" -> trangChu.setMainContent(new QuanLyNhanVien());
             case "Thanh toán" -> trangChu.setMainContent(new Gui_ThanhToan());
