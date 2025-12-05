@@ -13,6 +13,7 @@ import entity.ViTri;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
@@ -41,10 +42,14 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.StageStyle;
 
+import javafx.stage.Stage;
+import javafx.stage.Modality;
+import javafx.stage.Window;
+import java.util.stream.Collectors;
+
 public class Gui_DanhSachBan extends BorderPane {
     private GridPane luoiBan;
     private BanAn_DAO banAn_DAO;
-    //	private BorderPane mainLayout;
     private TrangChu trangChu;
     private List<BanAn> danhSachBanDaChon = new ArrayList<>();
     private TextField timKiem;
@@ -57,7 +62,7 @@ public class Gui_DanhSachBan extends BorderPane {
     private PhieuDatBan_DAO phieuDatBan_DAO;
 
     public Gui_DanhSachBan(TrangChu trangChu) {
-//		this.mainLayout = mainLayout;
+
         this.trangChu = trangChu;
         banAn_DAO = new BanAn_DAO();
         phieuDatBan_DAO = new PhieuDatBan_DAO();
@@ -68,6 +73,8 @@ public class Gui_DanhSachBan extends BorderPane {
         phanGiuaAll.getChildren().addAll(phanTren, phanGiua);
         this.setCenter(phanGiuaAll);
         loadDataToGrid();
+
+        this.getStylesheets().add(getClass().getResource("/css/danhsachban.css").toExternalForm());
     }
 
     // Tạo phần trên với nút tầng và trạng thái
@@ -320,15 +327,11 @@ public class Gui_DanhSachBan extends BorderPane {
         try {
             LocalDate ngayDat = datePicker.getValue();
 
-//	        datban guiDatBan = new datban(mainLayout, danhSachBanDaChon, ngayDat);
             datban guiDatBan = new datban(trangChu, danhSachBanDaChon, ngayDat);
 
-//	        mainLayout.setCenter(guiDatBan);
             trangChu.setMainContent(guiDatBan);
         } catch (Exception e) {
             e.printStackTrace();
-            // Cần đảm bảo constructor dự phòng cũng có tham số ngayDat
-//	        new datban(mainLayout, danhSachBanDaChon, datePicker.getValue());
             new datban(trangChu, danhSachBanDaChon, datePicker.getValue());
         }
 
@@ -366,7 +369,7 @@ public class Gui_DanhSachBan extends BorderPane {
         the.setPrefSize(210, 130);
         the.setAlignment(Pos.CENTER);
         the.setPadding(new Insets(0, 10, 0, 10));
-        the.getStyleClass().add("theBan"); // Dùng style class
+        the.getStyleClass().add("theBan");
         Label nhanBan = new Label(ban.getMaBan());
         nhanBan.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         nhanBan.setTextFill(Color.WHITE);
@@ -375,21 +378,47 @@ public class Gui_DanhSachBan extends BorderPane {
                 "-fx-text-fill: white; " + "-fx-font-weight: bold; " + "-fx-font-size: 14px;"
                 + "-fx-background-radius: 15;" + "-fx-cursor: hand;");
         btnXemThongTin.setPrefWidth(150);
-        ImageView iconVip = new ImageView(new Image("img/vipicon.png"));
+
+        HBox hboxIcons = new HBox(5);
+        hboxIcons.setMinHeight(20);
+        hboxIcons.setAlignment(Pos.CENTER_LEFT);
+
+        if (ban.getTrangThai() == TrangThai.DANG_SU_DUNG || ban.getTrangThai() == TrangThai.DA_DAT) {
+            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+            boolean isMerged = (maHDGop != null && banAn_DAO.getDanhSachBanCungHoaDon(maHDGop).size() > 1);
+
+            if (isMerged) {
+                // Sửa đường dẫn để đảm bảo tìm thấy tài nguyên
+                ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
+                iconLink.setFitWidth(20);
+                iconLink.setFitHeight(20);
+                hboxIcons.getChildren().add(iconLink);
+            }
+        }
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        hboxIcons.getChildren().add(spacer);
+
+        ImageView iconVip = new ImageView(new Image(getClass().getResource("/img/vipicon.png").toExternalForm()));
         iconVip.setFitHeight(20);
         iconVip.setFitWidth(20);
         iconVip.setVisible(ban.getLoai() == LoaiBan.VIP);
-        HBox hboxVip = new HBox(iconVip);
-        hboxVip.setAlignment(Pos.TOP_RIGHT);
-        hboxVip.setMinHeight(20);
-        the.getChildren().addAll(hboxVip, nhanBan, btnXemThongTin);
+        hboxIcons.getChildren().add(iconVip);
+
+        // Thêm các phần tử vào VBox the (Thẻ chính)
+        the.getChildren().addAll(hboxIcons, nhanBan, btnXemThongTin);
+
         btnXemThongTin.setOnAction(e -> {
             showTableInfoDialog(ban);
             e.consume();
         });
+
+        // Thêm các thành phần cố định vào StackPane khung
         khung.getChildren().addAll(mauVien, the);
         StackPane.setAlignment(mauVien, Pos.CENTER_LEFT);
         StackPane.setMargin(the, new Insets(0, 0, 0, 5));
+
         return khung;
     }
 
@@ -414,17 +443,14 @@ public class Gui_DanhSachBan extends BorderPane {
         headerPane.setPadding(new Insets(10, 10, 10, 15));
         headerPane.setStyle("-fx-background-color: #F7FAFC;");
         Separator separator = new Separator();
-// Content
-        // Biến kiểm tra xem có cần hiển thị thông tin khách hàng không
+
         boolean isBookedOrInUse = (ban.getTrangThai() == TrangThai.DA_DAT || ban.getTrangThai() == TrangThai.DANG_SU_DUNG);
 
         PhieuDatBan pdbInfo = null;
         if (isBookedOrInUse) {
-            // Lấy ngày đang chọn từ thuộc tính lớp Gui_DanhSachBan
+
             LocalDate ngayDat = datePicker.getValue();
 
-            // Gọi DAO để tra cứu phiếu đặt bàn cho bàn và ngày đó
-            // (Bạn cần đảm bảo PhieuDatBan_DAO.getPhieuDatBanByMaBanVaNgay có thể xử lý cả bàn đang dùng)
             pdbInfo = phieuDatBan_DAO.getPhieuDatBanByMaBanVaNgay(ban.getMaBan(), ngayDat);
         }
 
@@ -483,6 +509,7 @@ public class Gui_DanhSachBan extends BorderPane {
         }
 
 
+
         VBox mainLayout = new VBox(headerPane, separator, statusBox, extraInfoBox);
         mainLayout.setSpacing(0);
         mainLayout.setPrefWidth(350);
@@ -490,6 +517,76 @@ public class Gui_DanhSachBan extends BorderPane {
         if (pdbInfo != null) {
             mainLayout.getChildren().add(bookingInfoBox);
         }
+
+        if (ban.getTrangThai() == TrangThai.DANG_SU_DUNG || ban.getTrangThai() == TrangThai.DA_DAT) {
+            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+
+            if (maHDGop != null) {
+                List<String> dsBanGhep = banAn_DAO.getDanhSachBanCungHoaDon(maHDGop);
+
+                if (dsBanGhep.size() > 1) {
+                    // Đây là một bàn ghép, hiển thị danh sách các bàn chung hóa đơn
+                    Label lblGhepBanTitle = new Label("Bàn ghép cùng :");
+                    lblGhepBanTitle.setStyle("-fx-font-weight: bold; -fx-font-size: 14px; -fx-text-fill: #007BFF;");
+
+                    Label lblBanGhep = new Label(String.join(", ", dsBanGhep));
+                    lblBanGhep.setStyle("-fx-font-weight: normal; -fx-font-size: 14px;");
+
+                    VBox groupInfoBox = new VBox(5, lblGhepBanTitle, lblBanGhep);
+                    groupInfoBox.setPadding(new Insets(15, 0, 0, 0));
+
+                    mainLayout.getChildren().add(groupInfoBox);
+                }
+            }
+        }
+
+        HBox actionButtonsBox = new HBox(10);
+        actionButtonsBox.setAlignment(Pos.CENTER_RIGHT);
+        actionButtonsBox.setPadding(new Insets(15, 10, 10, 10));
+
+        Separator bottomSeparator = new Separator();
+
+        switch (ban.getTrangThai()) {
+            case DANG_SU_DUNG:
+                // 1. Nút Đổi bàn
+                Button btnDoiBan_SD = createActionButton("Đổi bàn", "#FFC107"); // Màu Vàng
+                btnDoiBan_SD.setOnAction(e -> xuLyDoiBan(ban));
+
+                // 2. Nút Thanh toán
+                Button btnThanhToan = createActionButton("Thanh toán", "#38A169"); // Màu Xanh lá
+                btnThanhToan.setOnAction(e -> xuLyThanhToan(ban));
+
+                // 3. Nút Gọi món
+                Button btnGoiMon = createActionButton("Gọi món", "#6B49C7"); // Màu Tím
+                btnGoiMon.setOnAction(e -> xuLyGoiMon(ban));
+
+                actionButtonsBox.getChildren().addAll(btnDoiBan_SD, btnThanhToan, btnGoiMon);
+                break;
+
+            case DA_DAT:
+                // 1. Nút Đổi bàn
+                Button btnDoiBan_DB = createActionButton("Đổi bàn", "#FFC107"); // Màu Vàng
+                btnDoiBan_DB.setOnAction(e -> xuLyDoiBan(ban));
+
+                // 2. Nút Hủy bàn
+                Button btnHuyBan = createActionButton("Hủy bàn", "#DC3545"); // Màu Đỏ
+                btnHuyBan.setOnAction(e -> xuLyHuyBan(ban));
+
+                // 3. Nút Check-in
+                Button btnCheckIn = createActionButton("Check-in", "#007BFF"); // Màu Xanh dương
+                btnCheckIn.setOnAction(e -> xuLyCheckIn(ban));
+
+                actionButtonsBox.getChildren().addAll(btnDoiBan_DB, btnHuyBan, btnCheckIn);
+                break;
+
+            case TRONG:
+                break;
+        }
+
+        if (!actionButtonsBox.getChildren().isEmpty()) {
+            mainLayout.getChildren().addAll(bottomSeparator, actionButtonsBox);
+        }
+
 
         dialog.getDialogPane().setContent(mainLayout);
         dialog.getDialogPane().getStylesheets().add("data:text/css,"
@@ -503,4 +600,147 @@ public class Gui_DanhSachBan extends BorderPane {
         closeNode.setManaged(false);
         dialog.showAndWait();
     }
+    private Button createActionButton(String text, String color) {
+        Button btn = new Button(text);
+        btn.setStyle("-fx-background-color: " + color + "; " +
+                "-fx-text-fill: white; " +
+                "-fx-font-weight: bold; " +
+                "-fx-font-size: 12px;" +
+                "-fx-background-radius: 5;" +
+                "-fx-cursor: hand;");
+        return btn;
+    }
+
+    // Xử lý logic cho Đổi Bàn
+    private void xuLyDoiBan(BanAn banCu) {
+
+        String maHDGop = banAn_DAO.getMaHoaDonTuBan(banCu.getMaBan(), ngayChon);
+        List<String> dsBanGhep = (maHDGop != null) ? banAn_DAO.getDanhSachBanCungHoaDon(maHDGop) : new ArrayList<>();
+
+        // Không cần Alert xác nhận/cảnh báo ở đây nếu bạn muốn hiển thị nó trong Dialog.
+
+        Window owner = this.getScene().getWindow();
+
+        // TẠO DIALOG DÙNG CONSTRUCTOR MỚI (6 tham số)
+        DialogDoiBan dialog = new DialogDoiBan(owner, banCu, ngayChon, banAn_DAO, phieuDatBan_DAO, dsBanGhep);
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == ButtonType.OK) {
+                loadDataToGrid();
+            }
+        });
+    }
+
+    // Xử lý logic cho Thanh Toán
+    private void xuLyThanhToan(BanAn ban) {
+        showAlert(AlertType.INFORMATION, "Chức năng Thanh toán", "Mở giao diện thanh toán cho " + ban.getMaBan() + "...");
+        // TODO: Triển khai logic nghiệp vụ thanh toán.
+    }
+
+    // Xử lý logic cho Gọi Món
+    private void xuLyGoiMon(BanAn ban) {
+        showAlert(AlertType.INFORMATION, "Chức năng Gọi món", "Mở giao diện gọi món/thêm món cho " + ban.getMaBan() + "...");
+        // TODO: Triển khai logic nghiệp vụ gọi món.
+    }
+
+    // Xử lý logic cho Hủy Bàn
+    private void xuLyHuyBan(BanAn ban) {
+        String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+        List<String> dsBanGhep = (maHDGop != null) ? banAn_DAO.getDanhSachBanCungHoaDon(maHDGop) : new ArrayList<>();
+
+        boolean laBanGhep = dsBanGhep.size() > 1;
+
+        if (laBanGhep) {
+            showDialogHuyBanGhep(ban, maHDGop, dsBanGhep);
+        } else {
+            thucHienHuyBanDon(ban);
+        }
+
+    }
+    private void thucHienHuyBanDon(BanAn ban) {
+        Alert alert = new Alert(AlertType.CONFIRMATION,
+                "Bạn có chắc chắn muốn hủy đặt bàn cho " + ban.getMaBan() + " không?",
+                ButtonType.YES, ButtonType.NO);
+        alert.setTitle("Xác nhận hủy");
+        alert.setHeaderText(null);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                if (phieuDatBan_DAO.huyPhieuDatBanByMaBanVaNgay(ban.getMaBan(), ngayChon)) {
+                    showAlert(AlertType.INFORMATION, "Thành công",
+                            "Đã hủy đặt bàn thành công cho bàn " + ban.getMaBan() + ".");
+                    loadDataToGrid();
+                } else {
+                    showAlert(AlertType.ERROR, "Lỗi",
+                            "Không tìm thấy phiếu đặt bàn hoặc hủy thất bại cho bàn " + ban.getMaBan() + ".");
+                }
+                loadDataToGrid();
+            }
+        });
+    }
+    private void showDialogHuyBanGhep(BanAn ban, String maHDGop, List<String> dsBanGhep) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        dialog.setTitle("Lựa chọn Hủy Bàn Ghép");
+        dialog.setHeaderText("Bàn " + ban.getMaBan() + " là một phần của nhóm bàn ghép (" + maHDGop + ")");
+
+        VBox content = new VBox(15);
+        content.setPadding(new Insets(15));
+
+        // Danh sách bàn ghép
+        Label lblGroup = new Label("Danh sách bàn ghép: " + String.join(", ", dsBanGhep));
+        lblGroup.setStyle("-fx-font-weight: bold;");
+
+        Label lblQuestion = new Label("Bạn muốn hủy riêng bàn này hay hủy toàn bộ nhóm?");
+
+        content.getChildren().addAll(lblGroup, lblQuestion);
+
+        // --- Các nút lựa chọn ---
+
+        // 1. Hủy riêng bàn này
+        ButtonType huyDonType = new ButtonType("Hủy riêng Bàn " + ban.getMaBan());
+        // 2. Hủy toàn bộ nhóm
+        ButtonType huyGhepType = new ButtonType("Hủy toàn bộ (" + dsBanGhep.size() + " bàn)");
+
+        dialog.getDialogPane().getButtonTypes().addAll(huyDonType, huyGhepType, ButtonType.CANCEL);
+        dialog.getDialogPane().setContent(content);
+
+        dialog.showAndWait().ifPresent(result -> {
+            if (result == huyDonType) {
+                thucHienHuyBanDon(ban);
+                loadDataToGrid();
+            } else if (result == huyGhepType) {
+                thucHienHuyBanGhep(maHDGop, dsBanGhep);
+                loadDataToGrid();
+            }
+        });
+    }
+
+    private void thucHienHuyBanGhep(String maHDGop, List<String> dsBanGhep) {
+        Alert alert = new Alert(AlertType.CONFIRMATION,
+                "Bạn có chắc chắn muốn hủy " + dsBanGhep.size() + " bàn thuộc nhóm " + maHDGop + " không?",
+                ButtonType.YES, ButtonType.NO);
+        alert.setTitle("Xác nhận hủy nhóm");
+        alert.setHeaderText(null);
+
+        alert.showAndWait().ifPresent(response -> {
+            if (response == ButtonType.YES) {
+                if (phieuDatBan_DAO.huyTatCaPhieuByMaHoaDon(maHDGop)) {
+                    showAlert(AlertType.INFORMATION, "Thành công",
+                            "Đã hủy đặt bàn thành công cho toàn bộ nhóm bàn ghép (" + String.join(", ", dsBanGhep) + ").");
+                    loadDataToGrid();
+                } else {
+                    showAlert(AlertType.ERROR, "Lỗi",
+                            "Không tìm thấy phiếu đặt bàn hoặc hủy nhóm thất bại (Mã HD: " + maHDGop + ").");
+                }
+                loadDataToGrid();
+            }
+        });
+    }
+
+    // Xử lý logic cho Check-in
+    private void xuLyCheckIn(BanAn ban) {
+        showAlert(AlertType.INFORMATION, "Chức năng Check-in", "Thực hiện Check-in cho " + ban.getMaBan() + " và chuyển sang giao diện gọi món...");
+        // TODO: Triển khai logic nghiệp vụ check-in: cập nhật trạng thái, chuyển trang.
+    }
+
 }
