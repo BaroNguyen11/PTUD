@@ -3,9 +3,15 @@ package gui;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+
+import Control.CheckIn_Ctrl;
 import dao.BanAn_DAO;
+import dao.CheckIn_DAO;
+import dao.KhachHang_DAO;
 import dao.PhieuDatBan_DAO;
 import entity.BanAn;
+import entity.KhachHang;
 import entity.LoaiBan;
 import entity.PhieuDatBan;
 import entity.TrangThai;
@@ -54,6 +60,7 @@ public class Gui_DanhSachBan extends BorderPane {
 	private DatePicker datePicker; 
     private LocalDate ngayChon = LocalDate.now();
     private PhieuDatBan_DAO phieuDatBan_DAO;
+    private CheckIn_Ctrl controlCheckIn = new CheckIn_Ctrl();
 
 	public Gui_DanhSachBan(TrangChu trangChu) {
 
@@ -68,7 +75,7 @@ public class Gui_DanhSachBan extends BorderPane {
 		this.setCenter(phanGiuaAll);
 		loadDataToGrid();
 		
-		this.getStylesheets().add(getClass().getResource("/css/danhsachban.css").toExternalForm());
+		//this.getStylesheets().add(getClass().getResource("/css/danhsachban.css").toExternalForm());
 	}
 
 // Tạo phần trên với nút tầng và trạng thái
@@ -423,10 +430,10 @@ public class Gui_DanhSachBan extends BorderPane {
 
 	        if (isMerged) {
 	            // Sửa đường dẫn để đảm bảo tìm thấy tài nguyên
-	            ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm())); 
-	            iconLink.setFitWidth(20); 
-	            iconLink.setFitHeight(20);
-	            hboxIcons.getChildren().add(iconLink);
+//	            ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm())); 
+//	            iconLink.setFitWidth(20); 
+//	            iconLink.setFitHeight(20);
+//	            hboxIcons.getChildren().add(iconLink);
 	        }
 	    }
 	    
@@ -437,11 +444,11 @@ public class Gui_DanhSachBan extends BorderPane {
 
 	    // 3. Icon VIP - TOP RIGHT (Cố định)
 	    // Sửa đường dẫn để đảm bảo tìm thấy tài nguyên
-	    ImageView iconVip = new ImageView(new Image(getClass().getResource("/img/vipicon.png").toExternalForm()));
-	    iconVip.setFitHeight(20);
-	    iconVip.setFitWidth(20);
-	    iconVip.setVisible(ban.getLoai() == LoaiBan.VIP);
-	    hboxIcons.getChildren().add(iconVip);
+//	    ImageView iconVip = new ImageView(new Image(getClass().getResource("/img/vipicon.png").toExternalForm()));
+//	    iconVip.setFitHeight(20);
+//	    iconVip.setFitWidth(20);
+//	    iconVip.setVisible(ban.getLoai() == LoaiBan.VIP);
+//	    hboxIcons.getChildren().add(iconVip);
 	    
 	    // Thêm các phần tử vào VBox the (Thẻ chính)
 	    the.getChildren().addAll(hboxIcons, nhanBan, btnXemThongTin);
@@ -616,7 +623,7 @@ public class Gui_DanhSachBan extends BorderPane {
 
                 // 3. Nút Check-in
                 Button btnCheckIn = createActionButton("Check-in", "#007BFF"); // Màu Xanh dương
-                btnCheckIn.setOnAction(e -> xuLyCheckIn(ban));
+                btnCheckIn.setOnAction(e -> xuLyCheckIn(ban, dialog));
 
                 actionButtonsBox.getChildren().addAll(btnDoiBan_DB, btnHuyBan, btnCheckIn);
                 break;
@@ -687,9 +694,43 @@ public class Gui_DanhSachBan extends BorderPane {
     }
 
     // Xử lý logic cho Check-in
-    private void xuLyCheckIn(BanAn ban) {
-        showAlert(AlertType.INFORMATION, "Chức năng Check-in", "Thực hiện Check-in cho " + ban.getMaBan() + " và chuyển sang giao diện gọi món...");
-        // TODO: Triển khai logic nghiệp vụ check-in: cập nhật trạng thái, chuyển trang.
+    private void xuLyCheckIn(BanAn ban, Dialog<Void> dialog) {
+    		String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+    		
+    		List<PhieuDatBan> dsPhieuDatBan = CheckIn_DAO.getPhieuDatBanTheoHoaDonVaNgay(maHDGop, ngayChon);
+    		
+    		KhachHang kh = KhachHang_DAO.getKhachHangById(dsPhieuDatBan.get(0).getKhachHang().getMaKhachHang());
+    		//System.out.println(dsPhieuDatBan);
+    		
+    		Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+    		alert.setTitle("Xác nhận");
+    		alert.setHeaderText(null);
+    		
+    		String dsBanDat = "";
+    		for(PhieuDatBan phieu : dsPhieuDatBan) {
+    			dsBanDat += phieu.getBan().getMaBan() + ", ";
+    		}
+    		
+    		alert.setContentText("Tiếp tục Check-In\nTên Khách Hàng: " + kh.getTenKhachHang() + "\nSố điện thoại: " + kh.getSoDienThoai() + "\nBàn đặt: " + dsBanDat);
+    		
+
+    		Optional<ButtonType> result = alert.showAndWait();
+    		if (result.isPresent() && result.get() == ButtonType.OK) {
+    			for(PhieuDatBan pdb : dsPhieuDatBan) {
+        			if(!controlCheckIn.capNhatTrangThai(pdb.getMaPhieu(), "Đang dùng") || !controlCheckIn.capNhatTrangThaiBan(pdb.getBan().getMaBan(), TrangThai.DANG_SU_DUNG))
+        			{	showAlert(AlertType.INFORMATION, "Lỗi", "Lỗi khi checkIn bàn và phiếu đặt bàn");
+        				return;
+        			}
+        		}
+        		
+    			showAlert(AlertType.INFORMATION, "Thành công", "Check-In thành công!");
+    			
+    			dialog.close();
+    			
+        		loadDataToGrid();
+    		} 
+    		
+    		
     }
 
 }
