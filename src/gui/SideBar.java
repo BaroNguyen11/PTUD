@@ -238,7 +238,7 @@ public class SideBar extends VBox {
 
         switch (menuText) {
             case "Dashboard" -> trangChu.setMainContent(new Dashboard());
-            case "Quản lí món ăn" -> trangChu.setMainContent(new Label("Giao diện Quản lí món ăn"));
+            case "Quản lí món ăn" -> trangChu.setMainContent(new Gui_QLMon());
             case "Thống kê" -> trangChu.setMainContent(new ThongKe());
             case "Kết ca" -> {
                 if (ketCaScreen == null) {
