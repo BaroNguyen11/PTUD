@@ -19,218 +19,158 @@ import java.util.List;
 
 
 public class CheckIn_DAO {
+    
+    public boolean capNhatTrangThaiBan(String maBan, String trangThai) {
+        Connection con = null;
+        PreparedStatement ps = null;
 
-    // Lấy phiếu theo mã
-    public String layThongTinDatBanTheoSDT(String sdt, LocalDate ngayDat) {
-        String info = "N/A";
+        try {
+            con = ConnectDB.getConnection();
 
-        String sql = """
-            SELECT 
-                b.maBan,
-                k.tenKhachHang,
-                p.thoiGianBatDau,
-                b.loai,
-                k.maKhachHang,
-                k.soDienThoai,
-                k.diemTichLuy,
-                p.soNguoi,
-                p.ghiChu,
-                b.viTri, 
-                p.maPhieu
-            FROM PhieuDatBan p
-            JOIN BanAn b ON p.maBan = b.maBan
-            JOIN KhachHang k ON p.maKhachHang = k.maKhachHang
-            WHERE p.trangThai = N'Đã đặt' AND k.soDienThoai = ? AND CAST(p.thoiGianBatDau AS DATE) = ?
-            ORDER BY p.thoiGianBatDau DESC
-        """;
+            String sql = "UPDATE BanAn SET trangThai = ? WHERE maBan = ?";
+            ps = con.prepareStatement(sql);
+            ps.setString(1, trangThai);
+            ps.setString(2, maBan);
 
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+            int rowsUpdated = ps.executeUpdate();
+            return rowsUpdated > 0;   // true nếu update thành công
 
-            ps.setString(1, sdt);
-            ps.setDate(2, Date.valueOf(ngayDat));
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
 
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    String maBan = safeString(rs.getString("maBan"));
-                    String tenKhachHang = safeString(rs.getString("tenKhachHang"));
-                    String loaiBan = safeString(rs.getString("loai"));
-                    String maKhachHang = safeString(rs.getString("maKhachHang"));
-                    String soDienThoai = safeString(rs.getString("soDienThoai"));
-                    String ghiChu = safeString(rs.getString("ghiChu"));
+        } finally {
+            try {
+                if (ps != null) ps.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+    
+    public PhieuDatBan timPhieuDatBanTheoBanTrongNgay(String maBan) {
+        PhieuDatBan phieu = null;
 
-                    BigDecimal diemTichLuyBD = rs.getBigDecimal("diemTichLuy");
-                    String diemTichLuyStr = (diemTichLuyBD != null)
-                            ? String.format("%.2f", diemTichLuyBD.doubleValue())
-                            : "0.00";
+        Connection con = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
 
-                    int soNguoi = rs.getInt("soNguoi");
-                    if (rs.wasNull()) soNguoi = 0;
+        try {
+            con = ConnectDB.getConnection();
 
-                    // Định dạng thời gian
-                    Timestamp ts = rs.getTimestamp("thoiGianBatDau");
-                    String thoiGian = "N/A";
-                    if (ts != null) {
-                        LocalDateTime ldt = ts.toLocalDateTime();
-                        thoiGian = String.format("%02dh%02d %02d/%02d/%04d",
-                                ldt.getHour(),
-                                ldt.getMinute(),
-                                ldt.getDayOfMonth(),
-                                ldt.getMonthValue(),
-                                ldt.getYear());
-                    }
+            String sql = """
+                SELECT maPhieu, maBan, ghiChu, maKhachHang, thoiGianBatDau, soNguoi, trangThai, maNhanVien, maHoaDon, maKhachHang
+                FROM PhieuDatBan
+                WHERE maBan = ? 
+                  AND CAST(ngayDat AS DATE) = CAST(GETDATE() AS DATE)
+            """;
 
-                    String viTri = rs.getString("viTri");
-                    String maPhieu = rs.getString("maPhieu");
-                    info = String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
-                            maBan, tenKhachHang, thoiGian, loaiBan, maKhachHang,
-                            soDienThoai, diemTichLuyStr, soNguoi, ghiChu, viTri, maPhieu);
-                }
+            stmt = con.prepareStatement(sql);
+            stmt.setString(1, maBan);
+
+            rs = stmt.executeQuery();
+
+            KhachHang kh = new KhachHang();
+            kh.setMaKhachHang(rs.getString("maKhachHang"));
+            
+            HoaDon hd = new HoaDon();
+            hd.setMaHoaDon(rs.getString("maHoaDon"));
+            
+            BanAn ban = new BanAn();
+            ban.setMaBan(rs.getString("maBan"));
+            
+            NhanVien nv = new  NhanVien();
+            nv.setMaNhanVien(rs.getString("maNhanVien"));
+            
+            if (rs.next()) {
+                phieu = new PhieuDatBan(
+                    rs.getString("maPhieu"),
+                    rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
+                    rs.getString("trangThai"),
+                    rs.getInt("soLuongNguoi"),
+                    rs.getString("ghiChu"),
+                    kh,
+                    ban,
+                    nv,
+                    hd
+                );
             }
 
-        } catch (SQLException ex) {
-            System.err.println("[Lỗi] Không thể lấy thông tin phiếu đặt bàn: " + ex.getMessage());
-            ex.printStackTrace();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return phieu;
+    }
+    
+    
+    public static List<PhieuDatBan> getPhieuDatBanTheoHoaDonVaNgay(String maHoaDon, LocalDate ngay) {
+        List<PhieuDatBan> ds = new ArrayList<>();
+
+        String sql = """
+            SELECT * 
+            FROM PhieuDatBan 
+            WHERE maHoaDon = ? 
+              AND CAST(thoiGianBatDau AS DATE) = ?
+        """;
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maHoaDon);
+            ps.setDate(2, java.sql.Date.valueOf(ngay));
+
+            ResultSet rs = ps.executeQuery();
+
+            while (rs.next()) {
+
+            		KhachHang kh = new KhachHang();
+                kh.setMaKhachHang(rs.getString("maKhachHang"));
+                
+                HoaDon hd = new HoaDon();
+                hd.setMaHoaDon(rs.getString("maHoaDon"));
+                
+                BanAn ban = new BanAn();
+                ban.setMaBan(rs.getString("maBan"));
+                
+                NhanVien nv = new  NhanVien();
+                nv.setMaNhanVien(rs.getString("maNhanVien"));
+                
+                PhieuDatBan p = new PhieuDatBan(
+                    rs.getString("maPhieu"),
+                    rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
+                    rs.getString("trangThai"),
+                    rs.getInt("soNguoi"),
+                    rs.getString("ghiChu"),
+                    kh, ban, nv, hd
+                );
+
+                ds.add(p);
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
-        return info;
+        return ds;
     }
-
-    private String safeString(String s) {
-        return (s != null && !s.isBlank()) ? s : "N/A";
-    }
-
-    // Cập nhật trạng thái phiếu (ví dụ: Check-in -> "Đã dùng")
-    public boolean capNhatTrangThaiPhieu(String maPhieu, String trangThaiMoi) {
+    
+    public static boolean capNhatTrangThaiPhieuDatBan(String maPhieu, String trangThaiMoi) {
         String sql = "UPDATE PhieuDatBan SET trangThai = ? WHERE maPhieu = ?";
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
 
-            ps.setString(1, trangThaiMoi);
-            ps.setString(2, maPhieu);
-            return ps.executeUpdate() > 0;
+            stmt.setString(1, trangThaiMoi);  // ví dụ: "Đang dùng"
+            stmt.setString(2, maPhieu);
 
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+            return stmt.executeUpdate() > 0;
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
+
         return false;
     }
-
-    // Chèn phiếu mới (nếu bạn cần)
-    public boolean insertPhieuDatBan(PhieuDatBan p) {
-        String sql = "INSERT INTO PhieuDatBan (maPhieu, thoiGianBatDau, trangThai, soNguoi, ghiChu, maKhachHang, maBan, maNhanVien, maHoaDon) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setString(1, p.getMaPhieu());
-
-            // chuyển LocalDateTime -> Timestamp
-            LocalDateTime dt = p.getThoiGianBatDau();
-            if (dt != null) {
-                ps.setTimestamp(2, Timestamp.valueOf(dt));
-            } else {
-                ps.setTimestamp(2, new Timestamp(System.currentTimeMillis()));
-            }
-
-            ps.setString(3, p.getTrangThai());
-            ps.setInt(4, p.getSoNguoi());
-            ps.setString(5, p.getGhiChu());
-
-            // Nếu lớp PhieuDatBan chứa đối tượng KhachHang/BanAn... thì lấy mã
-            ps.setString(6, p.getKhachHang() != null ? p.getKhachHang().getMaKhachHang() : null);
-            ps.setString(7, p.getBan() != null ? p.getBan().getMaBan() : null);
-            ps.setString(8, p.getNhanVien() != null ? p.getNhanVien().getMaNhanVien() : null);
-            ps.setString(9, p.getHoaDon() != null ? p.getHoaDon().getMaHoaDon() : null);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-        }
-        return false;
-    }
-
-
-    public List<String> getThongTinPhieuDatBan(LocalDate ngay) {
-        List<String> list = new ArrayList<>();
-
-        String sql = """
-            SELECT 
-                b.maBan,
-                k.tenKhachHang,
-                p.thoiGianBatDau,
-                b.loai,
-                k.maKhachHang,
-                k.soDienThoai,
-                k.diemTichLuy,
-                p.soNguoi,
-                p.ghiChu,
-                b.viTri,
-                p.maPhieu
-            FROM PhieuDatBan p
-            JOIN BanAn b ON p.maBan = b.maBan
-            JOIN KhachHang k ON p.maKhachHang = k.maKhachHang
-            WHERE p.trangThai = N'Đã đặt'
-              AND CAST(p.thoiGianBatDau AS DATE) = ?
-            ORDER BY p.thoiGianBatDau DESC
-        """;
-
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
-
-            ps.setDate(1, java.sql.Date.valueOf(ngay));
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    // Xử lý từng cột, tránh null
-                    String maBan = safeString(rs.getString("maBan"));
-                    String tenKhachHang = safeString(rs.getString("tenKhachHang"));
-                    String loaiBan = safeString(rs.getString("loai"));
-                    String maKhachHang = safeString(rs.getString("maKhachHang"));
-                    String soDienThoai = safeString(rs.getString("soDienThoai"));
-                    String ghiChu = safeString(rs.getString("ghiChu"));
-                    String viTri = safeString(rs.getString("viTri"));
-                    String maPhieu = safeString(rs.getString("maPhieu"));
-
-                    BigDecimal diemTichLuyBD = rs.getBigDecimal("diemTichLuy");
-                    String diemTichLuyStr = (diemTichLuyBD != null)
-                            ? String.format("%.2f", diemTichLuyBD.doubleValue())
-                            : "0.00";
-
-                    int soNguoi = rs.getInt("soNguoi");
-                    if (rs.wasNull()) soNguoi = 0;
-
-                    // Xử lý thời gian
-                    String thoiGian = "N/A";
-                    Timestamp ts = rs.getTimestamp("thoiGianBatDau");
-                    if (ts != null) {
-                        LocalDateTime ldt = ts.toLocalDateTime();
-                        thoiGian = String.format("%02dh%02d %02d/%02d/%04d",
-                                ldt.getHour(),
-                                ldt.getMinute(),
-                                ldt.getDayOfMonth(),
-                                ldt.getMonthValue(),
-                                ldt.getYear());
-                    }
-
-                    // Format thành 1 chuỗi (CSV-like)
-                    String info = String.format("%s,%s,%s,%s,%s,%s,%s,%d,%s,%s,%s",
-                            maBan, tenKhachHang, thoiGian, loaiBan,
-                            maKhachHang, soDienThoai, diemTichLuyStr,
-                            soNguoi, ghiChu, viTri, maPhieu);
-
-                    list.add(info);
-                }
-            }
-
-        } catch (SQLException ex) {
-            System.err.println("[Lỗi] Không thể lấy thông tin phiếu đặt bàn: " + ex.getMessage());
-            ex.printStackTrace();
-        }
-
-        return list;
-    }
-
-
+    
 
 }

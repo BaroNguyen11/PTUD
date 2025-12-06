@@ -24,12 +24,12 @@ import java.text.NumberFormat;
 import java.util.Locale;
 import java.util.Map;
 
-public class Dashboard extends BorderPane {
+public class Gui_Dashboard extends BorderPane {
 
     private Dashboard_DAO dashboardDAO;
     private NumberFormat currencyFormat;
 
-    public Dashboard() {
+    public Gui_Dashboard() {
         dashboardDAO = new Dashboard_DAO();
         currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
 

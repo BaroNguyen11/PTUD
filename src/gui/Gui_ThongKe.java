@@ -30,7 +30,7 @@ import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.util.Map;
 
-public class ThongKe extends VBox {
+public class Gui_ThongKe extends VBox {
     private ComboBox<String> cbGroup;
     private ComboBox<String> cbArea;
     private DatePicker datePickerFrom;
@@ -80,7 +80,7 @@ public class ThongKe extends VBox {
         });
     }
 
-    public ThongKe() {
+    public Gui_ThongKe() {
         // Container chính với animation
         VBox rootContent = new VBox(40);
         rootContent.setPadding(new Insets(30, 40, 30, 40));

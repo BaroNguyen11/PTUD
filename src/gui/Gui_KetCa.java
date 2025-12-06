@@ -335,7 +335,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Locale;
 
-public class KetCa extends VBox {
+public class Gui_KetCa extends VBox {
 
     private TextField txtTienDauCa;
     private TextField txtTongSoHoaDon;
@@ -356,9 +356,9 @@ public class KetCa extends VBox {
     private Label lblGioLam;
     private Label lblChenhLech;
 
-    public KetCa() {
+    public Gui_KetCa() {
         // Lấy mã nhân viên từ session đăng nhập
-        this.maNhanVien = GiaoDienDangNhap.getCurrentMaNhanVien();
+        this.maNhanVien = Gui_DangNhap.getCurrentMaNhanVien();
 
         VBox rootContent = new VBox(35);
         rootContent.setPadding(new Insets(35, 50, 35, 50));

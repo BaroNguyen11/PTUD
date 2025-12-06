@@ -39,7 +39,7 @@ public class NhanVien_DAO {
     }
 
     // Lấy nhân viên theo mã
-    public NhanVien getNhanVienByMa(String maNhanVien) {
+    public static NhanVien getNhanVienByMa(String maNhanVien) {
         String sql = "SELECT * FROM NhanVien WHERE maNhanVien = ?";
 
         try (Connection con = ConnectDB.getConnection();

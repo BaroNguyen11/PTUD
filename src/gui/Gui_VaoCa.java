@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 
-public class VaoCaModal {
+public class Gui_VaoCa {
 
     private Stage modalStage;
     private TextField txtTongTienMatDauCa;
@@ -28,7 +28,7 @@ public class VaoCaModal {
 
     private NhanVien nhanVien; // ✅ NhanVien object
 
-    public VaoCaModal(NhanVien nhanVien) {
+    public Gui_VaoCa(NhanVien nhanVien) {
         this.nhanVien = nhanVien;
 
         modalStage = new Stage();

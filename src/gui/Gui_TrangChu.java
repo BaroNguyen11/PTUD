@@ -1,6 +1,7 @@
 package gui;
 
 import dao.DangNhap_DAO;
+import entity.NhanVien;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
@@ -14,19 +15,23 @@ import javafx.scene.text.FontWeight;
 // Đã loại bỏ import Ikonli vì chưa thêm thư viện
 
 // Lớp TrangChu kế thừa từ BorderPane, bố cục chuẩn cho Sidebar và Header
-public class TrangChu extends BorderPane {
+public class Gui_TrangChu extends BorderPane {
 
-    private SideBar sideBar;
+    private Gui_Sidebar sideBar;
     private StackPane mainContentArea; // Vùng chứa nội dung chính
+    
+    public NhanVien nhanVienDangDung;
 
-    public TrangChu() {
+    public Gui_TrangChu(NhanVien nhanVien) {
+    		this.nhanVienDangDung = nhanVien;
+    	
         // 1. Khởi tạo Vùng Nội dung Chính (CENTER) trước
         this.mainContentArea = new StackPane(); 
         this.mainContentArea.getStyleClass().add("main-content-area"); 
         
         // 2. Khởi tạo SideBar và đặt vào bên TRÁI
         // TRUYỀN THAM CHIẾU 'THIS' (TrangChu) vào SideBar
-        this.sideBar = new SideBar(this);
+        this.sideBar = new Gui_Sidebar(this);
         this.setLeft(sideBar); 
 
         // 3. Tạo Header và đặt vào TOP
@@ -53,7 +58,7 @@ public class TrangChu extends BorderPane {
      * Hiển thị Dashboard (Trang Chủ) mặc định
      */
     public void showDashboard() {
-        setMainContent(new Dashboard());
+        setMainContent(new Gui_Dashboard());
     }
     
     // --- CÁC PHƯƠNG THỨC TẠO GIAO DIỆN ---
@@ -87,7 +92,7 @@ public class TrangChu extends BorderPane {
         
         // Tên người dùng
         DangNhap_DAO user = new DangNhap_DAO();
-        Label userName = new Label("Xin chào: abc");
+        Label userName = new Label("Xin chào: " + nhanVienDangDung.getTenNhanVien());
         userName.getStyleClass().add("user-name-label");
 
         HBox userInfo = new HBox(15, userIcon, userName);

@@ -114,25 +114,19 @@ public class BanAn_DAO {
                 }
             }
 
-            // --- TỔNG HỢP TRẠNG THÁI CUỐI CÙNG ---
             TrangThai trangThaiCuoiCung;
 
             if (ngay.isEqual(LocalDate.now())) {
-                // A. TRÊN NGÀY HIỆN TẠI (Ưu tiên Trạng thái Vật lý)
 
                 if (trangThaiVatLy == TrangThai.DANG_SU_DUNG) {
-                    // Ưu tiên cao nhất: Nếu bàn đang thực sự ĐANG_SU_DUNG (theo bảng BanAn)
                     trangThaiCuoiCung = TrangThai.DANG_SU_DUNG;
                 } else {
-                    // Nếu bàn trống, ta sử dụng trạng thái từ PDB (có thể là Đã đặt hoặc Đang dùng, hoặc Trống)
                     trangThaiCuoiCung = trangThaiPDB;
                 }
             } else {
-                // B. TRÊN NGÀY KHÁC (Chỉ dùng PDB)
                 trangThaiCuoiCung = trangThaiPDB;
             }
 
-            // Gán trạng thái đã xác định
             ban.setTrangThai(trangThaiCuoiCung);
             dsBanAnKetQua.add(ban);
         }
@@ -156,8 +150,6 @@ public class BanAn_DAO {
                 while (rs.next()) {
                     // Lấy chuỗi trạng thái trực tiếp từ CSDL (vì Entity không được sửa)
                     String rawTrangThai = rs.getString("trangThai");
-
-                    // TẠO OBJECT PDB
                     PhieuDatBan pdb = new PhieuDatBan(
                             rs.getString("maPhieu"),
                             rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
@@ -216,5 +208,52 @@ public class BanAn_DAO {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public List<String> getDanhSachBanCungHoaDon(String maHoaDon) {
+        List<String> dsBan = new ArrayList<>();
+        // Lấy MaBan từ các PDB cùng chung MaHoaDon
+        String sql = "SELECT DISTINCT maBan FROM PhieuDatBan WHERE maHoaDon = ? AND maBan IS NOT NULL";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maHoaDon);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    dsBan.add(rs.getString("maBan"));
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi lấy danh sách bàn cùng hóa đơn: " + e.getMessage());
+        }
+        return dsBan;
+    }
+
+
+    public String getMaHoaDonTuBan(String maBan, LocalDate ngay) {
+        String maHD = null;
+
+        String sql = "SELECT TOP 1 maHoaDon FROM PhieuDatBan " +
+                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
+                "AND trangThai IN (N'Đã đặt', N'Đang dùng') AND maHoaDon IS NOT NULL " +
+                "ORDER BY thoiGianBatDau DESC";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maBan);
+            ps.setDate(2, java.sql.Date.valueOf(ngay));
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    maHD = rs.getString("maHoaDon");
+                }
+            }
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi lấy Mã Hóa Đơn từ bàn: " + e.getMessage());
+        }
+        return maHD;
     }
 }

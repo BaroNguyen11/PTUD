@@ -70,7 +70,6 @@ public class Gui_ThanhToan extends BorderPane {
     private List<BanAn> dsBan = new ArrayList<>();
     private Scene scene;
     private ScrollPane scroll;
-    private BanAn banChon;
     private TextField txtTienNhan = new TextField();
     private TextField txtTienThua = new TextField();
     private TextField txtTongTien;
@@ -119,15 +118,18 @@ public class Gui_ThanhToan extends BorderPane {
     private ToggleButton tang1;
     private ToggleButton tang2;
 
-    public Gui_ThanhToan(NhanVien nv) {
+    public Gui_ThanhToan(NhanVien nv, BanAn ban) {
         this.nv = nv;
-        dsBan = control.layDanhSachBanThanhToan(LocalDate.now());
-        banChon = new BanAn();
+//        dsBan = control.layDanhSachBanThanhToan(LocalDate.now());
+//        banChon = new BanAn();
         // Root chính
         this.setStyle("-fx-background-color: white");
 
         // Màn hiển thị danh sách bàn
-        BorderPane manHienThiBan = taoManHinhDanhSachBan(control.chiaTang(dsBan, "Tầng 1"));
+//        BorderPane manHienThiBan = taoManHinhDanhSachBan(control.chiaTang(dsBan, "Tầng 1"));
+        
+        BorderPane manHienThiBan = taoManHinhThanhToan(ban);
+        
         this.setCenter(manHienThiBan);
         this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
         this.getStylesheets().add(getClass().getResource("/css/thanhtoan.css").toExternalForm());
@@ -346,24 +348,24 @@ public class Gui_ThanhToan extends BorderPane {
         VBox vboxPhanPhai = taoPhanPhai(banAn);
         rootAll.setRight(vboxPhanPhai);
 
-        //Hàng f
-        KeyCombination f9 = new KeyCodeCombination(KeyCode.F9);
-        KeyCombination f10 = new KeyCodeCombination(KeyCode.F10);
-        KeyCombination f11 = new KeyCodeCombination(KeyCode.F11);
-        KeyCombination f12 = new KeyCodeCombination(KeyCode.F12);
-        KeyCombination f8 = new KeyCodeCombination(KeyCode.F8);
-        KeyCombination f3 = new KeyCodeCombination(KeyCode.F3);
-
-
-        //Put do
-        shortcuts.put(f12, () -> btnThanhToan.fire());
-        shortcuts.put(f11, () -> btnQuayLai.fire());
-        shortcuts.put(f10, () -> btnMa.fire());
-        shortcuts.put(f9, () -> btnTienMat.fire());
-        shortcuts.put(f8, () -> btnIn.fire());
-        shortcuts.put(f3, () -> txtTienNhan.requestFocus());
-
-        this.getScene().getAccelerators().putAll(shortcuts);
+//        //Hàng f
+//        KeyCombination f9 = new KeyCodeCombination(KeyCode.F9);
+//        KeyCombination f10 = new KeyCodeCombination(KeyCode.F10);
+//        KeyCombination f11 = new KeyCodeCombination(KeyCode.F11);
+//        KeyCombination f12 = new KeyCodeCombination(KeyCode.F12);
+//        KeyCombination f8 = new KeyCodeCombination(KeyCode.F8);
+//        KeyCombination f3 = new KeyCodeCombination(KeyCode.F3);
+//
+//
+//        //Put do
+//        shortcuts.put(f12, () -> btnThanhToan.fire());
+//        shortcuts.put(f11, () -> btnQuayLai.fire());
+//        shortcuts.put(f10, () -> btnMa.fire());
+//        shortcuts.put(f9, () -> btnTienMat.fire());
+//        shortcuts.put(f8, () -> btnIn.fire());
+//        shortcuts.put(f3, () -> txtTienNhan.requestFocus());
+//
+//        this.getScene().getAccelerators().putAll(shortcuts);
 
         return rootAll;
     }
@@ -639,7 +641,8 @@ public class Gui_ThanhToan extends BorderPane {
         lblKMTieuDe.setContentDisplay(ContentDisplay.LEFT);
 
         DecimalFormat format = new DecimalFormat("#,###.0 VND");
-        txtTamTinh.setText(format.format(Double.parseDouble(dsChiTiet.get(0).split(",")[3])));
+        
+        	txtTamTinh.setText(format.format(Double.parseDouble(dsChiTiet.get(0).split(",")[3])));
         double tamTinh = parseVNDToDouble(txtTamTinh.getText());
 
         double thue = control.tinhThue(Double.parseDouble(dsChiTiet.get(0).split(",")[3]));
@@ -1013,7 +1016,7 @@ public class Gui_ThanhToan extends BorderPane {
         hboxButton.getChildren().addAll(btnQuayLai, spacer, btnThanhToan);
 
         btnQuayLai.setOnAction(e -> {
-            this.setCenter(taoManHinhDanhSachBan(dsBan));
+            this.setCenter(new Gui_DanhSachBan(new Gui_TrangChu(new NhanVien())));
         });
 
         btnThanhToan.setOnAction(e -> {

@@ -2,6 +2,7 @@ package gui;
 
 import dao.Ca_DAO;
 import dao.DangNhap_DAO;
+import dao.NhanVien_DAO;
 import entity.Ca;
 import entity.NhanVien;
 import javafx.application.Application;
@@ -17,7 +18,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.stage.Stage;
 
-public class GiaoDienDangNhap extends Application {
+public class Gui_DangNhap extends Application {
 
     private static final String SPICES_IMAGE_PATH = "/img/spices_background.jpg";
     private static final String USER_ICON_PATH = "/img/user_icon.png";
@@ -204,12 +205,12 @@ private HBox createInputControl(String iconPath, boolean isPassword, String prom
     return container;
 }
 
-private void openMainScreen(Stage currentStage) {
+private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
     try {
         currentStage.close();
 
         Stage mainStage = new Stage();
-        TrangChu root = new TrangChu();
+        Gui_TrangChu root = new Gui_TrangChu(nhanVien);
         Scene scene = new Scene(root);
 
         try {
@@ -400,6 +401,8 @@ private void openMainScreen(Stage currentStage) {
                     String maNvVuaDangNhap = dangNhapDAO.getMaNhanVien(username);
                     String tenNvVuaDangNhap = username; // TODO: Nên lấy tên đầy đủ từ DAO
                     boolean laAdmin = dangNhapDAO.isAdmin(username);
+                    
+                    NhanVien nhanVien = NhanVien_DAO.getNhanVienByMa(maNvVuaDangNhap);
 
                     // ✅✅✅ LOGIC KIỂM TRA MỚI ✅✅✅
                     Ca_DAO caDAO = new Ca_DAO();
@@ -419,7 +422,7 @@ private void openMainScreen(Stage currentStage) {
                             currentMaNhanVien = maNvVuaDangNhap;
 
                             stage.hide();
-                            openMainScreen(stage); // Đi thẳng vào
+                            openMainScreen(stage, nhanVien); // Đi thẳng vào
 
                         } else {
                             // B. Một nhân viên KHÁC đã để treo ca
@@ -443,16 +446,16 @@ private void openMainScreen(Stage currentStage) {
                         currentMaNhanVien = maNvVuaDangNhap;
 
                         stage.hide();
-                        NhanVien nhanVien = new NhanVien();
-                        nhanVien.setMaNhanVien(currentMaNhanVien);
-                        nhanVien.setTenNhanVien(currentUsername);
+//                        NhanVien nhanVien = new NhanVien();
+//                        nhanVien.setMaNhanVien(currentMaNhanVien);
+//                        nhanVien.setTenNhanVien(currentUsername);
 
-                        VaoCaModal vaoCaModal = new VaoCaModal(nhanVien);
+                        Gui_VaoCa vaoCaModal = new Gui_VaoCa(nhanVien);
                         vaoCaModal.showAndWait();
 
                         if (vaoCaModal.isConfirmed()) {
                             // User xác nhận vào ca, mở màn hình chính
-                            openMainScreen(stage);
+                            openMainScreen(stage, nhanVien);
                         } else {
                             // User đóng modal (không vào ca), hiển thị lại màn hình đăng nhập
                             // và xóa session

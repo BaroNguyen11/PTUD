@@ -44,7 +44,7 @@ import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import lib.ImageCacheManager;
 
-public class datban extends BorderPane {
+public class Gui_DatBan extends BorderPane {
     private MonAn_DAO monAnDAO;
     private KhachHang_DAO khachHangDAO;
     private BanAn_DAO banAn_DAO;
@@ -55,7 +55,7 @@ public class datban extends BorderPane {
     private ObservableList<BanAn> dsBanDaChon;
     private ObservableList<ChiTietHoaDon> dsMonDaChon;
     private final DecimalFormat df = new DecimalFormat("###,###đ");
-    private TrangChu trangChu;
+    private Gui_TrangChu trangChu;
     //	private BorderPane mainLayout;
     private List<BanAn> cacBanDuocChon;
     private Label lblTongCoc;
@@ -76,7 +76,7 @@ public class datban extends BorderPane {
     private RadioButton radioDatTruoc;
     private TextField txtGhiChu;
 
-    public datban(TrangChu trangChu, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
+    public Gui_DatBan(Gui_TrangChu trangChu, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
         this.trangChu = trangChu;
 //		this.mainLayout = mainLayout;
         this.cacBanDuocChon = cacBanDaChon;

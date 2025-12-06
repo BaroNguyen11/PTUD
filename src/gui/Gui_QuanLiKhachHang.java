@@ -16,7 +16,7 @@ import javafx.scene.layout.*;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 
-public class QuanLyKhachHang extends BorderPane {
+public class Gui_QuanLiKhachHang extends BorderPane {
     private final ObservableList<KhachHang> data = FXCollections.observableArrayList();
     private final KhachHang_DAO khachHangDAO = new KhachHang_DAO();
     private TableView<KhachHang> table;
@@ -24,7 +24,7 @@ public class QuanLyKhachHang extends BorderPane {
     private TextField txtSearch;
 
     // ====================== ✅ CONSTRUCTOR ======================
-    public QuanLyKhachHang() {
+    public Gui_QuanLiKhachHang() {
         // Tạo layout
         VBox searchSection = createSearchSection();
         table = createCustomerTable();

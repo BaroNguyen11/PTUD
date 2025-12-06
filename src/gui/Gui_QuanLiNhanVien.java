@@ -17,7 +17,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class QuanLyNhanVien extends VBox {
+public class Gui_QuanLiNhanVien extends VBox {
 
     private final NhanVien_DAO dao = new NhanVien_DAO();
     private final ObservableList<NhanVien> data = FXCollections.observableArrayList();
@@ -31,7 +31,7 @@ public class QuanLyNhanVien extends VBox {
     private Button btnThem, btnSua, btnThoiViec, btnTaiTuyen, btnClear;
     private TextField txtNgayThoiViec;
 
-    public QuanLyNhanVien() {
+    public Gui_QuanLiNhanVien() {
         initializeUI();
         loadData();
     }
