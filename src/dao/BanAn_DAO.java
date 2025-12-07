@@ -17,6 +17,48 @@ import java.util.List;
 import java.util.Map;
 
 public class BanAn_DAO {
+	
+	public  static BanAn getByMaBan(String maBan) {
+        if (maBan == null || maBan.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM BanAn WHERE maBan = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, maBan);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                String rawLoai = rs.getString("loai");
+                String rawTrangThai = rs.getString("trangThai");
+                String rawViTri = rs.getString("viTri");
+
+                LoaiBan loai = LoaiBan.fromString(rawLoai);
+                TrangThai trangThai = TrangThai.fromString(rawTrangThai);
+                ViTri viTri = ViTri.fromString(rawViTri);
+
+                // Thêm kiểm tra null trước khi tạo BanAn
+                if (loai == null || trangThai == null || viTri == null) {
+                    System.err.println("LỖI DAO (getAllBanAn): Dữ liệu không hợp lệ cho bàn '" + maBan +
+                            "'. Loai='" + rawLoai + "', TrangThai='" + rawTrangThai + "', ViTri='" + rawViTri + "'");
+                }
+
+                BanAn ban = new BanAn(maBan, loai, trangThai, viTri);
+
+                return ban;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy bàn ăn theo mã: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;  // Không tìm thấy
+    }
+	
 
     public List<BanAn> getAllBanAn() {
         List<BanAn> dsBanAn = new ArrayList<>();

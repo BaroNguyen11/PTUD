@@ -3,25 +3,23 @@ package gui;
 
 
 
-import java.sql.SQLException;
+import java.sql.Date;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-
-import javax.swing.JOptionPane;
 import ctrl.ThanhToan_Ctrl;
-import entity.BanAn;
-import entity.ChiTietHoaDon;
+import dao.HoaDon_DAO;
+import dao.KhachHang_DAO;
+import dao.NhanVien_DAO;
+import dao.QLHD_DAO;
 import entity.HoaDon;
 import entity.KhachHang;
 import entity.KhuyenMai;
-import entity.LoaiBan;
 import entity.NhanVien;
 import entity.PhieuDatBan;
 import javafx.application.Platform;
@@ -34,42 +32,23 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-
-import java.awt.Graphics2D;
-import java.awt.print.*;
-import javafx.scene.Node;
-import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.*;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.SVGPath;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontPosture;
-import javafx.scene.text.FontWeight;
-import javafx.scene.text.Text;
+import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javafx.stage.Window;
-import javafx.util.converter.DoubleStringConverter;
-import javafx.util.converter.NumberStringConverter;
 import javafx.print.*;
-import javafx.print.Paper;
-import javafx.print.PrinterJob;
 
 import java.util.Map;
 import java.util.Optional;
 
 public class Gui_ThanhToan extends BorderPane {
     private ThanhToan_Ctrl control = new ThanhToan_Ctrl();
-    private List<BanAn> dsBan = new ArrayList<>();
-    private Scene scene;
-    private ScrollPane scroll;
     private TextField txtTienNhan = new TextField();
     private TextField txtTienThua = new TextField();
     private TextField txtTongTien;
@@ -86,10 +65,8 @@ public class Gui_ThanhToan extends BorderPane {
     private Button btnPhim9;
     private Button btnPhim0;
     private Button btnPhimC;
-    private Button btnPhimCham;
     private Button btnPhim00;
     private Button btnPhim000;
-    private Button btnPhimCham000;
     private Button btnPhimXoaMot;
     private Button btn50;
     private Button btn200;
@@ -115,237 +92,41 @@ public class Gui_ThanhToan extends BorderPane {
     private TextField txtTamTinh;
     private Label lblTongTienQR;
     private ComboBox<KhuyenMai> cboKM;
-    private ToggleButton tang1;
-    private ToggleButton tang2;
+	private TextField txtTienCoc;
+	private String dsBan;
 
-    public Gui_ThanhToan(NhanVien nv, BanAn ban) {
+    public Gui_ThanhToan(NhanVien nv, String maHD) {
         this.nv = nv;
-//        dsBan = control.layDanhSachBanThanhToan(LocalDate.now());
-//        banChon = new BanAn();
         // Root chính
         this.setStyle("-fx-background-color: white");
 
-        // Màn hiển thị danh sách bàn
-//        BorderPane manHienThiBan = taoManHinhDanhSachBan(control.chiaTang(dsBan, "Tầng 1"));
         
-        BorderPane manHienThiBan = taoManHinhThanhToan(ban);
+        BorderPane manHienThiBan = taoManHinhThanhToan(maHD);
         
         this.setCenter(manHienThiBan);
         this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
         this.getStylesheets().add(getClass().getResource("/css/thanhtoan.css").toExternalForm());
 
     }
-
-    // Tạo màn danh sách bàn
-    public BorderPane taoManHinhDanhSachBan(List<BanAn> dsBan) {
-        BorderPane root = new BorderPane();
-
-        // Phần trên (chọn tầng + tìm kiếm + chú thích)
-        HBox hboxPhanTren = taoPhanTren();
-        root.setTop(hboxPhanTren);
-
-        // Phần danh sách bàn
-        HBox hboxDanhSach = taoPhanDanhSachBan(dsBan);
-        root.setCenter(hboxDanhSach);
-
-        safeClearAccelerators();
-        return root;
-    }
-
-    // Tạo phần trên với nút tầng, tìm kiếm, chú thích
-    private HBox taoPhanTren() {
-        VBox left = new VBox(5);
-        left.setPadding(new Insets(10));
-
-        // --- Nút chọn tầng ---
-        Label lblKhuVuc = new Label("Khu vực");
-        lblSetStyle(lblKhuVuc, "#667eea");
-        lblKhuVuc.setGraphic(createSvgIcon(20, 16, "#667eea",
-                "M5.5 2a.5.5 0 0 0-.5.5v8a.5.5 0 0 0 .5.5h5a.5.5 0 0 0 .5-.5v-8a.5.5 0 0 0-.5-.5zm1 4h2a.5.5 0 0 1 .5.5a.5.5 0 0 1-.5.5H7v.5a.5.5 0 0 1-.5.5a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5m-2 6a.5.5 0 0 0 0 1h7a.5.5 0 0 0 0-1zm-1 2a.5.5 0 0 0 0 1h9a.5.5 0 0 0 0-1z"));
-        lblKhuVuc.setContentDisplay(ContentDisplay.LEFT);
-        lblKhuVuc.setGraphicTextGap(10);
-
-        tang1 = new ToggleButton("Tầng 1");
-        tang2 = new ToggleButton("Tầng 2");
-        ToggleGroup group = new ToggleGroup();
-        tang1.setToggleGroup(group);
-        tang2.setToggleGroup(group);
-        tang1.getStyleClass().add("nutTang");
-        tang2.getStyleClass().add("nutTang");
-        HBox nutTang = new HBox(5, tang1, tang2);
-        nutTang.setAlignment(Pos.CENTER_LEFT);
-
-        // Chức năng loc tầng
-        tang1.setOnAction(e -> {
-            scroll.setContent(taoLuoiBan(control.chiaTang(dsBan, "Tầng 1")));
-        });
-
-        tang2.setOnAction(e -> {
-            scroll.setContent(taoLuoiBan(control.chiaTang(dsBan, "Tầng 2")));
-        });
-
-        tang1.setSelected(true);
-
-        // --- Ô tìm kiếm ---
-        Label lblTimKiem = new Label("Tìm kiếm");
-        lblSetStyle(lblTimKiem, "#667eea");
-        lblTimKiem.setGraphic(createSvgIcon(20, 16, "#667eea",
-                "m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"));
-        lblTimKiem.setContentDisplay(ContentDisplay.LEFT);
-        lblTimKiem.setGraphicTextGap(10);
-
-        TextField txtTimKiem = new TextField();
-        txtTimKiem.setPromptText("Tìm bằng mã bàn");
-        txtTimKiem.getStyleClass().add("timKiem");
-        Button btnTim = new Button("Tìm");
-        btnTim.getStyleClass().add("button-timKiem");
-        ComboBox<String> cboLoc = new ComboBox<String>();
-        cboLoc.getItems().addAll("Tất cả loại", "Bàn vip", "Bàn thường");
-        cboLoc.getStyleClass().add("combo-box");
-        cboLoc.getSelectionModel().selectFirst();
-        HBox timKiem = new HBox(10, txtTimKiem, btnTim, cboLoc);
-        timKiem.setAlignment(Pos.CENTER_LEFT);
-
-        left.getChildren().addAll(lblKhuVuc, nutTang, lblTimKiem, timKiem);
-        left.setStyle("-fx-border-width: 0 1 0 0; -fx-border-color: #D9D9D9");
-
-        // --- Chú thích trạng thái ---
-        VBox trangThai = new VBox(5);
-        trangThai.setPadding(new Insets(10));
-
-        Label lblTrangThai = new Label("Chú thích");
-        lblSetStyle(lblTrangThai, "#667eea");
-        lblTrangThai.setGraphic(createSvgIcon(20, 16, "#667eea",
-                "M7.5 2c-.277 0-.5.223-.5.5v2c0 .277.223.5.5.5h2c.277 0 .5-.223.5-.5v-2c0-.277-.223-.5-.5-.5zm-1 5a.499.499 0 1 0 0 1H7v5h-.5a.499.499 0 1 0 0 1h4a.499.499 0 1 0 0-1H10V7.5c0-.277-.223-.5-.5-.5z"));
-        lblTrangThai.setContentDisplay(ContentDisplay.LEFT);
-        lblTrangThai.setGraphicTextGap(10);
-        HBox vip = new HBox();
-        ImageView iconVip = new ImageView(new Image(getClass().getResourceAsStream("/img/vipicon.png")));
-        iconVip.setFitWidth(15);
-        iconVip.setFitHeight(15);
-        Label lblVip = new Label("Bàn VIP");
-        lblVip.setStyle("-fx-text-fill: yellow; -fx-font-weight: bold; -fx-font-size: 11;");
-        vip.getChildren().addAll(iconVip, lblVip);
-        vip.setPadding(new Insets(0, 0, 0, 4));
-        vip.setAlignment(Pos.CENTER_LEFT);
-
-        HBox ban = new HBox();
-        Label lblBan = new Label("Đang sử dụng");
-        lblBan.setStyle("-fx-text-fill: yellow; -fx-font-weight: bold; -fx-font-size: 11;");
-        trangThai.getChildren().addAll(lblTrangThai, vip, ban);
-
-        HBox topAll = new HBox(40, left, trangThai);
-        return topAll;
-    }
-
-    // Tạo phần giữa (danh sách bàn)
-    private HBox taoPhanDanhSachBan(List<BanAn> dsBanAn) {
-        HBox giua = new HBox(20);
-        giua.setPadding(new Insets(10));
-
-        VBox trai = new VBox(10);
-
-        Label lblDanhSach = new Label("Danh sách bàn");
-        lblSetStyle(lblDanhSach, "#667eea");
-        lblDanhSach.setGraphic(createSvgIcon(30, 16, "#667eea",
-                "M1.418 8.006a.5.5 0 0 0-.412.576l1 6a.5.5 0 1 0 .988-.164L2.924 14h1.652l-.07.418a.5.5 0 1 0 .988.164l.5-3A.5.5 0 0 0 5.5 11H2.424l-.43-2.582a.503.503 0 0 0-.576-.412M4.5 8a.499.499 0 1 0 0 1H7v5.5a.499.499 0 1 0 1 0V9h2.5a.499.499 0 1 0 0-1zm8.506.418L12.576 11H9.498a.5.5 0 0 0-.492.582l.5 3a.5.5 0 1 0 .986-.164l-.07-.418h1.654l-.07.418a.5.5 0 1 0 .986.164l1-6a.5.5 0 1 0-.986-.164"));
-        lblDanhSach.setContentDisplay(ContentDisplay.LEFT);
-        lblDanhSach.setGraphicTextGap(10);
-
-        GridPane luoiBan = taoLuoiBan(dsBanAn);
-        scroll = new ScrollPane(luoiBan);
-        scroll.setFitToWidth(true);
-        scroll.setPrefHeight(620);
-        scroll.getStyleClass().add("scroll-pane");
-
-        trai.getChildren().addAll(lblDanhSach, scroll);
-//        giua.setAlignment(Pos.CENTER);
-        giua.getChildren().add(trai);
-
-        return giua;
-    }
-
-    // Lưới bàn
-    private GridPane taoLuoiBan(List<BanAn> dsBanAn) {
-        GridPane grid = new GridPane();
-        grid.setHgap(15);
-        grid.setVgap(15);
-        grid.setPadding(new Insets(20));
-        grid.setStyle("-fx-background-color: white;");
-
-        for (int i = 0; i < dsBanAn.size(); i++) {
-            StackPane theBan = taoTheBan(dsBanAn.get(i));
-
-            int hang = i / 5;
-            int cot = i % 5;
-            GridPane.setRowIndex(theBan, hang);
-            GridPane.setColumnIndex(theBan, cot);
-            grid.getChildren().add(theBan);
-
-        }
-        return grid;
-    }
-
-    // Tạo thẻ bàn
-    private StackPane taoTheBan(BanAn banAn) {
-        StackPane khung = new StackPane();
-        khung.setMinHeight(100);
-        khung.setMinWidth(210);
-
-        Region mauTrai = new Region();
-        mauTrai.setPrefWidth(10);
-        mauTrai.setStyle("-fx-background-color: yellow; -fx-background-radius: 20;");
-
-        VBox the = new VBox(10);
-        the.setPrefSize(210, 130);
-        the.setAlignment(Pos.CENTER);
-        the.setPadding(new Insets(0, 10, 0, 10));
-        the.setStyle("-fx-background-color: #082744; -fx-background-radius: 20;");
-
-        ImageView iconVip = new ImageView(new Image("img/vipicon.png"));
-        iconVip.setFitHeight(20);
-        iconVip.setFitWidth(20);
-        HBox hboxVip = new HBox();
-        if (banAn.getLoai().equals(LoaiBan.VIP)) {
-            hboxVip.getChildren().add(iconVip);
-        }
-        hboxVip.setAlignment(Pos.TOP_RIGHT);
-        hboxVip.setMinHeight(20);
-
-        Label lblTen = new Label(banAn.getMaBan());
-        lblTen.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        lblTen.setTextFill(Color.WHITE);
-
-        Button btnThanhToan = new Button("Thanh toán");
-        btnThanhToan.getStyleClass().add("btn-thanhToan-guiThanhToan");
-        btnThanhToan.setOnAction(e -> {
-            this.setCenter(taoManHinhThanhToan(banAn));
-//        		banChon = banAn;
-        });
-
-        the.getChildren().addAll(hboxVip, lblTen, btnThanhToan);
-
-        khung.getChildren().addAll(mauTrai, the);
-        StackPane.setAlignment(mauTrai, Pos.CENTER_LEFT);
-        StackPane.setMargin(the, new Insets(0, 0, 0, 5));
-
-        return khung;
-    }
-
-    private BorderPane taoManHinhThanhToan(BanAn banAn) {
+    
+    private BorderPane taoManHinhThanhToan(String maHD) {
         // Root all
         BorderPane rootAll = new BorderPane();
 
-        // Lấy các dữ liệu cần thiết
-        PhieuDatBan phieuDatBan = control.timPhieuTheoMaBan(banAn.getMaBan());
-        KhachHang khachHang = phieuDatBan.getKhachHang();
-
+        List<PhieuDatBan> dsPhieu = null;
+        
+        try {
+        		dsPhieu = control.layDanhSachPhieuBangMaHD(maHD);
+        }catch (Exception e) {
+			e.printStackTrace();
+		}
+        
         // Tạo phần trái
-        VBox vboxPhanTrai = taoPhanTrai(banAn, khachHang, phieuDatBan);
+        VBox vboxPhanTrai = taoPhanTrai(dsPhieu);
         rootAll.setLeft(vboxPhanTrai);
 
         // Tạo phần phải
-        VBox vboxPhanPhai = taoPhanPhai(banAn);
+        VBox vboxPhanPhai = taoPhanPhai(dsPhieu);
         rootAll.setRight(vboxPhanPhai);
 
 //        //Hàng f
@@ -370,7 +151,7 @@ public class Gui_ThanhToan extends BorderPane {
         return rootAll;
     }
 
-    private VBox taoPhanTrai(BanAn banAn, KhachHang khachHang, PhieuDatBan phieuDatBan) {
+    private VBox taoPhanTrai(List<PhieuDatBan> dsPhieu) {
         // VBox
         VBox vboxAll = new VBox(5);
 
@@ -386,9 +167,25 @@ public class Gui_ThanhToan extends BorderPane {
         Region spacer5 = new Region();
         HBox.setHgrow(spacer5, Priority.ALWAYS);
 
-        // Khai báo biến
-        ImageView iconVip = new ImageView(new Image("/img/vipicon.png"));
-        Label lblMaBan = new Label(banAn.getMaBan());
+        
+        String maHD = "";
+        
+        if(dsPhieu == null || dsPhieu.isEmpty()) {
+        		showAlert(AlertType.ERROR, "Lỗi thanh toán", "Không tìm thấy danh sách phiếu");
+        }else {
+        		maHD = dsPhieu.get(0).getHoaDon().getMaHoaDon();
+        }
+        
+        
+        dsBan = "";
+        for(PhieuDatBan phieu : dsPhieu) {
+        		dsBan += phieu.getBan().getMaBan();
+        		if(!(phieu == dsPhieu.get(dsPhieu.size() - 1))) {
+        			dsBan += ", ";
+        		}
+        }
+        
+        Label lblMaBan = new Label(dsBan);
         HBox hbox1 = new HBox(5);
 
         Label lblDanhSach = new Label("Danh sách món sử dụng");
@@ -398,7 +195,7 @@ public class Gui_ThanhToan extends BorderPane {
         lblDanhSach.setContentDisplay(ContentDisplay.LEFT);
         lblDanhSach.setGraphicTextGap(10);
 
-        List<String> dsChiTietRaw = control.layDanhSachCTHD(control.layHoaDonTheoMaBan(banAn.getMaBan()).getMaHoaDon());
+        List<String> dsChiTietRaw = control.layDanhSachCTHD(maHD);
         ObservableList<String> dsChiTiet = FXCollections.observableArrayList(dsChiTietRaw);
         TableView<String> tableMon = new TableView<>(dsChiTiet);
         tableMon.setPrefHeight(195);
@@ -413,25 +210,24 @@ public class Gui_ThanhToan extends BorderPane {
         txtGiamGia = new TextField();
         HBox hbox4 = new HBox();
         Label lblTienCoc = new Label("Tiền đã cọc:");
-        TextField txtTienCoc = new TextField();
+        txtTienCoc = new TextField();
         HBox hbox5 = new HBox();
         lblTongTien = new Label("Tổng tiền:");
         txtTongTien = new TextField();
         HBox hbox6 = new HBox();
 
         ///
-        iconVip.setFitHeight(30);
-        iconVip.setFitWidth(30);
+//        iconVip.setFitHeight(30);
+//        iconVip.setFitWidth(30);
+        
+        
         lblMaBan.setStyle("-fx-font-size: 30px; -fx-font-weight: bold;");
         lblMaBan.setGraphic(createSvgIcon(24, 24, "black",
                 "m9.2 17l-.975 2.425q-.125.275-.35.425t-.5.15q-.5 0-.787-.413t-.088-.862l1-2.475q.225-.575.725-.913T9.35 15H11v-4.025Q7.175 10.85 4.587 9.85T2 7.5q0-1.45 2.925-2.475T12 4q4.175 0 7.088 1.025T22 7.5q0 1.35-2.588 2.35T13 10.975V15h1.65q.6 0 1.113.338t.737.912l1 2.475q.1.225.063.45t-.163.413q-.125.187-.325.3t-.45.112q-.275 0-.5-.15t-.35-.425L14.8 17H9.2Z"));
         lblMaBan.setGraphicTextGap(10);
         lblMaBan.setContentDisplay(ContentDisplay.LEFT);
 
-        if (banAn.getLoai().equals(LoaiBan.THUONG)) {
-            hbox1.getChildren().addAll(lblMaBan);
-        } else
-            hbox1.getChildren().addAll(lblMaBan, iconVip);
+        hbox1.getChildren().addAll(lblMaBan);
         hbox1.setPadding(new Insets(0, 0, 0, 10));
         hbox1.setStyle(
                 "-fx-background-color: white; -fx-effect: dropshadow(gaussian, #ddd9dd, 8, 0, 0, 2); -fx-background-radius: 5px");
@@ -642,13 +438,14 @@ public class Gui_ThanhToan extends BorderPane {
 
         DecimalFormat format = new DecimalFormat("#,###.0 VND");
         
-        	txtTamTinh.setText(format.format(Double.parseDouble(dsChiTiet.get(0).split(",")[3])));
+        double tongTien = control.tinhTongTien(dsChiTiet);
+        	txtTamTinh.setText(format.format(tongTien));
         double tamTinh = parseVNDToDouble(txtTamTinh.getText());
 
-        double thue = control.tinhThue(Double.parseDouble(dsChiTiet.get(0).split(",")[3]));
+        double thue = control.tinhThue(tongTien);
         txtThue.setText(format.format(thue));
 
-        double tienCoc = control.tinhCoc(banAn);
+        double tienCoc = control.tinhCocBangDanhSachPhieu(dsPhieu);
         txtTienCoc.setText(format.format(tienCoc));
 
         txtTamTinh.setEditable(false);
@@ -663,11 +460,12 @@ public class Gui_ThanhToan extends BorderPane {
             }
         });
 
-
+        
         Label lblTenKM = new Label("Khuyến mãi:");
         lblTenKM.setStyle("-fx-font-size: 15px; -fx-font-weight: bold");
-        List<KhuyenMai> dsKMApDung = control.layDanhSachKhuyenMai(phieuDatBan.getMaPhieu(), tamTinh);
-
+        List<KhuyenMai> dsKMApDung = control.layDanhSachKhuyenMai(dsPhieu.get(0).getHoaDon().getMaHoaDon(), tamTinh);
+       
+        
 
         cboKM = new ComboBox<KhuyenMai>(FXCollections.observableArrayList(dsKMApDung));
         cboKM.setPromptText("Không có khuyến mãi được áp dụng");
@@ -702,8 +500,8 @@ public class Gui_ThanhToan extends BorderPane {
             if (selected != null) {
                 double tienTT = control.tinhTienThanhToan(parseVNDToDouble(txtTamTinh.getText()), tienCoc,
                         selected.getGiamGiaPhanTram(), selected.getGiaTriGiam(), thue, selected.getGiaTriToiDa());
-                double giaGiam = control.tinhTienGiamGia(tamTinh, selected.getGiamGiaPhanTram(),
-                        selected.getGiaTriGiam(), selected.getGiaTriToiDa());
+                double giaGiam = control.tinhTienGiamGia(selected.getGiaTriGiam(), selected.getGiamGiaPhanTram(),
+                        tamTinh, selected.getGiaTriToiDa());
                 txtGiamGia.setText(format.format(giaGiam));
 
                 loadTienThanhToan(tienTT, txtTongTien, lblTongTien, txtTienNhan, txtTienThua, tienCoc);
@@ -731,6 +529,7 @@ public class Gui_ThanhToan extends BorderPane {
         cboKM.setMaxHeight(10);
 
         // Load dữ liệu từ database
+        KhachHang khachHang = KhachHang_DAO.getKhachHangById(dsPhieu.get(0).getKhachHang().getMaKhachHang());
 
         txtTenKhacHang.setText(khachHang.getTenKhachHang());
         txtDiemTichLuy.setText(khachHang.getDiemTichLuy() + "");
@@ -744,7 +543,7 @@ public class Gui_ThanhToan extends BorderPane {
         return vboxAll;
     }
 
-    private VBox taoPhanPhai(BanAn banAn) {
+    private VBox taoPhanPhai(List<PhieuDatBan> dsPhieu) {
         // VBox all
         VBox vboxAll = new VBox(5);
 
@@ -765,13 +564,22 @@ public class Gui_ThanhToan extends BorderPane {
         btnIn = new Button("In hóa đơn(F8)");
 
         btnIn.setOnAction(e -> {
-            HoaDon hoaDon = control.layHoaDonTheoMaBan(banAn.getMaBan());
+            HoaDon hoaDon = control.layHoaDonBangMa(dsPhieu.get(0).getHoaDon().getMaHoaDon());
             String tamTinh = txtTamTinh.getText();
             String thueVAT = txtThue.getText();
             String giamGia = txtGiamGia.getText();
             String tongTien = txtTongTien.getText();
+            
+            String dsBan = "";
+            for(PhieuDatBan phieu : dsPhieu) {
+            		dsBan += phieu.getBan().getMaBan();
+            		if(!(phieu == dsPhieu.get(dsPhieu.size() - 1))) {
+            			dsBan += ", ";
+            		}
+            }
 
-            inHoaDon((Stage) this.getScene().getWindow(),control.layDanhSachCTHD(hoaDon.getMaHoaDon()), banAn, hoaDon, tamTinh, thueVAT, giamGia, tongTien);
+//            inHoaDon((Stage) this.getScene().getWindow(),control.layDanhSachCTHD(hoaDon.getMaHoaDon()), dsBan, hoaDon, tamTinh, thueVAT, giamGia, tongTien);
+            thucHienIn(dsPhieu.get(0).getHoaDon().getMaHoaDon(), dsBan);
         });
         btnIn.setGraphic(createSvgIcon(15, 24, "white",
                 "M6.72 13.829c-.24.03-.48.062-.72.096m.72-.096a42.415 42.415 0 0 1 10.56 0m-10.56 0L6.34 18m10.94-4.171c.24.03.48.062.72.096m-.72-.096L17.66 18m0 0 .229 2.523a1.125 1.125 0 0 1-1.12 1.227H7.231c-.662 0-1.18-.568-1.12-1.227L6.34 18m11.318 0h1.091A2.25 2.25 0 0 0 21 15.75V9.456c0-1.081-.768-2.015-1.837-2.175a48.055 48.055 0 0 0-1.913-.247M6.34 18H5.25A2.25 2.25 0 0 1 3 15.75V9.456c0-1.081.768-2.015 1.837-2.175a48.041 48.041 0 0 1 1.913-.247m10.5 0a48.536 48.536 0 0 0-10.5 0m10.5 0V3.375c0-.621-.504-1.125-1.125-1.125h-8.25c-.621 0-1.125.504-1.125 1.125v3.659M18 10.5h.008v.008H18V10.5Zm-3 0h.008v.008H15V10.5Z"));
@@ -1016,20 +824,21 @@ public class Gui_ThanhToan extends BorderPane {
         hboxButton.getChildren().addAll(btnQuayLai, spacer, btnThanhToan);
 
         btnQuayLai.setOnAction(e -> {
-            this.setCenter(new Gui_DanhSachBan(new Gui_TrangChu(new NhanVien())));
+            this.setCenter(new Gui_DanhSachBan(new Gui_TrangChu(nv)));
         });
 
         btnThanhToan.setOnAction(e -> {
 
             if (checkTienNhan()) {
-                String maHoaDon = control.layHoaDonTheoMaBan(banAn.getMaBan()).getMaHoaDon();
-                String maPhieu = control.timPhieuTheoMaBan(banAn.getMaBan()).getMaPhieu();
-                String tongTien = txtTongTien.getText();
-                String phuongThuc = btnTienMat.isSelected() ? "Tiền mặt" : "Chuyển khoản";
-                KhuyenMai khuyenMai = cboKM.getSelectionModel().getSelectedItem();
-                if (thanhToan(tongTien, phuongThuc, maHoaDon, maPhieu, banAn.getMaBan(), khuyenMai)) {
-                    btnQuayLai.fire();
-                    loadLaiDanhSach();
+                for(PhieuDatBan phieu : dsPhieu) {
+                		String maHoaDon = dsPhieu.get(0).getHoaDon().getMaHoaDon();
+                    String maPhieu = phieu.getMaPhieu();
+                    String tongTien = txtTongTien.getText();
+                    String phuongThuc = btnTienMat.isSelected() ? "Tiền mặt" : "Chuyển khoản";
+                    KhuyenMai khuyenMai = cboKM.getSelectionModel().getSelectedItem();
+                    if (thanhToan(tongTien, phuongThuc, maHoaDon, dsPhieu, khuyenMai, dsPhieu.get(0).getKhachHang().getMaKhachHang())) {
+                        	btnQuayLai.fire();
+                    }
                 }
 
             }
@@ -1190,7 +999,7 @@ public class Gui_ThanhToan extends BorderPane {
         alert.showAndWait();
     }
 
-    private boolean thanhToan(String tongTien, String phuongThuc, String maHoaDon, String maPhieu, String maBan, KhuyenMai khuyenMai) {
+    private boolean thanhToan(String tongTien, String phuongThuc, String maHoaDon, List<PhieuDatBan> dsPhieu, KhuyenMai khuyenMai, String maKH) {
         Alert alert = new Alert(AlertType.CONFIRMATION);
         alert.setTitle("Xác nhận thanh toán");
         alert.setHeaderText("Bạn có chắc thanh toán?");
@@ -1200,14 +1009,16 @@ public class Gui_ThanhToan extends BorderPane {
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == ButtonType.OK) {
             try {
-                if (control.xuLyThanhToan(maHoaDon, maPhieu, maBan, phuongThuc, giamGia, khuyenMai)) {
-                    showAlert(AlertType.INFORMATION, "Thanh Toán Thành Công", "Tổng tiền thanh toán: " + tongTien);
-                    return true;
+            		double diemMoi = parseVNDToDouble(tongTien) / 20000.0;
+                if (control.xuLiThanhToanTatCa( dsPhieu, maHoaDon, phuongThuc, giamGia, khuyenMai) && control.capNhatTichLuy(maKH, diemMoi)) {
+            			showAlert(AlertType.INFORMATION, "Thanh Toán Thành Công", "Tổng tiền thanh toán: " + tongTien);
+            			return true;
                 }else {
-                    showAlert(AlertType.ERROR, "Thất bại", "Thanh Toán Không Thành Công !");
+                    showAlert(AlertType.ERROR, "Thất bại", "Thanh Toán Không Thành Công 1!");
+                    return false;
                 }
             } catch (Exception e) {
-                showAlert(AlertType.ERROR, "Thất bại", "Thanh Toán Không Thành Công !");
+                showAlert(AlertType.ERROR, "Thất bại", "Thanh Toán Không Thành Công 2!");
                 return false;
             }
         }
@@ -1265,6 +1076,17 @@ public class Gui_ThanhToan extends BorderPane {
     }
 
     public boolean checkTienNhan() {
+    		
+    		double giamGia = parseVNDToDouble(txtGiamGia.getText());
+    		double thue = parseVNDToDouble(txtThue.getText());
+    		double coc = parseVNDToDouble(txtTienCoc.getText());
+    		double tongTien = parseVNDToDouble(txtTamTinh.getText());
+    		
+    		double thanhToan = (tongTien - giamGia + thue - coc);
+    		if(thanhToan <= 0) {
+    			return true;
+    		}
+    		
         String chuoiTienNhan = txtTienNhan.getText().trim();
         double tienNhan = 0.0;
         if(chuoiTienNhan.isBlank()) {
@@ -1380,308 +1202,520 @@ public class Gui_ThanhToan extends BorderPane {
 
     }
 
-    public void inHoaDon(Stage owner, List<String> danhSach, BanAn banAn, HoaDon hoaDon, String tamTinh, String thueVAT, String giamGia, String tongTien) {
-        Printer printer = Printer.getDefaultPrinter();
-        PrinterJob job = PrinterJob.createPrinterJob(printer);
-        if (job == null || !job.showPrintDialog(owner)) {
-            return;
-        }
+    public void inHoaDon(Stage owner, List<String> danhSach, HoaDon hoaDon, String dsBan) {
+		Printer printer = Printer.getDefaultPrinter();
+		PrinterJob job = PrinterJob.createPrinterJob(printer);
+		if (job == null || !job.showPrintDialog(owner)) {
+			System.out.println("Hủy in.");
+			return;
+		}
 
-        PageLayout layout = printer.createPageLayout(Paper.A4, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
-        double maxHeight = layout.getPrintableHeight();
+		PageLayout layout = printer.createPageLayout(Paper.A4, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
+		double maxHeight = layout.getPrintableHeight();
 
-        int currentIndex = 0;
-        int sttGlobal = 1; // STT liên tục toàn bộ hóa đơn
-        int pageNum = 1;
-        boolean hasMore = true;
-        while (hasMore) {
-            VBox pageBox = new VBox(10);
-            pageBox.setStyle("-fx-padding: 20; -fx-font-family: Arial; -fx-background-color: white;"); // Nền trắng cho
-            // page in
-            pageBox.setAlignment(Pos.TOP_CENTER); // Căn giữa theo chiều dọc trên cùng
+		int currentIndex = 0;
+		int sttGlobal = 1; 
+		int pageNum = 1;
+		boolean hasMore = true;
+		while (hasMore) {
+			VBox pageBox = new VBox(10);
+			pageBox.setStyle("-fx-padding: 20; -fx-font-family: Arial; -fx-background-color: white;"); // Nền trắng cho
+																										// page in
+			pageBox.setAlignment(Pos.TOP_CENTER); // Căn giữa theo chiều dọc trên cùng
 
-            // Header chỉ trang đầu
-            if (pageNum == 1) {
-                pageBox.getChildren().add(taoHeader(1, 1, banAn, hoaDon)); // totalPages không biết trước, có thể để 1 hoặc tính trước
-            }
+			// Header chỉ trang đầu
+			if (pageNum == 1) {
+				pageBox.getChildren().add(taoHeader(1, 1, hoaDon, dsBan)); // totalPages không biết trước, có thể để 1 hoặc tính trước
+			}
 
-            // Tính items cho trang này
-            int itemsPerPage = (pageNum == 1) ? 19 : 25;
-            int remaining = danhSach.size() - currentIndex;
-            int itemsThisPage = Math.min(itemsPerPage, remaining);
-            hasMore = remaining > itemsThisPage;
+			// Tính items cho trang này
+			int itemsPerPage = (pageNum == 1) ? 19 : 25;
+			int remaining = danhSach.size() - currentIndex;
+			int itemsThisPage = Math.min(itemsPerPage, remaining);
+			
 
-            if (itemsThisPage > 0) {
-                int from = currentIndex;
-                int to = currentIndex + itemsThisPage;
-                List<String> subList = danhSach.subList(from, to);
+			if (itemsThisPage > 0 && remaining >= 0) {
+				int from = currentIndex;
+				int to = currentIndex + itemsThisPage;
+				List<String> subList = danhSach.subList(from, to);
 
-                TableView<String> table = taoTable(subList, sttGlobal);
-                pageBox.getChildren().add(table);
+				TableView<String> table = taoTable(subList, sttGlobal);
+				pageBox.getChildren().add(table);
 
-                // Cập nhật cho trang sau
-                currentIndex += itemsThisPage;
-                sttGlobal += itemsThisPage;
-            }
+				// Cập nhật cho trang sau
+				currentIndex += itemsThisPage;
+				sttGlobal += itemsThisPage;
+			}
 
-            pageBox.getChildren().add(taoFooter(!hasMore, tamTinh, thueVAT, giamGia, tongTien)); // Footer chỉ trang cuối
+			hasMore = remaining > itemsThisPage;
+			
+			if((pageNum == 1 && (itemsThisPage > 10 && itemsThisPage <= 19)) || (pageNum > 1 && (itemsThisPage > 16 && itemsThisPage <= 25)))
+				hasMore = true;
+			
+			pageBox.getChildren().add(taoFooter(!hasMore, hoaDon));
+			
+			pageBox.setAlignment(Pos.CENTER);
+			pageBox.applyCss();
+			pageBox.layout();
 
-            pageBox.setAlignment(Pos.CENTER);
-            pageBox.applyCss();
-            pageBox.layout();
+//			// Scale nếu page cao quá (hiếm vì itemsPerPage fit)
+//			double pageHeight = pageBox.getBoundsInLocal().getHeight();
+//			if (pageHeight > maxHeight) {
+//				double scale = maxHeight / pageHeight;
+//				pageBox.setScaleX(scale);
+//				pageBox.setScaleY(scale);
+//			}
+			
+			
 
-            // Scale nếu page cao quá (hiếm vì itemsPerPage fit)
-            double pageHeight = pageBox.getBoundsInLocal().getHeight();
-            if (pageHeight > maxHeight) {
-                double scale = maxHeight / pageHeight;
-                pageBox.setScaleX(scale);
-                pageBox.setScaleY(scale);
-            }
+			job.printPage(layout, pageBox);
+			pageNum++;
+		}
 
-            job.printPage(layout, pageBox);
-            pageNum++;
-        }
+		if(job.endJob()) {
+			showAlert(AlertType.INFORMATION, "In Hóa Đơn", "In Hóa Đơn Thành Công !");
+		}
+	}
 
-        job.endJob();
-    }
+	private TableView<String> taoTable(List<String> ds, int page) {
+		TableView<String> table = new TableView<>();
+		table.setItems(FXCollections.observableArrayList(ds));
 
-    private TableView<String> taoTable(List<String> ds, int page) {
-        TableView<String> table = new TableView<>();
-        table.setItems(FXCollections.observableArrayList(ds));
+		// Cột STT
+		TableColumn<String, Void> colSTT = new TableColumn<>("STT");
+		colSTT.setPrefWidth(30);
+		colSTT.setSortable(false);
+		colSTT.setCellFactory(col -> new TableCell<String, Void>() {
+			@Override
+			protected void updateItem(Void item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty ? null : String.valueOf(getIndex() + page));
+				setAlignment(Pos.CENTER);
+			}
+		});
 
-        // Cột STT
-        TableColumn<String, Void> colSTT = new TableColumn<>("STT");
-        colSTT.setPrefWidth(30);
-        colSTT.setSortable(false);
-        colSTT.setCellFactory(col -> new TableCell<String, Void>() {
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty ? null : String.valueOf(getIndex() + page));
-                setAlignment(Pos.CENTER);
-            }
-        });
+		// Cột tên món
+		TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
 
-        // Cột tên món
-        TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
+		// Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
+		colTenMon.setCellValueFactory(cellData -> {
+			String tenMon = cellData.getValue().split(",")[0];
+			return new SimpleStringProperty(tenMon);
+		});
 
-        // Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
-        colTenMon.setCellValueFactory(cellData -> {
-            String tenMon = cellData.getValue().split(",")[0];
-            return new SimpleStringProperty(tenMon);
-        });
+		colTenMon.setCellFactory(tc -> new TableCell<String, String>() {
+			@Override
+			protected void updateItem(String item, boolean empty) {
+				super.updateItem(item, empty);
 
-        colTenMon.setCellFactory(tc -> new TableCell<String, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
+				if (empty || item == null) {
+					setText(null);
+					setStyle("");
+				} else {
+					setText(item);
+					setAlignment(Pos.CENTER_LEFT);
+				}
+			}
+		});
 
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    setAlignment(Pos.CENTER_LEFT);
-                }
-            }
-        });
+		colTenMon.setPrefWidth(145);
 
-        colTenMon.setPrefWidth(145);
+		// Cột số lượng
+		TableColumn<String, Integer> colSoLuong = new TableColumn<>("SL");
 
-        // Cột số lượng
-        TableColumn<String, Integer> colSoLuong = new TableColumn<>("SL");
+		colSoLuong.setCellValueFactory(cellData -> {
+			int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
+			return new SimpleIntegerProperty(soLuong).asObject();
+		});
 
-        colSoLuong.setCellValueFactory(cellData -> {
-            int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
-            return new SimpleIntegerProperty(soLuong).asObject();
-        });
+		colSoLuong.setCellFactory(tc -> new TableCell<String, Integer>() {
+			@Override
+			protected void updateItem(Integer item, boolean empty) {
+				super.updateItem(item, empty);
+				if (empty || item == null) {
+					setText(null);
+					setStyle("");
+				} else {
+					setText(String.valueOf(item));
+					setAlignment(Pos.CENTER);
+					setStyle("-fx-font-size: 13px;");
+				}
+			}
+		});
 
-        colSoLuong.setCellFactory(tc -> new TableCell<String, Integer>() {
-            @Override
-            protected void updateItem(Integer item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(String.valueOf(item));
-                    setAlignment(Pos.CENTER);
-                    setStyle("-fx-font-size: 13px;");
-                }
-            }
-        });
+		colSoLuong.setPrefWidth(40);
 
-        colSoLuong.setPrefWidth(40);
+		// Cột giá
+		TableColumn<String, Double> colGia = new TableColumn<>("Giá");
+		colGia.setCellValueFactory(cellData -> {
+			double giaTien = Double.parseDouble(cellData.getValue().split(",")[2]);
+			return new SimpleDoubleProperty(giaTien).asObject();
+		});
+		colGia.setPrefWidth(120);
+		colGia.setCellFactory(tc -> new TableCell<String, Double>() {
+			@Override
+			protected void updateItem(Double item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty || item == null ? null : String.format("%,.0fđ", item));
+				setAlignment(Pos.CENTER);
+			}
 
-        // Cột giá
-        TableColumn<String, Double> colGia = new TableColumn<>("Giá");
-        colGia.setCellValueFactory(cellData -> {
-            double giaTien = Double.parseDouble(cellData.getValue().split(",")[2]);
-            return new SimpleDoubleProperty(giaTien).asObject();
-        });
-        colGia.setPrefWidth(120);
-        colGia.setCellFactory(tc -> new TableCell<String, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
-                setAlignment(Pos.CENTER);
-            }
+		});
 
-        });
+		// Cột tổng tiền
+		TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
+		colTong.setPrefWidth(120);
+		colTong.setCellValueFactory(cellData -> {
+			double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
+			return new SimpleDoubleProperty(tongTien).asObject();
+		});
+		colTong.setCellFactory(tc -> new TableCell<String, Double>() {
+			@Override
+			protected void updateItem(Double item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty || item == null ? null : String.format("%,.0fđ", item));
+				setAlignment(Pos.CENTER);
+			}
 
-        // Cột tổng tiền
-        TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
-        colTong.setPrefWidth(120);
-        colTong.setCellValueFactory(cellData -> {
-            double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
-            return new SimpleDoubleProperty(tongTien).asObject();
-        });
-        colTong.setCellFactory(tc -> new TableCell<String, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
-                setAlignment(Pos.CENTER);
-            }
+		});
 
-        });
+		table.getStylesheets().add(getClass().getResource("/css/tableprint.css").toExternalForm());
 
-        table.getStylesheets().add(getClass().getResource("/css/tableprint.css").toExternalForm());
+		table.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
+		table.setPrefHeight(ds.size() * 25 + 20);
+		return table;
+	}
 
-        table.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
-        table.setPrefHeight(ds.size() * 25 + 30);
-        return table;
-    }
+	private VBox taoHeader(int page, int totalPages, HoaDon hoaDon, String dsBan) {
+		VBox box = new VBox(10);
+		box.setMaxWidth(480);
 
-    private VBox taoHeader(int page, int totalPages, BanAn banAn, HoaDon hoaDon) {
-        VBox box = new VBox(10);
-        box.setMaxWidth(480);
-
-        Label lblTenNhaHang = new Label("2BT RESTAURANT");
-        lblTenNhaHang.setStyle("""
+		Label lblTenNhaHang = new Label("2BT RESTAURANT");
+		lblTenNhaHang.setStyle("""
 				-fx-font-size: 20px;
 				-fx-font-weight: bold;
 				""");
-        Label lblDiaChi = new Label("100 Lê Đức Thọ, P.16, Gò Vấp, TP Hồ Chí Minh");
-        Label lblSdt = new Label("0987 654 321");
+		Label lblDiaChi = new Label("100 Lê Đức Thọ, P.16, Gò Vấp, TP Hồ Chí Minh");
+		Label lblSdt = new Label("0987 654 321");
 
-        Label lblHoaDon = new Label("HÓA ĐƠN THANH TOÁN");
-        lblHoaDon.setStyle("""
+		Label lblHoaDon = new Label("HÓA ĐƠN THANH TOÁN");
+		lblHoaDon.setStyle("""
 				-fx-font-size: 20px;
 				-fx-font-weight: bold;
 				""");
 
-        HBox hbox1 = new HBox();
-        Region spacer1 = new Region();
-        hbox1.setMaxWidth(460);
-        HBox.setHgrow(spacer1, Priority.ALWAYS);
+		HBox hbox1 = new HBox();
+		Region spacer1 = new Region();
+		hbox1.setMaxWidth(460);
+		HBox.setHgrow(spacer1, Priority.ALWAYS);
 
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        Label lblNgay = new Label("Ngày: " + dtf.format(hoaDon.getNgayTao()));
-        Label lblMaHoaDon = new Label("Mã hóa đơn: " + hoaDon.getMaHoaDon());
+		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+		
+		Label lblNgay = new Label("Ngày: " + dtf.format(hoaDon.getNgayTao()));
+		Label lblMaHoaDon = new Label("Mã hóa đơn: " + hoaDon.getMaHoaDon());
 
-        hbox1.getChildren().addAll(lblNgay, spacer1, lblMaHoaDon);
+		hbox1.getChildren().addAll(lblNgay, spacer1, lblMaHoaDon);
 
-        Label lblMaBan = new Label("Bàn: " + banAn.getMaBan());
-        HBox hbox2 = new HBox(lblMaBan);
-        hbox2.setAlignment(Pos.CENTER_LEFT);
-        Label lblThuNgan = new Label("Thu ngân: " + nv.getTenNhanVien());
-        HBox hbox3 = new HBox(lblThuNgan);
-        hbox3.setAlignment(Pos.CENTER_LEFT);
+		Label lblMaBan = new Label("Bàn: " + dsBan);
+		HBox hbox2 = new HBox(lblMaBan);
+		hbox2.setAlignment(Pos.CENTER_LEFT);
+		
+		NhanVien_DAO nvDao = new NhanVien_DAO();
+		NhanVien nv = nvDao.getNhanVienByMa(hoaDon.getNhanVien().getMaNhanVien());
+		
+		Label lblThuNgan = new Label("Nhân viên: " + nv.getTenNhanVien());
+		HBox hbox3 = new HBox(lblThuNgan);
+		hbox3.setAlignment(Pos.CENTER_LEFT);
 
-        box.setAlignment(Pos.CENTER);
+		box.setAlignment(Pos.CENTER);
 
-        box.setMargin(hbox1, new Insets(0, 15, 0, 0));
-        box.getChildren().addAll(lblTenNhaHang, lblDiaChi, lblSdt, lblHoaDon, hbox1, hbox2, hbox3, new Separator());
-        return box;
-    }
+		box.setMargin(hbox1, new Insets(0, 15, 0, 0));
+		box.getChildren().addAll(lblTenNhaHang, lblDiaChi, lblSdt, lblHoaDon, hbox1, hbox2, hbox3, new Separator());
+		return box;
+		}
 
-    private VBox taoFooter(boolean lastPage, String tamTinh, String thueVAT, String giamGia, String tongTien) {
-        VBox box = new VBox(5);
-        box.setMaxWidth(480);
-        if (lastPage) {
-            HBox hbox1 = new HBox();
-            Region spacer1 = new Region();
-            hbox1.setMaxWidth(460);
-            HBox.setHgrow(spacer1, Priority.ALWAYS);
+	private VBox taoFooter(boolean lastPage, HoaDon hoaDon) {
+		VBox box = new VBox(5);
+		box.setMaxWidth(480);
+		DecimalFormat dcm = new DecimalFormat("#,##0.0 VND");
+		
+		String[] hoaDonSplit = QLHD_DAO.layHoaDonString(hoaDon.getMaHoaDon()).split(",");
+		
+		String tongTienString = hoaDonSplit[3];
+		//String giamGiaString = hoaDonSplit[4];
+		String loaiBan = hoaDonSplit[9];
+		String ghiChu = hoaDonSplit[8];
 
-            Label lblTamTinh = new Label("Tạm tính: ");
-            Label lblTamTinhText = new Label(tamTinh);
+		KhuyenMai km = cboKM.getValue();
+		
+		
+		
+		double tongTien = Double.parseDouble(tongTienString);
+		double giamGia = control.tinhTienGiamGia(km.getGiaTriGiam(), km.getGiamGiaPhanTram(), tongTien, km.getGiaTriToiDa());
+		double thue = control.tinhThue(tongTien);
+		
+		if (lastPage) {
+			HBox hbox1 = new HBox();
+			Region spacer1 = new Region();
+			hbox1.setMaxWidth(460);
+			HBox.setHgrow(spacer1, Priority.ALWAYS);
 
-            hbox1.getChildren().addAll(lblTamTinh, spacer1, lblTamTinhText);
+			Label lblTamTinh = new Label("Tạm tính: ");
+			Label lblTamTinhText = new Label(dcm.format(tongTien));
 
-            HBox hbox2 = new HBox();
-            Region spacer2 = new Region();
-            hbox2.setMaxWidth(460);
-            HBox.setHgrow(spacer2, Priority.ALWAYS);
+			hbox1.getChildren().addAll(lblTamTinh, spacer1, lblTamTinhText);
 
-            Label lblThue = new Label("Thuế VAT: ");
-            Label lblThueText = new Label(thueVAT);
+			HBox hbox2 = new HBox();
+			Region spacer2 = new Region();
+			hbox2.setMaxWidth(460);
+			HBox.setHgrow(spacer2, Priority.ALWAYS);
 
-            hbox2.getChildren().addAll(lblThue, spacer2, lblThueText);
+			Label lblThue = new Label("Thuế VAT: ");
+			Label lblThueText = new Label(dcm.format(thue));
 
-            HBox hbox3 = new HBox();
-            Region spacer3 = new Region();
-            hbox3.setMaxWidth(460);
-            HBox.setHgrow(spacer3, Priority.ALWAYS);
+			hbox2.getChildren().addAll(lblThue, spacer2, lblThueText);
 
-            Label lblGiamGia = new Label("Giảm giá: ");
-            Label lblGiamGiaText = new Label(giamGia);
+			HBox hbox3 = new HBox();
+			Region spacer3 = new Region();
+			hbox3.setMaxWidth(460);
+			HBox.setHgrow(spacer3, Priority.ALWAYS);
 
-            hbox3.getChildren().addAll(lblGiamGia, spacer3, lblGiamGiaText);
+			Label lblGiamGia = new Label("Giảm giá: ");
+			Label lblGiamGiaText = new Label(dcm.format(giamGia));
 
-            Separator line = new Separator();
-            line.setPrefWidth(480);
-            line.setStyle("-fx-background-color: black");
+			hbox3.getChildren().addAll(lblGiamGia, spacer3, lblGiamGiaText);
 
-            HBox hbox4 = new HBox();
-            Region spacer4 = new Region();
-            hbox4.setMaxWidth(460);
-            HBox.setHgrow(spacer4, Priority.ALWAYS);
+			Separator line = new Separator();
+			line.setPrefWidth(480);
+			line.setStyle("-fx-background-color: black");
 
-            Label lblTongTien = new Label("Tổng tiền: ");
-            Label lblTongTienText = new Label(tongTien);
+			HBox hbox4 = new HBox();
+			Region spacer4 = new Region();
+			hbox4.setMaxWidth(460);
+			HBox.setHgrow(spacer4, Priority.ALWAYS);
 
-            lblTongTien.setStyle("""
+			Label lblTongTien = new Label("Tổng tiền: ");
+			Label lblTongTienText = new Label(dcm.format(tongTien + thue - giamGia));
+			
+			lblTongTien.setStyle("""
 					-fx-font-size: 20px;
 					-fx-font-weight: bold;
 					""");
-            lblTongTienText.setStyle("""
+			lblTongTienText.setStyle("""
 					-fx-font-size: 20px;
 					-fx-font-weight: bold;
 					""");
 
-            hbox4.getChildren().addAll(lblTongTien, spacer4, lblTongTienText);
+			hbox4.getChildren().addAll(lblTongTien, spacer4, lblTongTienText);
 
-            HBox hbox5 = new HBox();
-            hbox5.setMaxWidth(460);
+			HBox hbox5 = new HBox();
+			hbox5.setMaxWidth(460);
 
-            Separator line2 = new Separator();
-            line2.setPrefWidth(480);
-            line2.setStyle("-fx-background-color: black");
+			Separator line2 = new Separator();
+			line2.setPrefWidth(480);
+			line2.setStyle("-fx-background-color: black");
 
-            Label lblCamOn = new Label("Cảm Ơn Quý Khách - Hẹn Gặp Lại ");
-            lblCamOn.setStyle("""
+			Label lblCamOn = new Label("Cảm Ơn Quý Khách - Hẹn Gặp Lại ");
+			lblCamOn.setStyle("""
 					-fx-font-style: italic;
 					-fx-font-size: 20px;
 					""");
 
-            hbox5.getChildren().addAll(lblCamOn);
-            hbox5.setAlignment(Pos.CENTER);
+			hbox5.getChildren().addAll(lblCamOn);
+			hbox5.setAlignment(Pos.CENTER);
 
-            box.getChildren().addAll(hbox1, hbox2, hbox3, line, hbox4,  line2, hbox5);
+			box.getChildren().addAll(hbox1, hbox2, hbox3, line, hbox4,  line2, hbox5);
 
-        }
-        box.setStyle("-fx-padding: 10 0 0 0;");
-        return box;
-    }
+		}
+		box.setStyle("-fx-padding: 10 0 0 0;");
+		return box;
+	}
+	
+	public void thucHienIn(String maHoaDon, String dsBan) {
 
-    public void loadLaiDanhSach() {
-        dsBan = control.layDanhSachBanThanhToan(LocalDate.of(2025, 10, 29));
-        tang1.fire();
-    }
+		QLHD_DAO daoQLHD = new  QLHD_DAO();
+		
+	    if (maHoaDon == null || maHoaDon.isBlank()) {
+	        showAlert(AlertType.ERROR, "Lỗi", "Vui lòng chọn một hóa đơn trước khi in");
+	        return;
+	    }
 
+	    List<String> dsMon = daoQLHD.getChiTietHoaDonTheoMa(maHoaDon);
+	    HoaDon hoaDon = daoQLHD.getHoaDonById(maHoaDon);
 
+	    // Gọi xem trước
+	    xemTruocHoaDonIn((Stage) this.getScene().getWindow(), dsMon, hoaDon, dsBan);
+	}
+	
+	public void xemTruocHoaDonIn(Stage owner, List<String> danhSach, HoaDon hoaDon, String dsBan) {
 
+	    // Tạo Stage xem trước
+	    Stage previewStage = new Stage();
+	    previewStage.initOwner(owner);
+	    previewStage.initModality(Modality.APPLICATION_MODAL);
+	    previewStage.setTitle("Xem trước hóa đơn");
+
+	    VBox root = new VBox(20);
+	    root.setPadding(new Insets(20));
+	    root.setAlignment(Pos.CENTER);
+
+	    // Tạo nội dung giống hệt trang in
+	    ScrollPane scroll = new ScrollPane();
+	    scroll.setFitToWidth(true);
+
+	    VBox previewContent = new VBox(20);
+	    previewContent.setAlignment(Pos.TOP_CENTER);
+	    previewContent.setStyle("-fx-background-color: white; -fx-padding: 20;");
+
+	    // Header
+	    previewContent.getChildren().add(taoHeader(1, 1, hoaDon, dsBan));
+
+	    // Bảng món ăn
+	    TableView<String> table = new TableView<String>();
+
+		table.setItems(FXCollections.observableArrayList(danhSach));
+
+		// Cột STT
+		TableColumn<String, Void> colSTT = new TableColumn<>("STT");
+		colSTT.setPrefWidth(30);
+		colSTT.setSortable(false);
+		colSTT.setCellFactory(col -> new TableCell<String, Void>() {
+			@Override
+			protected void updateItem(Void item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty ? null : String.valueOf(getIndex() + 1));
+				setAlignment(Pos.CENTER);
+			}
+		});
+
+		// Cột tên món
+		TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
+
+		// Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
+		colTenMon.setCellValueFactory(cellData -> {
+			String tenMon = cellData.getValue().split(",")[0];
+			return new SimpleStringProperty(tenMon);
+		});
+
+		colTenMon.setCellFactory(tc -> new TableCell<String, String>() {
+			@Override
+			protected void updateItem(String item, boolean empty) {
+				super.updateItem(item, empty);
+
+				if (empty || item == null) {
+					setText(null);
+					setStyle("");
+				} else {
+					setText(item);
+					setAlignment(Pos.CENTER_LEFT);
+				}
+			}
+		});
+
+		colTenMon.setPrefWidth(200);
+
+		// Cột số lượng
+		TableColumn<String, Integer> colSoLuong = new TableColumn<>("SL");
+
+		colSoLuong.setCellValueFactory(cellData -> {
+			int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
+			return new SimpleIntegerProperty(soLuong).asObject();
+		});
+
+		colSoLuong.setCellFactory(tc -> new TableCell<String, Integer>() {
+			@Override
+			protected void updateItem(Integer item, boolean empty) {
+				super.updateItem(item, empty);
+				if (empty || item == null) {
+					setText(null);
+					setStyle("");
+				} else {
+					setText(String.valueOf(item));
+					setAlignment(Pos.CENTER);
+					setStyle("-fx-font-size: 13px;");
+				}
+			}
+		});
+
+		colSoLuong.setPrefWidth(40);
+
+		// Cột giá
+		TableColumn<String, Double> colGia = new TableColumn<>("Giá");
+		colGia.setCellValueFactory(cellData -> {
+			double giaTien = Double.parseDouble(cellData.getValue().split(",")[2]);
+			return new SimpleDoubleProperty(giaTien).asObject();
+		});
+		colGia.setPrefWidth(120);
+		colGia.setCellFactory(tc -> new TableCell<String, Double>() {
+			@Override
+			protected void updateItem(Double item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty || item == null ? null : String.format("%,.0fđ", item));
+				setAlignment(Pos.CENTER);
+			}
+
+		});
+
+		// Cột tổng tiền
+		TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
+		colTong.setPrefWidth(120);
+		colTong.setCellValueFactory(cellData -> {
+			double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
+			return new SimpleDoubleProperty(tongTien).asObject();
+		});
+		colTong.setCellFactory(tc -> new TableCell<String, Double>() {
+			@Override
+			protected void updateItem(Double item, boolean empty) {
+				super.updateItem(item, empty);
+				setText(empty || item == null ? null : String.format("%,.0fđ", item));
+				setAlignment(Pos.CENTER);
+			}
+
+		});
+		
+		table.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
+
+		int rowCount = table.getItems().size();
+		double rowHeight = 26; 
+		double headerHeight = 28;
+		table.setPrefHeight(rowCount * rowHeight + headerHeight - 5);
+	    
+	    previewContent.getChildren().add(table);
+
+	    // Footer
+	    previewContent.getChildren().add(taoFooter(true, hoaDon));
+
+	    scroll.setContent(previewContent);
+
+	    // Nút Quay lại + In
+	    HBox buttons = new HBox(20);
+	    buttons.setAlignment(Pos.CENTER);
+
+	    Button btnBack = new Button("Quay lại");
+	    btnBack.setPrefWidth(120);
+	    btnBack.getStyleClass().add("btn-QuayLai");
+
+	    Button btnPrint = new Button("In hóa đơn");
+	    btnPrint.setPrefWidth(120);
+	    btnPrint.getStyleClass().add("btn-In");
+
+	    buttons.getChildren().addAll(btnBack, btnPrint);
+
+	    root.getChildren().addAll(scroll, buttons);
+
+	    Scene scene = new Scene(root, 600, 600);
+	    scene.getStylesheets().add(getClass().getResource("/css/qlhd.css").toExternalForm());
+	    previewStage.setScene(scene);
+
+	    // ----- SỰ KIỆN NÚT -----
+
+	    btnBack.setOnAction(e -> previewStage.close());
+
+	    btnPrint.setOnAction(e -> {
+	        previewStage.close();
+	        inHoaDon(owner, danhSach, hoaDon, dsBan);  
+	    });
+
+	    previewStage.show();
+	}
 }

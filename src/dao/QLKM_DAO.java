@@ -113,7 +113,8 @@ public class QLKM_DAO {
 	                WHERE ctkm.maMonAn = ma.maMonAn
 	                  AND km.ngayKetThuc >= ?
 	                  AND km.ngayBatDau <= ?
-	            ), 'NA') AS maKhuyenMai
+	            ), 'NA') AS maKhuyenMai, 
+	            ma.hinhAnh
 	        FROM MonAn ma
 	        ORDER BY ma.tenMonAn
 	        """;
@@ -129,14 +130,15 @@ public class QLKM_DAO {
 
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
-                    String line = rs.getString("maMonAn") + "_" +
-                            rs.getString("tenMonAn") + "_" +
-                            rs.getString("loaiMon") + "_" +
-                            rs.getBigDecimal("giaTien") + "_" +
-                            rs.getString("moTa") + "_" +
-                            rs.getInt("CoGiamGia") + "_" +
-                            rs.getBigDecimal("giaSauKhuyenMai") + "_" +
-                            rs.getString("maKhuyenMai");
+                    String line = rs.getString("maMonAn") + "-" +
+                            rs.getString("tenMonAn") + "-" +
+                            rs.getString("loaiMon") + "-" +
+                            rs.getBigDecimal("giaTien") + "-" +
+                            rs.getString("moTa") + "-" +
+                            rs.getInt("CoGiamGia") + "-" +
+                            rs.getBigDecimal("giaSauKhuyenMai") + "-" +
+                            rs.getString("maKhuyenMai") + "-" +
+                            rs.getString("hinhAnh");
                     ds.add(line);
                 }
             }
@@ -284,13 +286,13 @@ public class QLKM_DAO {
             while (rs.next()) {
 
                 String row =
-                        rs.getString("maMonAn") + "_" +
-                                rs.getString("tenMonAn") + "_" +
-                                rs.getString("loaiMon") + "_" +
-                                rs.getDouble("giaTien") + "_" +
-                                rs.getString("moTa") + "_" +
-                                rs.getInt("CoGiamGia") + "_" +
-                                rs.getDouble("giaSauKhuyenMai") + "_" +
+                        rs.getString("maMonAn") + "-" +
+                                rs.getString("tenMonAn") + "-" +
+                                rs.getString("loaiMon") + "-" +
+                                rs.getDouble("giaTien") + "-" +
+                                rs.getString("moTa") + "-" +
+                                rs.getInt("CoGiamGia") + "-" +
+                                rs.getDouble("giaSauKhuyenMai") + "-" +
                                 rs.getString("maKhuyenMai");
 
                 ds.add(row);

@@ -39,12 +39,14 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import lib.ImageCacheManager;
 import javafx.geometry.Side;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
@@ -115,7 +117,8 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         mainLayout.setRight(phanPhai);
         mainLayout.setStyle("-fx-background-color: white;");
         this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
-
+        
+        
         // Set vào BorderPane chính (this)
         this.setCenter(mainLayout);
 
@@ -851,6 +854,8 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
             //Scene
             Scene scene = new Scene(layout,  900, 600);
             scene.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
+            
+            
             modal.setScene(scene);
             modal.showAndWait();
 
@@ -864,25 +869,25 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
         TableColumn<String, String> colMaMon = new TableColumn<>("Mã");
         colMaMon.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("_")[0]);
+            return new SimpleStringProperty(cellData.getValue().split("-")[0]);
         });
         colMaMon.setPrefWidth(80);
 
         TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
         colTenMon.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("_")[1]);
+            return new SimpleStringProperty(cellData.getValue().split("-")[1]);
         });
         colTenMon.setPrefWidth(170);
 
         TableColumn<String, String> colGiaTien = new TableColumn<>("Giá tiền");
         colGiaTien.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("_")[3]);
+            return new SimpleStringProperty(cellData.getValue().split("-")[3]);
         });
         colGiaTien.setPrefWidth(120);
 
         TableColumn<String, String> colGiaSauKM = new TableColumn<>("Giá KM");
         colGiaSauKM.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("_")[6]);
+            return new SimpleStringProperty(cellData.getValue().split("-")[6]);
         });
         colGiaSauKM.setMinWidth(120);
 
@@ -909,7 +914,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
                 btnTBXoa.setOnAction(e -> {
                     // lấy đúng item của dòng hiện tại
                     String monAn = getTableView().getItems().get(getIndex());
-                    String[] monAnSplit = monAn.split("_");
+                    String[] monAnSplit = monAn.split("-");
 
                     Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
                     alert.setTitle("Xác nhận");
@@ -925,14 +930,15 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
                     if (result.isPresent() && result.get() == ButtonType.OK) {
                         // thực hiện xóa
                         dsTTMonAn.add(
-                                monAnSplit[0] + "_" +
-                                        monAnSplit[1] + "_" +
-                                        monAnSplit[2] + "_" +
-                                        monAnSplit[3] + "_" +
-                                        monAnSplit[4] + "_" +
-                                        monAnSplit[5] + "_" +
-                                        monAnSplit[3] + "_" +
-                                        monAnSplit[7]
+                                monAnSplit[0] + "-" +
+                                        monAnSplit[1] + "-" +
+                                        monAnSplit[2] + "-" +
+                                        monAnSplit[3] + "-" +
+                                        monAnSplit[4] + "-" +
+                                        monAnSplit[5] + "-" +
+                                        monAnSplit[3] + "-" +
+                                        monAnSplit[7] + "-" +
+                                        monAnSplit[8]
                         );
                         getTableView().getItems().remove(getIndex());
                         dsMonChon.remove(monAn);
@@ -1192,7 +1198,39 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
         //Khai báo biến
         HBox hboxBenTrai = new HBox(3);
+        
         ImageView imgMonAn = new ImageView(IMG_MON_AN);
+        
+        // Thêm clip bo góc trực tiếp (quan trọng!)
+        Rectangle clip = new Rectangle(40, 40);  // Kích thước khớp với fitWidth/Height
+        clip.setArcWidth(4);   // Độ bo ngang (25px = bo nhẹ, tăng lên 125 để gần tròn)
+        clip.setArcHeight(4);  // Độ bo dọc (giữ bằng nhau cho bo đều 4 góc)
+        imgMonAn.setClip(clip);  // Áp dụng clip - ảnh sẽ bị cắt bo góc
+        
+        
+        // ✅ Load ảnh từ Supabase
+        if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
+            String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
+
+            // Lấy ảnh từ cache (hoặc download nếu chưa có)
+            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
+
+            if (imagePath != null) {
+                try {
+                    Image image = new Image(imagePath);
+                    imgMonAn.setImage(image);
+                } catch (Exception e) {
+                   System.out.println("Không load được ảnh");
+                }
+            } else {
+                // Không download được → Dùng ảnh mặc định
+            		System.out.println("Không load được ảnh");
+            }
+        } else {
+        		System.out.println("Không load được ảnh");
+        }
+        
+        
         VBox vboxThongTinMon = new VBox(5);
         Label lblTenMon = new Label("Món nào đó");
         HBox hboxGia = new HBox(3);
@@ -1205,16 +1243,17 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
             dsMonTemp.remove(monAn);
 
 
-            String[] monAnTach = monAn.split("_");
+            String[] monAnTach = monAn.split("-");
 
-            String monAn2 = monAnTach[0] + "_" +
-                    monAnTach[1] + "_" +
-                    monAnTach[2] + "_" +
-                    monAnTach[3] + "_" +
-                    monAnTach[4] + "_" +
-                    monAnTach[5] + "_" +
-                    monAnTach[3] + "_" +
-                    monAnTach[7] ;
+            String monAn2 = monAnTach[0] + "-" +
+                    monAnTach[1] + "-" +
+                    monAnTach[2] + "-" +
+                    monAnTach[3] + "-" +
+                    monAnTach[4] + "-" +
+                    monAnTach[5] + "-" +
+                    monAnTach[3] + "-" +
+                    monAnTach[7] + "-" +
+                    monAnTach[8] ;
 
             dsTTMonAn.add(monAn2);
 
@@ -1227,11 +1266,11 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         //Set giá trị
         DecimalFormat fomat = new DecimalFormat("#,### VND");
 
-        lblTenMon.setText(monAn.split("_")[1]);
+        lblTenMon.setText(monAn.split("-")[1]);
 
         String maKM = txtMaKhuyenMai.getText();
 
-        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("_")[6])));
+        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("-")[6])));
 
         //Tạo món ăn
         //Trái
@@ -1272,6 +1311,35 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         //Khai báo biến
         HBox hboxBenTrai = new HBox(3);
         ImageView imgMonAn = new ImageView(IMG_MON_AN);
+        
+        // Thêm clip bo góc trực tiếp (quan trọng!)
+        Rectangle clip = new Rectangle(90, 90);  // Kích thước khớp với fitWidth/Height
+        clip.setArcWidth(6);   // Độ bo ngang (25px = bo nhẹ, tăng lên 125 để gần tròn)
+        clip.setArcHeight(6);  // Độ bo dọc (giữ bằng nhau cho bo đều 4 góc)
+        imgMonAn.setClip(clip);  // Áp dụng clip - ảnh sẽ bị cắt bo góc
+        
+        // ✅ Load ảnh từ Supabase
+        if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
+            String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
+
+            // Lấy ảnh từ cache (hoặc download nếu chưa có)
+            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
+
+            if (imagePath != null) {
+                try {
+                    Image image = new Image(imagePath);
+                    imgMonAn.setImage(image);
+                } catch (Exception e) {
+                   System.out.println("Không load được ảnh");
+                }
+            } else {
+                // Không download được → Dùng ảnh mặc định
+            		System.out.println("Không load được ảnh");
+            }
+        } else {
+        		System.out.println("Không load được ảnh");
+        }
+        
         VBox vboxThongTinMon = new VBox(5);
         Label lblTenMon = new Label();
 
@@ -1285,9 +1353,9 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
         //Set gia tri
         DecimalFormat fomat = new DecimalFormat("#,### VND");
-        lblTenMon.setText(monAn.split("_")[1]);
+        lblTenMon.setText(monAn.split("-")[1]);
 
-        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("_")[6])));
+        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("-")[6])));
 
 
 
@@ -1316,22 +1384,23 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
             if(!dsLocMon.isEmpty()) {
                 dsLocMon.remove(monAn);
             }
-            String[] monAnTach = monAn.split("_");
+            String[] monAnTach = monAn.split("-");
 
             double giaSauKM = control.tinhGiaSauKM(Double.parseDouble(monAnTach[3]), Double.parseDouble(txtGiaTriGiam.getText()));
-            String monAn2 = monAnTach[0] + "_" +
-                    monAnTach[1] + "_" +
-                    monAnTach[2] + "_" +
-                    monAnTach[3] + "_" +
-                    monAnTach[4] + "_" +
-                    monAnTach[5] + "_" +
-                    giaSauKM + "_" +
-                    monAnTach[7];
+            String monAn2 = monAnTach[0] + "-" +
+                    monAnTach[1] + "-" +
+                    monAnTach[2] + "-" +
+                    monAnTach[3] + "-" +
+                    monAnTach[4] + "-" +
+                    monAnTach[5] + "-" +
+                    giaSauKM + "-" +
+                    monAnTach[7] + "-" +
+                    monAnTach[8];
             dsMonTemp.add(monAn2);
         });
 
         //Phải
-        boolean giamGia = monAn.split("_")[5].equals("1") ? true : false;
+        boolean giamGia = monAn.split("-")[5].equals("1") ? true : false;
 
         vboxBenPhai.setPrefWidth(150);
         vboxBenPhai.setPrefHeight(100);
@@ -1343,7 +1412,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         if(giamGia) {
             vboxBenPhai.setStyle("-fx-background-color: #D5B009; -fx-background-radius: 10");
             vboxBenPhai.getChildren().addAll(lblGiamHayChua);
-            lblGiamHayChua.setText("Mã " + monAn.split("_")[7]);
+            lblGiamHayChua.setText("Mã " + monAn.split("-")[7]);
         }
         else {
             vboxBenPhai.setStyle("-fx-background-color: #082744; -fx-background-radius: 10");
@@ -1820,15 +1889,15 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
     public void quayVe() {
         for(String monAn : dsMonTemp) {
-            String[] monAnTach = monAn.split("_");
+            String[] monAnTach = monAn.split("-");
 
-            String monAn2 = monAnTach[0] + "_" +
-                    monAnTach[1] + "_" +
-                    monAnTach[2] + "_" +
-                    monAnTach[3] + "_" +
-                    monAnTach[4] + "_" +
-                    monAnTach[5] + "_" +
-                    monAnTach[3] + "_" +
+            String monAn2 = monAnTach[0] + "-" +
+                    monAnTach[1] + "-" +
+                    monAnTach[2] + "-" +
+                    monAnTach[3] + "-" +
+                    monAnTach[4] + "-" +
+                    monAnTach[5] + "-" +
+                    monAnTach[3] + "-" +
                     monAnTach[7] ;
 
             dsTTMonAn.add(monAn2);
@@ -1985,7 +2054,7 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         String chuoi = cboLocMon.getValue().equals("Đã giảm giá") ? "1" : "0";
 
         for(String i : dsTTMonAn) {
-            if(i.split("_")[5].equals(chuoi)) {
+            if(i.split("-")[5].equals(chuoi)) {
                 dsLocMon.add(i);
             }
         }

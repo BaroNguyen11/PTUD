@@ -5,7 +5,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import dao.BanAn_DAO;
 import dao.QLHD_DAO;
+import entity.BanAn;
 import entity.ChiTietHoaDon;
 import entity.HoaDon;
 import entity.LoaiBan;
@@ -69,6 +71,24 @@ public class QLHD_Ctrl {
         }else {
             return 350000;
         }
+    }
+    
+    public double tinhTienCocTheoDSBan(String dsBan) {
+    		String[] dsMa = dsBan.split("_");
+    		
+    		double tienCoc = 0.0;
+    		
+    		for(String maBan : dsMa) {
+    			BanAn ban = BanAn_DAO.getByMaBan(maBan);
+    			
+    			if(ban.getLoai().equals(LoaiBan.VIP)) {
+    				tienCoc += 450000;
+    			}else {
+    				tienCoc += 350000;
+    			}
+    		}
+    		
+    		return tienCoc;
     }
 
     public double tinhThue(double tongTien) {

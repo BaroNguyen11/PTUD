@@ -548,6 +548,7 @@ public class Gui_DanhSachBan extends BorderPane {
         actionButtonsBox.setPadding(new Insets(15, 10, 10, 10));
 
         Separator bottomSeparator = new Separator();
+        
 
         switch (ban.getTrangThai()) {
             case DANG_SU_DUNG:
@@ -557,7 +558,7 @@ public class Gui_DanhSachBan extends BorderPane {
 
                 // 2. Nút Thanh toán
                 Button btnThanhToan = createActionButton("Thanh toán", "#38A169"); // Màu Xanh lá
-                btnThanhToan.setOnAction(e -> xuLyThanhToan(ban));
+                btnThanhToan.setOnAction(e -> xuLyThanhToan(banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon)));
 
                 // 3. Nút Gọi món
                 Button btnGoiMon = createActionButton("Gọi món", "#6B49C7"); // Màu Tím
@@ -776,8 +777,8 @@ public class Gui_DanhSachBan extends BorderPane {
 
     
 	// Xử lý logic cho Thanh Toán
-    private void xuLyThanhToan(BanAn ban) {
-    		this.setCenter(new Gui_ThanhToan(new NhanVien(), ban));
+    private void xuLyThanhToan(String maHD) {
+    		this.setCenter(new Gui_ThanhToan(new NhanVien(), maHD));
     		
     }
     

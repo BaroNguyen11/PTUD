@@ -1,78 +1,8 @@
-/* JavaFX CSS - Leave this comment until you have at least create one rule which uses -fx-Property */
-
-.sidebar {
-	-fx-background-color: #082744;
-	-fx-padding: 15px;
-	-fx-spacing: 10px;
-}
-
-
-.theBan{
-	-fx-background-color: #082744;
-	-fx-background-radius: 20;
-	-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);
-	-fx-cursor:hand;
-}
-
-.theBan:hover{
-	-fx-opacity: 0.9;
-}
-
-.theBan-selected{
-	-fx-background-color: gray;
-	-fx-background-radius: 20;
-	-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);
-	-fx-cursor:hand;
-}
-
-.menu-item Label {
-	-fx-text-fill: white;
-	-fx-font-size: 14px;
-	-fx-padding: 10px 15px;
-	-fx-cursor: hand;
-	/* Con trỏ chuột khi hover */
-}
-
-
 .fontTieuDeNho {
 	-fx-font-family: "Tai Heritage Pro";
 	-fx-text-fill: gray;
 	-fx-font-size: 15px;
 }
-
-.nutTang {
-	-fx-background-color: #082744;
-	-fx-text-fill: white;
-	-fx-font-weight: bold;
-	-fx-font-family: 'Tai Heritage Pro';
-	-fx-cursor: hand;
-	transition: -fx-background-color 0.3s ease;
-}
-
-.nutTang:hover {
-    -fx-opacity: 0.9;
-}
-
-/* Khi được chọn */
-.nutTang:selected {
-    -fx-background-color: Gray;
-    -fx-text-fill: white;
-}
-
-
-
-
-/* hoc ve font */
-/*
-.bold-white-text {
-    -fx-font-family: "Segoe UI";
-    -fx-font-size: 18px;
-    -fx-font-weight: bold;
-    -fx-font-style: italic;
-    -fx-text-fill: white;
-    -fx-underline: false;
-}*/
-
 
 /* Style tổng thể cho ScrollPane */
 .scroll-pane {
@@ -118,30 +48,6 @@
     -fx-pref-width: 0;
 }
 
-
-/*
-.radio-button:hover {
-    -fx-text-fill: #082744;
-}
-
-
-
-.radio-button {
-	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 15;
-	-fx-background-color: white;
-}
-
-
-.radio-button:selected .radio {
-    -fx-background-color: #082744;
-    -fx-min-width: 10px;
-    -fx-min-height: 10px;
-    -fx-background-color: white;
-}
-	*/
-
 .radio-button{
 	-fx-cursor: hand;
 	-fx-font-family: 'Tai Heritage Pro';
@@ -169,35 +75,6 @@
     -fx-min-width: 14px;
     -fx-min-height: 14px;
 }
-
-/*
-.radio-button:selected .radio {
-    -fx-background-color: #082744;
-    -fx-border-color: transparent;
-    -fx-background-radius: 50%;
-    -fx-min-width: 8px;
-    -fx-min-height: 8px;
-    -fx-max-width: 8px;
-    -fx-max-height: 8px;
-    -fx-effect: none;
-}
-*/
-
-
-.button-checkin{
-	-fx-background-color: #082744;
-	-fx-text-fill: white;
-	-fx-font-weight: bold;
-	-fx-border-radius: 5;
-	-fx-cursor: hand;
-	-fx-font-family: 'Tai Heritage Pro';
-	-fx-font-size: 20;
-}
-
-.button-checkin:hover{
-	-fx-opacity: 0.9;
-}
-
 
 .hbox-shadow {
     -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.5), 10, 0, 3, 3);
@@ -235,9 +112,6 @@
 .textField-guiKhuyenMai:hover{
 	-fx-border-color: blue;
 }
-
-
-
 
 .date-picker, .date-picker .text-field {
     -fx-background-color: white;
@@ -344,6 +218,7 @@
 	-fx-border-weight: 1;
 	-fx-border-radius: 5;
 }
+
 .monAn:hover{
 	-fx-opacity: 0.9
 }
@@ -356,7 +231,7 @@
     -fx-border-radius: 6px;
     -fx-font-family: 'Tai Heritage Pro';
     -fx-background-color: white;
-    -fx-font-size: 15;
+    -fx-font-size: 15px;
 }
 
 .timKiem:hover{
@@ -393,51 +268,4 @@
 }
 .list-view .list-cell:focused {
     -fx-background-color: transparent;
-}
-/* =========================================
-   STYLE CHO MENU GỢI Ý (AUTO-SUGGESTION)
-   ========================================= */
-
-/* 1. Khung chứa danh sách gợi ý (ContextMenu) */
-.goi-y-menu {
-    -fx-background-color: white;
-    /* Bo góc dưới để khớp với ô tìm kiếm (nếu ô tìm kiếm vuông thì chỉnh về 0) */
-    -fx-background-radius: 0 0 8px 8px;
-    /* Đổ bóng nhẹ giống Google */
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 8, 0, 0, 4);
-    -fx-padding: 5px 0; /* Khoảng cách trên dưới */
-    -fx-border-color: #dfe1e5; /* Viền xám nhạt */
-    -fx-border-width: 0 1px 1px 1px; /* Chỉ hiện viền 3 cạnh dưới */
-    -fx-border-radius: 0 0 8px 8px;
-}
-
-/* Ẩn cái viền xanh mặc định xấu xí của JavaFX khi focus */
-.goi-y-menu .menu-item:focused {
-    -fx-background-color: #f1f3f4; /* Màu xám nhạt khi di chuột vào */
-}
-
-/* 2. Từng dòng gợi ý (MenuItem) */
-.goi-y-item {
-    -fx-padding: 8px 15px; /* Khoảng cách chữ so với viền */
-    -fx-background-color: transparent;
-    -fx-cursor: hand;
-}
-
-/* 3. Chữ trong menu (Label) */
-.goi-y-item .label {
-    -fx-text-fill: #202124; /* Màu chữ đen xám Google */
-    -fx-font-family: "Segoe UI", Arial, sans-serif;
-    -fx-font-size: 14px;
-    -fx-font-weight: normal;
-}
-
-/* Khi di chuột vào dòng gợi ý (Hover/Focus) */
-.goi-y-item:focused .label {
-    -fx-text-fill: #000000; /* Chữ đậm hơn tí khi hover */
-}
-
-/* (Tùy chọn) Nếu bạn muốn thêm icon kính lúp đằng trước */
-/* Bạn cần setGraphic cho MenuItem trong code Java thì CSS này mới tác dụng */
-.goi-y-item .image-view {
-    -fx-opacity: 0.6;
 }

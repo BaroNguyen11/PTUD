@@ -3,11 +3,15 @@ package dao;
 import java.sql.*;
 
 import entity.BanAn;
+import entity.HoaDon;
 import entity.KhachHang;
+import entity.NhanVien;
 import entity.PhieuDatBan;
 import entity.TrangThai;
 import ConnectDB.ConnectDB;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -375,4 +379,102 @@ public class PhieuDatBan_DAO {
         
         return false; 
     }
+    
+    public static List<PhieuDatBan> getByMaHoaDon(String maHoaDon) {
+        List<PhieuDatBan> list = new ArrayList<>();
+        String sql = "SELECT * FROM PhieuDatBan WHERE maHoaDon = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, maHoaDon);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                PhieuDatBan phieu = new PhieuDatBan();
+                phieu.setMaPhieu(rs.getString("maPhieu"));
+                phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());  
+                phieu.setTrangThai(rs.getString("trangThai"));
+                phieu.setSoNguoi(rs.getInt("soNguoi"));
+                phieu.setGhiChu(rs.getNString("ghiChu"));
+
+                HoaDon hd = new HoaDon();
+                hd.setMaHoaDon(maHoaDon);
+                
+                KhachHang kh = new KhachHang();
+                kh.setMaKhachHang(rs.getString("maKhachHang"));
+                
+                NhanVien nv = new NhanVien();
+                nv.setMaNhanVien(rs.getString("maNhanVien"));
+                
+                	BanAn ban = new BanAn();
+                	ban.setMaBan(rs.getString("maBan"));
+                
+                phieu.setKhachHang(kh);  
+                phieu.setBan(ban);
+                phieu.setNhanVien(nv);
+                phieu.setHoaDon(hd);
+
+
+                list.add(phieu);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy phiếu đặt bàn theo mã hóa đơn: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+    
+    public static PhieuDatBan timMotPhieuBangMaHD(String maHoaDon) {
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM PhieuDatBan WHERE maHoaDon = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, maHoaDon.trim());
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                PhieuDatBan phieu = new PhieuDatBan();
+                phieu.setMaPhieu(rs.getString("maPhieu"));
+                phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
+                phieu.setTrangThai(rs.getString("trangThai"));
+                phieu.setSoNguoi(rs.getInt("soNguoi"));
+                phieu.setGhiChu(rs.getNString("ghiChu"));
+
+                HoaDon hd = new HoaDon();
+                hd.setMaHoaDon(maHoaDon);
+                
+                KhachHang kh = new KhachHang();
+                kh.setMaKhachHang(rs.getString("maKhachHang"));
+                
+                NhanVien nv = new NhanVien();
+                nv.setMaNhanVien(rs.getString("maNhanVien"));
+                
+                	BanAn ban = new BanAn();
+                	ban.setMaBan(rs.getString("maBan"));
+                
+                phieu.setKhachHang(kh);  
+                phieu.setBan(ban);
+                phieu.setNhanVien(nv);
+                phieu.setHoaDon(hd);
+
+
+                return phieu;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy phiếu đặt bàn theo mã hóa đơn: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;  // Không tìm thấy
+    }
+    
 }

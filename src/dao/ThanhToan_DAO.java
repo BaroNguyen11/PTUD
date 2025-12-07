@@ -376,52 +376,44 @@ public class ThanhToan_DAO {
     }
 
 
-    /**
-     * Lấy KM hợp lệ cho hóa đơn tại thời điểm phiếu tạo, sắp xếp theo số tiền giảm thực tế DESC.
-     *
-     * @param maPhieu Mã phiếu.
-     * @param tongTien Tổng tiền hóa đơn (để tính %).
-     * @return List<KhuyenMai> với field soTienGiamThucTe computed.
-     */
-    public List<KhuyenMai> getKhuyenMaiApDungChoHoaDon(String maPhieu, double tongTien) {
+    public List<KhuyenMai> getKhuyenMaiApDungChoHoaDon(String maHoaDon, double tongTien) {
         List<KhuyenMai> dsKM = new ArrayList<>();
 
         String sql = """
-            SELECT 
-                maKhuyenMai, tenKhuyenMai, ngayBatDau, ngayKetThuc, dieuKienApDung, 
-                giaTriToiDa, giamGiaPhanTram, giaTriGiam,
-                CASE 
-                    WHEN giamGiaPhanTram = 1 THEN 
-                        CASE 
-                            WHEN ? >= dieuKienApDung THEN 
-                                LEAST( (? * giaTriGiam / 100), COALESCE(giaTriToiDa, 999999999))
-                            ELSE 0 
+            SELECT
+                k.maKhuyenMai, k.tenKhuyenMai, k.ngayBatDau, k.ngayKetThuc, k.dieuKienApDung,
+                k.giaTriToiDa, k.giamGiaPhanTram, k.giaTriGiam,
+                CASE
+                    WHEN k.giamGiaPhanTram = 1 THEN
+                        CASE
+                            WHEN ? >= k.dieuKienApDung THEN
+                                LEAST( (? * k.giaTriGiam / 100), COALESCE(k.giaTriToiDa, 999999999))
+                            ELSE 0
                         END
-                    ELSE 
-                        CASE 
-                            WHEN ? >= dieuKienApDung THEN 
-                                LEAST(giaTriGiam, COALESCE(giaTriToiDa, 999999999))
-                            ELSE 0 
-                        END
+                    ELSE
+                        k.giaTriGiam
                 END AS soTienGiamThucTe
-            FROM KhuyenMai
-            WHERE ngayBatDau <= (
-                SELECT CAST(thoiGianBatDau AS DATE) FROM PhieuDatBan WHERE maPhieu = ?
+            FROM KhuyenMai k
+            LEFT JOIN ChiTietKMMonAn ctm ON k.maKhuyenMai = ctm.maKhuyenMai
+            WHERE k.ngayBatDau <= (
+                SELECT TOP 1 CAST(p.thoiGianBatDau AS DATE) FROM PhieuDatBan p WHERE p.maHoaDon = ? ORDER BY p.thoiGianBatDau
             )
-            AND ngayKetThuc >= (
-                SELECT CAST(thoiGianBatDau AS DATE) FROM PhieuDatBan WHERE maPhieu = ?
+            AND k.ngayKetThuc >= (
+                SELECT TOP 1 CAST(p.thoiGianBatDau AS DATE) FROM PhieuDatBan p WHERE p.maHoaDon = ? ORDER BY p.thoiGianBatDau
             )
+            AND ? >= k.dieuKienApDung  -- Kiểm tra tổng tiền đủ điều kiện
+            AND ctm.maKhuyenMai IS NULL  -- Loại trừ khuyến mãi món ăn
             ORDER BY soTienGiamThucTe DESC
         """;
 
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
 
-            stmt.setDouble(1, tongTien);
-            stmt.setDouble(2, tongTien);
-            stmt.setDouble(3, tongTien);
-            stmt.setString(4, maPhieu.trim());
-            stmt.setString(5, maPhieu.trim());
+            stmt.setDouble(1, tongTien);  // Cho % giảm
+            stmt.setDouble(2, tongTien);  // Cho tổng tiền * %
+            stmt.setString(3, maHoaDon.trim());  // Subquery 1
+            stmt.setString(4, maHoaDon.trim());  // Subquery 2
+            stmt.setDouble(5, tongTien);  // Kiểm tra điều kiện tổng tiền
 
             ResultSet rs = stmt.executeQuery();
 
@@ -432,15 +424,17 @@ public class ThanhToan_DAO {
                         rs.getDate("ngayBatDau").toLocalDate(),
                         rs.getDate("ngayKetThuc").toLocalDate(),
                         rs.getBigDecimal("dieuKienApDung").doubleValue(),
-                        rs.getBigDecimal("giaTriToiDa").doubleValue(),
+                        rs.getBigDecimal("giaTriToiDa") != null ? rs.getBigDecimal("giaTriToiDa").doubleValue() : 0,
                         rs.getBoolean("giamGiaPhanTram"),
                         rs.getBigDecimal("giaTriGiam").doubleValue()
                 );
+                
 
                 dsKM.add(km);
             }
 
         } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy khuyến mãi cho hóa đơn: " + e.getMessage());
             e.printStackTrace();
         }
 
@@ -460,6 +454,72 @@ public class ThanhToan_DAO {
             return false;
         } finally {
             if (con != null) con.close();
+        }
+    }
+    
+    public HoaDon getByMaHoaDon(String maHoaDon) {
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM HoaDon WHERE maHoaDon = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, maHoaDon);
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                HoaDon hoaDon = new HoaDon();
+                hoaDon.setMaHoaDon(rs.getString("maHoaDon"));
+                hoaDon.setNgayTao(rs.getTimestamp("ngayTao").toLocalDateTime());  // Timestamp sang LocalDateTime
+                hoaDon.setTrangThai(rs.getString("trangThai"));
+                hoaDon.setPhuongThuc(rs.getString("phuongThuc"));
+                hoaDon.setGhiChu(rs.getNString("ghiChu"));
+
+                // Set object fields (null ban đầu, lazy load sau nếu cần)
+                NhanVien nv = new NhanVien();
+                nv.setMaNhanVien(rs.getString("maNhanVien"));
+                
+                hoaDon.setNhanVien(nv);  // Hoặc load: new NhanVienDAO().getByMaNhanVien(rs.getString("maNhanVien"));
+                
+                KhachHang kh = new KhachHang();
+                kh.setMaKhachHang(rs.getString("maKhachHang"));
+                
+                hoaDon.setKhachHang(kh);  // Tương tự
+
+                return hoaDon;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy hóa đơn theo mã: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;  // Không tìm thấy
+    }
+    
+    public boolean updateDiemTichLuy(String maKhachHang, double diemMoi) {
+        if (maKhachHang == null || maKhachHang.trim().isEmpty()) {
+            return false; 
+        }
+
+        String sql = "UPDATE KhachHang SET diemTichLuy = ? WHERE maKhachHang = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setDouble(1, diemMoi);
+            pstmt.setString(2, maKhachHang.trim());
+
+            int rowsAffected = pstmt.executeUpdate();
+            return rowsAffected > 0;  // Thành công nếu ảnh hưởng 1 row
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi cập nhật điểm tích lũy: " + e.getMessage());
+            e.printStackTrace();
+            return false;
         }
     }
 
