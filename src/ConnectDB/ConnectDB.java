@@ -8,9 +8,9 @@ import javax.swing.JOptionPane;
 
 public class ConnectDB {
 
-    static final String JDBC_URL = "jdbc:sqlserver://Localhost:1433;databaseName=QLNhaHang2BTCHECK;trustServerCertificate=true";
+    static final String JDBC_URL = "jdbc:sqlserver://Localhost:1433;databaseName=QLNhaHang2BT;trustServerCertificate=true";
     static final String USER = "sa";
-    static final String PASSWORD = "123456";
+    static final String PASSWORD = "thuongho@2005";
 
     public static Connection getConnection() throws SQLException {
         Connection con = DriverManager.getConnection(JDBC_URL, USER, PASSWORD);

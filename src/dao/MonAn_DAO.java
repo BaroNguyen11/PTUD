@@ -14,6 +14,51 @@ import java.util.List;
 public class MonAn_DAO {
 
 
+	public static MonAn getMonAnByMa(String maMonAn) {
+	    MonAn mon = null;
+	    String sql = "SELECT * FROM MonAn WHERE maMonAn = ?";
+
+	    try (Connection con = ConnectDB.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+
+	        ps.setString(1, maMonAn);
+
+	        try (ResultSet rs = ps.executeQuery()) {
+	            if (rs.next()) {
+	                mon = new MonAn(
+	                        rs.getString("maMonAn"),
+	                        rs.getString("tenMonAn"),
+	                        rs.getString("loaiMon"),
+	                        rs.getDouble("giaTien"),
+	                        rs.getString("moTa"),
+	                        rs.getString("hinhAnh")
+	                );
+	            }
+	        }
+
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+
+	    return mon;
+	}
+	
+	public static String getMaMonByTen(String tenMon) {
+	    String sql = "SELECT maMonAn FROM MonAn WHERE tenMonAn = ?";
+	    try (Connection con = ConnectDB.getConnection();
+	         PreparedStatement ps = con.prepareStatement(sql)) {
+	        
+	        ps.setString(1, tenMon);
+	        ResultSet rs = ps.executeQuery();
+	        if (rs.next()) {
+	            return rs.getString("maMonAn");
+	        }
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return null;
+	}
+
 
         // ✅ Sửa method getAllMonAn
         public List<MonAn> getAllMonAn() {
@@ -91,4 +136,79 @@ public class MonAn_DAO {
         }
         return giaCuoiCung;
     }
+    
+    
+    public List<String> layDanhSachMonAnGiaKMString() {
+        List<String> ds = new ArrayList<>();
+
+        String sql = """
+	        SELECT 
+	            ma.maMonAn,
+	            ma.tenMonAn,
+	            ma.loaiMon,
+	            ma.giaTien,
+	            ma.moTa,
+	            CASE 
+	                WHEN EXISTS (
+	                    SELECT 1
+	                    FROM ChiTietKMMonAn ctkm
+	                    JOIN KhuyenMai km ON km.maKhuyenMai = ctkm.maKhuyenMai
+	                    WHERE ctkm.maMonAn = ma.maMonAn
+	                      AND km.ngayKetThuc >= ?
+	                      AND km.ngayBatDau <= ?
+	                ) THEN 1
+	                ELSE 0
+	            END AS CoGiamGia,
+	            ISNULL((
+	                SELECT MIN(ctkm.giaSauKhuyenMai)
+	                FROM ChiTietKMMonAn ctkm
+	                JOIN KhuyenMai km ON km.maKhuyenMai = ctkm.maKhuyenMai
+	                WHERE ctkm.maMonAn = ma.maMonAn
+	                  AND km.ngayKetThuc >= ?
+	                  AND km.ngayBatDau <= ?
+	            ), ma.giaTien) AS giaSauKhuyenMai,
+	            ISNULL((
+	                SELECT STRING_AGG(ctkm.maKhuyenMai, ',')
+	                FROM ChiTietKMMonAn ctkm
+	                JOIN KhuyenMai km ON km.maKhuyenMai = ctkm.maKhuyenMai
+	                WHERE ctkm.maMonAn = ma.maMonAn
+	                  AND km.ngayKetThuc >= ?
+	                  AND km.ngayBatDau <= ?
+	            ), 'NA') AS maKhuyenMai, 
+	            ma.hinhAnh
+	        FROM MonAn ma
+	        ORDER BY ma.tenMonAn
+	        """;
+
+        try (PreparedStatement ps = ConnectDB.getConnection().prepareStatement(sql)) {
+            // set tham số cho ngày bắt đầu và kết thúc khuyến mãi mới
+            ps.setObject(1, LocalDate.now());
+            ps.setObject(2, LocalDate.now());
+            ps.setObject(3, LocalDate.now());
+            ps.setObject(4, LocalDate.now());
+            ps.setObject(5, LocalDate.now());
+            ps.setObject(6, LocalDate.now());
+
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    String line = rs.getString("maMonAn") + "-" +
+                    		rs.getString("tenMonAn") + "-" +
+                            rs.getString("loaiMon") + "-" +
+                            rs.getBigDecimal("giaTien") + "-" +
+                            rs.getString("moTa") + "-" +
+                            rs.getInt("CoGiamGia") + "-" +
+                            rs.getBigDecimal("giaSauKhuyenMai") + "-" +
+                            rs.getString("maKhuyenMai") + "-" +
+                            rs.getString("hinhAnh");
+                    ds.add(line);
+                }
+            }
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return ds;
+    }
+    
 }

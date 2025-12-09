@@ -65,11 +65,7 @@
 
 .datepicker-custom {
     /* Style DatePicker nhất quán */
-<<<<<<< HEAD
-    -fx-pref-height: 40px;
-=======
     -fx-pref-height: 40px; 
->>>>>>> 6a4a465935aaa4570f13108ae723d76b961fa063
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-color: #CBD5E0;
@@ -304,4 +300,71 @@
 .button-dieu-chinh-menu:hover {
 	-fx-background-color: #E2E8F0;
     -fx-border-color: #A0AEC0;
+}
+
+.combo-box {
+    -fx-background-color: white;
+    -fx-border-color: #D2D2D2;
+    -fx-border-radius: 6;
+    -fx-background-radius: 6;
+    -fx-font-size: 15px;
+    -fx-font-family:	'Tai Heritage Pro' ;
+    -fx-cursor: hand;
+}
+
+/* Style cho TableView tổng thể */
+.table-view {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e2e8f0;
+    -fx-border-radius: 8px;
+    -fx-background-radius: 8px;
+    -fx-font-family: "Segoe UI";
+    -fx-font-size: 13px;
+}
+
+/* Header của cột (Table Header) */
+.table-view .column-header {
+    -fx-background-color: #f8f9fa;
+    -fx-background-radius: 6px 6px 0 0;
+    -fx-border-color: #e2e8f0;
+    -fx-border-width: 0 0 1 0;
+    -fx-font-weight: bold;
+    -fx-text-fill: black;
+}
+
+/* Hàng header khi hover */
+.table-view .column-header:hover {
+    -fx-background-color: #e9ecef;
+}
+
+/* Hàng được chọn */
+.table-row-cell:selected {
+    -fx-background-color: #ebf8ff;
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: black;
+}
+
+/* Cell dữ liệu */
+.table-row-cell .table-cell {
+    -fx-alignment: center-left;
+    -fx-border-color: transparent;
+}
+
+/* Style cho TextField trong cell editable (SL thêm) */
+.table-row-cell .text-field {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 4px;
+    -fx-border-color: #cbd5e0;
+    -fx-border-radius: 4px;
+    -fx-border-width: 1;
+    -fx-font-size: 13px;
+    -fx-alignment: center;
+}
+
+/* Tách biệt viền giữa các hàng */
+.table-view .table-row-cell:selected {
+    -fx-border-color: #3182ce;
+    -fx-border-width: 0 0 0 3px;
 }
