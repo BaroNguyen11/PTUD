@@ -27,4 +27,29 @@ public enum TrangThai {
         System.err.println("Cảnh báo: Không tìm thấy TrangThai cho chuỗi: '" + text + "'");
         return null; // Hoặc trả về TRONG làm mặc định
     }
+    
+    public static TrangThai fromDB(String value) {
+        if (value == null) return null;
+
+        value = value.trim().toUpperCase();
+
+        switch (value) {
+            case "TRONG":
+            case "TRỐNG":
+                return TRONG;
+
+            case "DANG_SU_DUNG":
+            case "ĐANG SỬ DỤNG":
+            case "ĐANG DÙNG":   
+                return DANG_SU_DUNG;
+
+            case "DA_DAT":
+            case "ĐÃ ĐẶT TRƯỚC":
+            case "ĐÃ ĐẶT":
+                return DA_DAT;
+
+            default:
+                throw new IllegalArgumentException("Không có trạng thái: " + value);
+        }
+    }
 }

@@ -64,7 +64,7 @@
     -fx-pref-height: 20px;
     -fx-border-width: 1;
     -fx-border-color: #D2D2D2;
-    -fx-border-radius: 5px;
+    -fx-border-radius: 20px;
     -fx-font-family: 'Tai Heritage Pro';
     -fx-background-color: white;
     -fx-font-size: 15;
@@ -78,7 +78,7 @@
 	-fx-background-color: white;
 	-fx-border-color: #D2D2D2;
 	-fx-border-width: 1;
-	-fx-border-radius: 5px;
+	-fx-border-radius: 20;
 	-fx-text-fill: black;
 	-fx-cursor: hand;
 	-fx-font-size: 15
@@ -145,6 +145,30 @@
     -fx-pref-width: 0;
 }
 
+
+/*
+.radio-button:hover {
+    -fx-text-fill: #082744;
+}
+
+
+
+.radio-button {
+	-fx-cursor: hand;
+	-fx-font-family: 'Tai Heritage Pro';
+	-fx-font-size: 15;
+	-fx-background-color: white;
+}
+
+
+.radio-button:selected .radio {
+    -fx-background-color: #082744;
+    -fx-min-width: 10px;
+    -fx-min-height: 10px;
+    -fx-background-color: white;
+}
+	*/
+
 .radio-button{
 	-fx-cursor: hand;
 	-fx-font-family: 'Tai Heritage Pro';
@@ -173,6 +197,18 @@
     -fx-min-height: 14px;
 }
 
+/*
+.radio-button:selected .radio {
+    -fx-background-color: #082744;
+    -fx-border-color: transparent;
+    -fx-background-radius: 50%;
+    -fx-min-width: 8px;
+    -fx-min-height: 8px;
+    -fx-max-width: 8px;
+    -fx-max-height: 8px;
+    -fx-effect: none;
+}
+*/
 
 
 .button-checkin{
@@ -235,9 +271,14 @@
     -fx-background-insets: 0;
     -fx-border-color: transparent;
     -fx-effect: none;
+    -fx-border-weight: 1;
     -fx-border-color: #D9D9D9;
-	-fx-border-weight: 0.3px;
     -fx-font-size: 15;
+}
+
+
+.date-picker:hover{
+	-fx-border-color: blue;
 }
 
 .date-picker > .arrow-button {
@@ -247,6 +288,7 @@
     -fx-background-size: 20px;
     -fx-background-color: white;
     -fx-effect: none;
+    -fx-border-color: #D9D9D9;
 }
 
 /* Nếu muốn ẩn luôn icon lịch (nếu còn hiện) */
@@ -339,32 +381,19 @@
 .btn-In:hover{
     -fx-opacity: 0.9;
 }
-/* Popup container */
-.context-menu {
-    -fx-background-color: white;
-    -fx-background-radius: 0 0 5px 5px;
-    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 2);
-    -fx-padding: 5px 0;
-    -fx-border-color: #D9D9D9;
-    -fx-border-width: 1px;
-    -fx-min-width: 220px; /* Khớp với độ rộng TextField */
-}
 
-/* Từng dòng gợi ý */
-.menu-item {
-    -fx-padding: 8px 15px;
-    -fx-background-color: transparent;
-}
 
-/* Chữ trong gợi ý */
-.menu-item .label {
-    -fx-text-fill: #333;
-    -fx-font-size: 14px;
-    -fx-font-family: "Segoe UI";
-}
-
-/* Hiệu ứng khi di chuột vào */
-.menu-item:focused, .menu-item:hover {
-    -fx-background-color: #f1f3f4; /* Màu xám nhạt giống Google */
+.btn-QuayLai{
+    -fx-background-color: gray;
+    -fx-background-radius: 5;
+    -fx-text-fill: white;
+    -fx-font-size: 15px;
+    -fx-pref-width: 100;
+    -fx-pref-height: 35;
+    -fx-font-weight: bold;
     -fx-cursor: hand;
+}
+
+.btn-QuayLai:hover{
+    -fx-opacity: 0.9;
 }

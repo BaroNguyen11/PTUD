@@ -152,9 +152,14 @@ public class Ca_DAO {
             return null;
         }
     }
+    /**
+     * Tính tổng tiền mặt thu được trong ca hiện tại dựa trên chi tiết hóa đơn.
+     * Logic: JOIN HoaDon - ChiTietHoaDon - MonAn
+     * Công thức: SUM(soLuong * giaTien)
+     */
 
-    public int demSoHoaDonTrongCa(String maNhanVien, LocalDateTime thoiGianVaoCa ) {
-        int soLuong = 0;
+    public double tinhTongTienMat(String maNhanVien, LocalDateTime thoiGianVaoCa) {
+        double tongTien = 0;
         Connection con = null;
         PreparedStatement ps = null;
         ResultSet rs = null;
@@ -162,27 +167,101 @@ public class Ca_DAO {
         try {
             con = ConnectDB.getConnection();
 
-            // LOGIC SQL:
-            // 1. JOIN HoaDon và Ca thông qua maNhanVien
-            // 2. Chỉ lấy những dòng mà Ngày tạo hóa đơn (ngayTao) TRÙNG VỚI Ngày vào ca (thoiGianVaoCa)
-            // 3. Lọc đúng ngày được truyền vào tham số
+
             String sql = """
-            SELECT COUNT(h.maHoaDon) 
-            FROM HoaDon h
-            JOIN Ca c ON h.maNhanVien = c.maNhanVien
-            WHERE h.maNhanVien = ? 
-              AND h.trangThai = N'Đã thanh toán'
-              AND CAST(h.ngayTao AS DATE) = CAST(c.thoiGianVaoCa AS DATE)
-              AND CAST(c.thoiGianVaoCa AS DATE) = CAST(? AS DATE)
+            SELECT SUM(cthd.soLuong * ma.giaTien) AS TongTienCa
+            FROM ChiTietHoaDon cthd
+            JOIN MonAn ma ON cthd.maMonAn = ma.maMonAn
+            JOIN HoaDon hd ON cthd.maHoaDon = hd.maHoaDon
+            WHERE hd.maNhanVien = ? 
+              AND hd.trangThai = ? 
+              AND hd.ngayTao >= ?
         """;
 
             ps = con.prepareStatement(sql);
-
-            // Tham số 1: Mã nhân viên
             ps.setString(1, maNhanVien);
+            ps.setString(2, "Đã thanh toán");
+            ps.setTimestamp(3, Timestamp.valueOf(thoiGianVaoCa));
 
-            // Tham số 2: Thời gian vào ca (Code sẽ tự CAST về DATE để so sánh)
-            ps.setTimestamp(2, java.sql.Timestamp.valueOf(thoiGianVaoCa));
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                tongTien = rs.getDouble("TongTienCa");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception ignored) {}
+            try { if (ps != null) ps.close(); } catch (Exception ignored) {}
+            try { if (con != null) con.close(); } catch (Exception ignored) {}
+        }
+
+        return tongTien;
+    }
+    /**
+     * Tính tổng tiền giảm giá trong ca
+     */
+    public double tinhTongTienGiamGia(String maNhanVien, LocalDateTime thoiGianVaoCa) {
+        double tongGiam = 0;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = ConnectDB.getConnection();
+
+            // JOIN giữa ChiTietKMHD và HoaDon
+            // Lấy tổng cột soTienGiam từ bảng ChiTietKMHD
+            String sql = """
+                SELECT SUM(ct.soTienGiam) 
+                FROM ChiTietKMHD ct
+                JOIN HoaDon h ON ct.maHoaDon = h.maHoaDon
+                WHERE h.maNhanVien = ? 
+                  AND h.trangThai LIKE N'Đã thanh toán' 
+                  AND h.ngayTao >= ?
+            """;
+
+            ps = con.prepareStatement(sql);
+            ps.setString(1, maNhanVien);
+            ps.setTimestamp(2, Timestamp.valueOf(thoiGianVaoCa));
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                tongGiam = rs.getDouble(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            try { if (rs != null) rs.close(); } catch (Exception ignored) {}
+            try { if (ps != null) ps.close(); } catch (Exception ignored) {}
+            try { if (con != null) con.close(); } catch (Exception ignored) {}
+        }
+        return tongGiam;
+    }
+
+    /**
+     * Đếm số lượng đơn đang phục vụ (Chưa thanh toán)
+     */
+    public int demDonDangPhucVu(String maNhanVien, LocalDateTime thoiGianVaoCa) {
+        int soLuong = 0;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+        try {
+            con = ConnectDB.getConnection();
+            // SỬA LỖI: Thay chuỗi cứng bằng ? cho cả 2 trạng thái
+            String sql = """
+                SELECT COUNT(*) 
+                FROM HoaDon 
+                WHERE maNhanVien = ? 
+                  AND (trangThai = ? OR trangThai = ?) 
+                  AND ngayTao >= ?
+            """;
+
+            ps = con.prepareStatement(sql);
+            ps.setString(1, maNhanVien);
+            ps.setString(2, "Chờ thanh toán"); // Tham số 2
+            ps.setString(3, "Đang phục vụ");   // Tham số 3
+            ps.setTimestamp(4, Timestamp.valueOf(thoiGianVaoCa)); // Tham số 4
 
             rs = ps.executeQuery();
             if (rs.next()) {
@@ -191,9 +270,41 @@ public class Ca_DAO {
         } catch (Exception e) {
             e.printStackTrace();
         } finally {
-            try { if (rs != null) rs.close(); if (ps != null) ps.close(); if (con != null) con.close(); } catch (Exception e) {}
+            closeResources(con, ps, rs);
         }
-
         return soLuong;
     }
+
+    // Cập nhật lại phương thức đếm số hóa đơn cho chính xác theo thời gian thực
+    public int demSoHoaDonTrongCa(String maNhanVien, LocalDateTime thoiGianVaoCa) {
+        int soLuong = 0;
+        Connection con = null;
+        PreparedStatement ps = null;
+        ResultSet rs = null;
+
+        try {
+            con = ConnectDB.getConnection();
+            String sql = "SELECT COUNT(*) FROM HoaDon WHERE maNhanVien = ? AND trangThai = N'Đã thanh toán' AND ngayTao >= ?";
+
+            ps = con.prepareStatement(sql);
+            ps.setString(1, maNhanVien);
+            ps.setTimestamp(2, Timestamp.valueOf(thoiGianVaoCa));
+
+            rs = ps.executeQuery();
+            if (rs.next()) {
+                soLuong = rs.getInt(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            closeResources(con, ps, rs);
+        }
+        return soLuong;
+    }
+    private void closeResources(Connection con, Statement stmt, ResultSet rs) {
+        try { if (rs != null) rs.close(); } catch (Exception ignored) {}
+        try { if (stmt != null) stmt.close(); } catch (Exception ignored) {}
+        try { if (con != null) con.close(); } catch (Exception ignored) {}
+    }
+
 }

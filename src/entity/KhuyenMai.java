@@ -1,5 +1,7 @@
 package entity;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 public class KhuyenMai {
     private String maKhuyenMai;
@@ -10,6 +12,7 @@ public class KhuyenMai {
     private double giaTriToiDa;
     private boolean giamGiaPhanTram;
     private double giaTriGiam;
+   
 
     public KhuyenMai() {}
 
@@ -92,15 +95,20 @@ public class KhuyenMai {
 
     @Override
     public String toString() {
-        return "KhuyenMai{" +
-                "maKhuyenMai='" + maKhuyenMai + '\'' +
-                ", tenKhuyenMai='" + tenKhuyenMai + '\'' +
-                ", ngayBatDau=" + ngayBatDau +
-                ", ngayKetThuc=" + ngayKetThuc +
-                ", dieuKienApDung='" + dieuKienApDung + '\'' +
-                ", giaTriToiDa=" + giaTriToiDa +
-                ", giamGiaPhanTram=" + giamGiaPhanTram +
-                ", giaTriGiam=" + giaTriGiam +
-                '}';
+    		DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    		DecimalFormat dcm = new DecimalFormat("#,##0.0 VND");
+    		
+    		if(giamGiaPhanTram) {
+    			return tenKhuyenMai + " | " +
+    					"Ngày hết hạn: " + dtf.format(ngayKetThuc) + " | " +
+    	                "Điều kiện: " + dieuKienApDung + " | " +
+    	                "Tối đa: " + dcm.format(giaTriToiDa) + " | " +
+    	                "Giảm giá: " + giaTriGiam + " %";
+    		}else {
+    			return tenKhuyenMai + " | " +
+    					"Ngày hết hạn: " + dtf.format(ngayKetThuc) + " | " +
+    	                "Điều kiện: " + dieuKienApDung + " | " +
+    	                "Giảm giá: " + dcm.format(giaTriGiam);
+    		}    
     }
 }

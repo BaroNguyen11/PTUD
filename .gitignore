@@ -6,3 +6,4 @@ build.fxbuild
 PTUD.iml
 .idea
 out/
+*.class

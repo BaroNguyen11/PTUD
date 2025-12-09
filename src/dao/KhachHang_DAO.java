@@ -34,7 +34,7 @@ public class KhachHang_DAO {
     }
 
     // Lấy khách hàng theo mã
-    public KhachHang getKhachHangById(String maKH) {
+    public static KhachHang getKhachHangById(String maKH) {
         KhachHang kh = null;
         String sql = "SELECT * FROM KhachHang WHERE maKhachHang = ?";
         try (Connection con = ConnectDB.getConnection();

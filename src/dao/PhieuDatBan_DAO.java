@@ -3,19 +3,35 @@ package dao;
 import java.sql.*;
 
 import entity.BanAn;
+import entity.HoaDon;
 import entity.KhachHang;
+import entity.NhanVien;
 import entity.PhieuDatBan;
-import ConnectDB.ConnectDB;
 import entity.TrangThai;
-
-import java.time.LocalDateTime;
+import ConnectDB.ConnectDB;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 
 public class PhieuDatBan_DAO {
 
     private static final DateTimeFormatter SQL_DATETIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+    private BanAn_DAO banAn_DAO;
+
+    public PhieuDatBan_DAO() {
+        // Constructor mặc định (Nếu bạn khởi tạo BanAn_DAO ở đây)
+        this.banAn_DAO = new BanAn_DAO();
+    }
+
+    // Hoặc nếu bạn muốn truyền từ bên ngoài (cách linh hoạt hơn)
+    public PhieuDatBan_DAO(BanAn_DAO banAn_DAO) {
+        this.banAn_DAO = banAn_DAO;
+
+    }
 
     public boolean themPhieuDatBan(PhieuDatBan pdb, String trangThaiPhieu) {
 
@@ -192,6 +208,51 @@ public class PhieuDatBan_DAO {
         }
         return pdb;
     }
+    public boolean huyPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngay) {
+        // Lưu ý: Cần đảm bảo chuỗi trạng thái trong CSDL là N'Đã hủy'
+        String trangThaiHuy = "Đã hủy";
+
+        // SQL tìm PDB cho bàn, ngày, và trạng thái hiện tại là 'Đã đặt'/'Đang dùng'
+        String sql = "UPDATE PhieuDatBan SET trangThai = ? " +
+                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
+                "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, trangThaiHuy);
+            ps.setString(2, maBan);
+            ps.setDate(3, java.sql.Date.valueOf(ngay));
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi hủy PDB đơn: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    public boolean huyTatCaPhieuByMaHoaDon(String maHoaDon) {
+        // Lưu ý: Cần đảm bảo chuỗi trạng thái trong CSDL là N'Đã hủy'
+        String trangThaiHuy = "Đã hủy";
+
+        // SQL tìm TẤT CẢ PDB có cùng maHoaDon (và trạng thái hiện tại là 'Đã đặt'/'Đang dùng')
+        String sql = "UPDATE PhieuDatBan SET trangThai = ? " +
+                "WHERE maHoaDon = ? AND trangThai IN (N'Đã đặt', N'Đang dùng')";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, trangThaiHuy);
+            ps.setString(2, maHoaDon);
+
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("Lỗi SQL khi hủy PDB ghép: " + e.getMessage());
+            e.printStackTrace();
+            return false;
+        }
+    }
     public boolean capNhatMaBanSuDung(String maBanCu, String maBanMoi, LocalDate ngayDat) {
         // Lưu ý: Cần đảm bảo chuỗi trạng thái trong CSDL là N'Đang dùng'
         String trangThaiDangDung = "Đang dùng";
@@ -275,50 +336,6 @@ public class PhieuDatBan_DAO {
             return false;
         }
     }
-    public boolean huyPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngay) {
-        // Lưu ý: Cần đảm bảo chuỗi trạng thái trong CSDL là N'Đã hủy'
-        String trangThaiHuy = "Đã hủy";
-
-        // SQL tìm PDB cho bàn, ngày, và trạng thái hiện tại là 'Đã đặt'/'Đang dùng'
-        String sql = "UPDATE PhieuDatBan SET trangThai = ? " +
-                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-                "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, trangThaiHuy);
-            ps.setString(2, maBan);
-            ps.setDate(3, java.sql.Date.valueOf(ngay));
-
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi hủy PDB đơn: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-    public boolean huyTatCaPhieuByMaHoaDon(String maHoaDon) {
-        // Lưu ý: Cần đảm bảo chuỗi trạng thái trong CSDL là N'Đã hủy'
-        String trangThaiHuy = "Đã hủy";
-
-        // SQL tìm TẤT CẢ PDB có cùng maHoaDon (và trạng thái hiện tại là 'Đã đặt'/'Đang dùng')
-        String sql = "UPDATE PhieuDatBan SET trangThai = ? " +
-                "WHERE maHoaDon = ? AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, trangThaiHuy);
-            ps.setString(2, maHoaDon);
-
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi hủy PDB ghép: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
     public boolean doiBanTongHop(BanAn banCu, BanAn banMoi, LocalDate ngayDat, TrangThai trangThaiCu) {
         boolean doiPhieuThanhCong = false;
 
@@ -362,4 +379,102 @@ public class PhieuDatBan_DAO {
 
         return false;
     }
+
+    public static List<PhieuDatBan> getByMaHoaDon(String maHoaDon) {
+        List<PhieuDatBan> list = new ArrayList<>();
+        String sql = "SELECT * FROM PhieuDatBan WHERE maHoaDon = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, maHoaDon);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                PhieuDatBan phieu = new PhieuDatBan();
+                phieu.setMaPhieu(rs.getString("maPhieu"));
+                phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
+                phieu.setTrangThai(rs.getString("trangThai"));
+                phieu.setSoNguoi(rs.getInt("soNguoi"));
+                phieu.setGhiChu(rs.getNString("ghiChu"));
+
+                HoaDon hd = new HoaDon();
+                hd.setMaHoaDon(maHoaDon);
+
+                KhachHang kh = new KhachHang();
+                kh.setMaKhachHang(rs.getString("maKhachHang"));
+
+                NhanVien nv = new NhanVien();
+                nv.setMaNhanVien(rs.getString("maNhanVien"));
+
+                BanAn ban = new BanAn();
+                ban.setMaBan(rs.getString("maBan"));
+
+                phieu.setKhachHang(kh);
+                phieu.setBan(ban);
+                phieu.setNhanVien(nv);
+                phieu.setHoaDon(hd);
+
+
+                list.add(phieu);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy phiếu đặt bàn theo mã hóa đơn: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return list;
+    }
+
+    public static PhieuDatBan timMotPhieuBangMaHD(String maHoaDon) {
+        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
+            return null;
+        }
+
+        String sql = "SELECT * FROM PhieuDatBan WHERE maHoaDon = ?";
+
+        try (Connection conn = ConnectDB.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, maHoaDon.trim());
+            ResultSet rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                PhieuDatBan phieu = new PhieuDatBan();
+                phieu.setMaPhieu(rs.getString("maPhieu"));
+                phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
+                phieu.setTrangThai(rs.getString("trangThai"));
+                phieu.setSoNguoi(rs.getInt("soNguoi"));
+                phieu.setGhiChu(rs.getNString("ghiChu"));
+
+                HoaDon hd = new HoaDon();
+                hd.setMaHoaDon(maHoaDon);
+
+                KhachHang kh = new KhachHang();
+                kh.setMaKhachHang(rs.getString("maKhachHang"));
+
+                NhanVien nv = new NhanVien();
+                nv.setMaNhanVien(rs.getString("maNhanVien"));
+
+                BanAn ban = new BanAn();
+                ban.setMaBan(rs.getString("maBan"));
+
+                phieu.setKhachHang(kh);
+                phieu.setBan(ban);
+                phieu.setNhanVien(nv);
+                phieu.setHoaDon(hd);
+
+
+                return phieu;
+            }
+
+        } catch (SQLException e) {
+            System.err.println("❌ Lỗi lấy phiếu đặt bàn theo mã hóa đơn: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return null;  // Không tìm thấy
+    }
+
 }

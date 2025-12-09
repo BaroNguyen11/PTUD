@@ -179,14 +179,14 @@ public class Dashboard_DAO {
             JOIN ChiTietHoaDon ct ON h.maHoaDon = ct.maHoaDon
             JOIN MonAn m ON ct.maMonAn = m.maMonAn
             WHERE CAST(h.ngayTao AS DATE) = ?
-              AND h.trangThai = N'Đã thanh toán'
+            AND h.trangThai LIKE N'Đã thanh toán'
             GROUP BY m.tenMonAn
             ORDER BY tongSoLuong DESC
         """;
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setInt(1, limit);
-            ps.setDate(2, toSqlDate(LocalDate.now()));
+//            ps.setInt(1, limit);
+            ps.setDate(1, toSqlDate(LocalDate.now()));
             try (ResultSet rs = ps.executeQuery()) {
                 while (rs.next()) {
                     data.put(rs.getString("tenMonAn"), rs.getInt("tongSoLuong"));

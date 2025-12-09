@@ -65,7 +65,11 @@
 
 .datepicker-custom {
     /* Style DatePicker nhất quán */
+<<<<<<< HEAD
     -fx-pref-height: 40px;
+=======
+    -fx-pref-height: 40px; 
+>>>>>>> 6a4a465935aaa4570f13108ae723d76b961fa063
     -fx-background-radius: 8;
     -fx-border-radius: 8;
     -fx-border-color: #CBD5E0;
