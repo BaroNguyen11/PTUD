@@ -2014,7 +2014,9 @@ public class Gui_DanhSachBan extends BorderPane {
         Label lblGioHang = new Label("Gọi món ăn");
         lblGioHang.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
 
-        TableView<Object[]> tbl = taoBangGioHang(gioHang, new TilePane());
+        TilePane tileMenu = new TilePane(10, 12);
+        
+        TableView<Object[]> tbl = taoBangGioHang(gioHang, tileMenu);
 
         lblTongTien = new Label();
         lblTongTien.setFont(Font.font("Segoe UI", FontWeight.BOLD, 16));
@@ -2046,7 +2048,7 @@ public class Gui_DanhSachBan extends BorderPane {
         cbLoai.setValue("Tất cả");
         
 
-        TilePane tileMenu = new TilePane(10, 12);
+        
         tileMenu.setPrefColumns(3);
         
         cbLoai.setOnAction(e -> {
@@ -2342,6 +2344,7 @@ public class Gui_DanhSachBan extends BorderPane {
                     if (!tf.getText().isEmpty() && Integer.parseInt(tf.getText()) < 0) {
                         tf.setText("0");
                     }
+
                     tinhTongTien(gioHang, lblTongTien);
                 });
             }
@@ -2361,19 +2364,25 @@ public class Gui_DanhSachBan extends BorderPane {
 
                     // Cập nhật lại số lượng trên card món ăn
                     Platform.runLater(() -> {
+                    	
                         if (tilePane != null) {
-                            for (Node node : tilePane.getChildren()) {
-                                if (node instanceof VBox card) {
-                                    Label lblTen = (Label) card.getChildren().get(1);
-                                    
-                                    if (lblTen.getText().equals(row[0])) {
-                                        HBox controls = (HBox) card.getChildren().get(4);
-                                        Label lblSL = (Label) controls.getChildren().get(1);
-                                        lblSL.setText(String.valueOf(slNew));
-                                        break;
-                                    }
-                                }
-                            }
+                        	
+                        	for (Node node : tilePane.getChildren()) {
+                        		
+                        	    VBox card = (VBox) node; 
+
+                        	    Label lblTen = (Label) card.getChildren().get(1);
+
+                        	    String tenCard = lblTen.getText().replace("\n", "").trim().toLowerCase();
+                        	    String tenRow = row[0].toString().replace("\n", "").trim().toLowerCase();
+
+                        	    if (tenCard.equals(tenRow)) {
+                        	        HBox controls = (HBox) card.getChildren().get(4);
+                        	        Label lblSL = (Label) controls.getChildren().get(1);
+                        	        lblSL.setText(String.valueOf(slNew));
+                        	        break;
+                        	    }
+                        	}
                         }
                     });
                 } catch (Exception ex) {

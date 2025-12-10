@@ -54,9 +54,9 @@ public class QLKM_Ctrl {
 
     public boolean themDSCTKMMonAn(List<String> dsMon, KhuyenMai km) {
         for(String chuoi : dsMon) {
-            String maMon = chuoi.split("_")[0];
+            String maMon = chuoi.split("-")[0];
             String maKm = km.getMaKhuyenMai();
-            double giaSauKM = Double.parseDouble(chuoi.split("_")[3]) - km.getGiaTriGiam();
+            double giaSauKM = Double.parseDouble(chuoi.split("-")[3]) - km.getGiaTriGiam();
             if(!dao.insertCTKMMonAn(maKm, maMon, giaSauKM)) {
                 return false;
             };
