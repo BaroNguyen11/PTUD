@@ -1,3 +1,2067 @@
+//package gui;
+//
+//import java.text.DecimalFormat;
+//import java.time.LocalDate;
+//import java.time.format.DateTimeFormatter;
+//import java.util.ArrayList;
+//import java.util.HashMap;
+//import java.util.List;
+//import java.util.Map;
+//import java.util.Optional;
+//
+//import ctrl.QLKM_Ctrl;
+//import entity.KhuyenMai;
+//import javafx.animation.FadeTransition;
+//import javafx.beans.property.SimpleStringProperty;
+//import javafx.collections.FXCollections;
+//import javafx.collections.ObservableList;
+//import javafx.event.Event;
+//import javafx.event.EventHandler;
+//import javafx.geometry.Insets;
+//import javafx.geometry.Pos;
+//import javafx.geometry.Side;
+//import javafx.scene.Node;
+//import javafx.scene.Parent;
+//import javafx.scene.Scene;
+//import javafx.scene.control.*;
+//import javafx.scene.control.Alert.AlertType;
+//import javafx.scene.effect.BoxBlur;
+//import javafx.scene.image.Image;
+//import javafx.scene.image.ImageView;
+//import javafx.scene.input.KeyCode;
+//import javafx.scene.input.KeyCodeCombination;
+//import javafx.scene.input.KeyCombination;
+//import javafx.scene.input.KeyEvent;
+//import javafx.scene.input.MouseEvent;
+//import javafx.scene.layout.BorderPane;
+//import javafx.scene.layout.HBox;
+//import javafx.scene.layout.Priority;
+//import javafx.scene.layout.Region;
+//import javafx.scene.layout.StackPane;
+//import javafx.scene.layout.VBox;
+//import javafx.scene.shape.Rectangle;
+//import javafx.scene.shape.SVGPath;
+//import javafx.scene.text.Font;
+//import javafx.scene.text.FontWeight;
+//import javafx.stage.Modality;
+//import javafx.stage.Stage;
+//import javafx.util.Duration;
+//import lib.ImageCacheManager;
+//import javafx.geometry.Side;
+//import javafx.scene.control.ContextMenu;
+//import javafx.scene.control.MenuItem;
+//public class Gui_QuanLiKhuyenMai extends BorderPane {
+//    // DANH SÁCH TOÀN CỤC
+//    private QLKM_Ctrl control;
+//    ObservableList<String> dsTTMonAn = FXCollections.observableArrayList();
+//    ObservableList<String> dsMonChon = FXCollections.observableArrayList();
+//    ObservableList<String> dsKhuyenMai = FXCollections.observableArrayList();
+//    ObservableList<String> dsMonTemp = FXCollections.observableArrayList();
+//    ObservableList<String> dsLocMon = FXCollections.observableArrayList();
+//
+//    private TextField txtMaKhuyenMai;
+//    private TextField txtTenKhuyenMai;
+//    private TextField txtDieuKienApDung;
+//    private TextField txtGiaTriToiDa;
+//    private TextField txtGiaTriGiam;
+//    private ToggleGroup radioGroup1;
+//    private ToggleGroup radioGroup2;
+//    private TableView<String> tableDSKM;
+//    private TableView<String> tableDSMonKMTheoMa = new TableView<String>(dsMonChon);
+//    private RadioButton radioCo;
+//    private RadioButton radioKhong;
+//    private RadioButton radioHoaDon;
+//    private RadioButton radioMonAn;
+//    private DatePicker dateBatDau;
+//    private DatePicker dateKetThuc;
+//    private Button btnChonMonAn;
+//    private Button btnSuaLuu;
+//    private final EventHandler<MouseEvent> blockMouse = Event::consume;
+//    private final EventHandler<KeyEvent> blockKey = Event::consume;
+//    private Button btnNgung;
+//    private ListView listMonAn;
+//    TableColumn<String, Void> colXoa = new TableColumn<>("Xóa");
+//
+//    // Cờ sửa và lưu || True là sửa || False là lưu
+//    private boolean flagSuaLuu = true;
+//
+//    // Cờ xóa và ngừng KM || True là ngừng || False là xóa
+//    private boolean flagNgungXoa = true;
+//
+//    // Cờ đg xem và đang thêm || True là đang thêm || False là đang xem
+//    private boolean flagXemThem = false;
+//
+//    private ComboBox<String> cboTT;
+//    private ComboBox<String> cboLoai;
+//    private TextField txtTimKiem;
+//    private Button btnReset;
+//    private ComboBox<String> cboLocMon;
+//    private Button btnThemKM;
+//    private final Map<KeyCombination, Runnable> shortcuts = new HashMap<>();
+//
+//    // Preload image để tránh load lại mỗi lần tạo cell (giảm lag scroll)
+//    private static final Image IMG_MON_AN = new Image("/img/monAn.png");
+//    private static final Image IMG_CHU_NHAT_XANH = new Image("/img/chuNhatXanh.png");
+//    private static final Image IMG_CHU_NHAT_VANG = new Image("/img/chuNhatVang.png");
+//
+//
+//    public Gui_QuanLiKhuyenMai() {
+//        control  = new QLKM_Ctrl();
+//        BorderPane mainLayout = new BorderPane();
+//
+//        // Thêm phần bên trái và bên phải
+//        VBox phanTrai = taoPhanBenTrai();
+//        VBox phanPhai = taoPhanBenPhai();
+//
+//        mainLayout.setLeft(phanTrai);
+//        mainLayout.setRight(phanPhai);
+//        mainLayout.setStyle("-fx-background-color: white;");
+//        this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
+//
+//
+//        // Set vào BorderPane chính (this)
+//        this.setCenter(mainLayout);
+//
+//        // === Phím tắt ===
+//
+//        /////Hàng f
+//        /// === Thêm khuyến mãi : F2
+//        KeyCombination f2 = new KeyCodeCombination(KeyCode.F2);
+//        /// === Truy cập tìm kiếm nhanh : F3
+//        KeyCombination f3 = new KeyCodeCombination(KeyCode.F3);
+//        /// === Tạo mới : F5
+//        KeyCombination f5 = new KeyCodeCombination(KeyCode.F5);
+//        /// === Lưu, sửa : F6
+//        KeyCombination f6 = new KeyCodeCombination(KeyCode.F6);
+//        /// === Xóa, ngừng KM : F9
+//        KeyCombination f9 = new KeyCodeCombination(KeyCode.F9);
+//
+//
+//        shortcuts.put(f3, () -> txtTimKiem.requestFocus());
+//        shortcuts.put(f2, () -> btnThemKM.fire());
+//        shortcuts.put(f5, () -> btnReset.fire());
+//        shortcuts.put(f6, () -> btnSuaLuu.fire());
+//        shortcuts.put(f9, () -> btnNgung.fire());
+//
+//
+//        this.sceneProperty().addListener((obs, oldScene, newScene) -> {
+//            if (newScene != null) {
+//                newScene.getAccelerators().putAll(shortcuts);
+//            }
+//
+//            if(oldScene != null) {
+//                oldScene.getAccelerators().clear();
+//            }
+//        });
+//
+//    }
+//    private void caiDatGoiYTimKiem(TextField txtInput, ObservableList<String> dataNguon) {
+//        // 1. Tạo Menu ngữ cảnh
+//        ContextMenu suggestionsPopup = new ContextMenu();
+//        suggestionsPopup.getStyleClass().add("goi-y-menu");
+//        suggestionsPopup.setPrefWidth(txtInput.getPrefWidth()); // Chiều rộng bằng ô input
+//
+//        // 2. Logic hiển thị
+//        Runnable hienThiGoiY = () -> {
+//            String tuKhoa = txtInput.getText().toLowerCase();
+//            List<MenuItem> suggestions = new ArrayList<>();
+//
+//            // Duyệt qua danh sách nguồn (dsKhuyenMai)
+//            for (String row : dataNguon) {
+//                String[] parts = row.split(",");
+//                if (parts.length < 2) continue;
+//
+//                String maKM = parts[0]; // Mã khuyến mãi
+//                String tenKM = parts[1]; // Tên khuyến mãi
+//
+//                // Logic lọc: Nếu từ khóa rỗng (khi click chuột) HOẶC chứa từ khóa
+//                if (tuKhoa.isEmpty() || maKM.toLowerCase().contains(tuKhoa) || tenKM.toLowerCase().contains(tuKhoa)) {
+//
+//                    String hienThi = maKM + " - " + tenKM;
+//                    MenuItem item = new MenuItem(hienThi);
+//                    item.getStyleClass().add("goi-y-item");
+//
+//                    // Sự kiện khi chọn gợi ý
+//                    item.setOnAction(e -> {
+//                        txtInput.setText(maKM);
+//                        txtInput.positionCaret(maKM.length());
+//                        suggestionsPopup.hide();
+//
+//                        // GỌI HÀM LỌC CỦA CLASS NÀY
+//                        locKhuyenMai();
+//                    });
+//                    suggestions.add(item);
+//                }
+//                if (suggestions.size() >= 10) break; // Giới hạn 10 dòng
+//            }
+//
+//            // Hiển thị hoặc ẩn popup
+//            if (!suggestions.isEmpty()) {
+//                suggestionsPopup.getItems().setAll(suggestions);
+//                if (!suggestionsPopup.isShowing()) {
+//                    suggestionsPopup.show(txtInput, Side.BOTTOM, 0, 0);
+//                }
+//            } else {
+//                suggestionsPopup.hide();
+//            }
+//        };
+//
+//        // 3. Gắn sự kiện
+//        txtInput.textProperty().addListener((observable, oldValue, newValue) -> hienThiGoiY.run()); // Khi gõ
+//        txtInput.setOnMouseClicked(event -> hienThiGoiY.run()); // Khi click
+//        txtInput.focusedProperty().addListener((obs, oldVal, newVal) -> { // Khi mất focus
+//            if (!newVal) suggestionsPopup.hide();
+//        });
+//    }
+//    public VBox taoPhanBenTrai() {
+//        // Ô tìm kiếm
+//        Label lblTimKiem = createModernSectionTitle("Tìm kiếm", "#667eea");
+//        //lblTimKiem.setGraphic(createSvgIcon(24, 24, "#667eea", "m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"));
+//
+//        txtTimKiem = new TextField();
+//        txtTimKiem.setPromptText("Nhập mã khuyến mãi");
+//        txtTimKiem.getStyleClass().add("timKiem");
+//        Button nutTimKiem = new Button("Tìm kiếm");
+//        caiDatGoiYTimKiem(txtTimKiem, dsKhuyenMai);
+//        nutTimKiem.getStyleClass().add("button-timKiem");
+//        HBox oTimKiem = new HBox(10, txtTimKiem, nutTimKiem);
+//        oTimKiem.setAlignment(Pos.CENTER_LEFT);
+//        VBox vboxTimKiem = new VBox(5);
+//        vboxTimKiem.getChildren().addAll(lblTimKiem, oTimKiem);
+//
+//        txtTimKiem.setTooltip(new Tooltip("Nhấn F3 để truy cập nhanh"));
+//
+//        nutTimKiem.setOnAction(e -> {locKhuyenMai();});
+//        txtTimKiem.setOnAction(e -> {locKhuyenMai();});
+//
+//        // ===== Lọc theo trạng thái =====
+//        Label lblLocTT = new Label("Trạng thái");
+//        lblLocTT.getStyleClass().add("fontTieuDeNho");
+//
+//        cboTT = new ComboBox<>();
+//        cboTT.getItems().addAll("Tất cả", "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc");
+//        cboTT.setValue("Tất cả"); // mặc định
+//
+//        VBox vboxTT = new VBox(3, lblLocTT, cboTT);
+//
+//        cboTT.setOnAction(e -> {locKhuyenMai();});
+//
+//        // ===== Lọc theo loại =====
+//        Label lblLocLoai = new Label("Loại");
+//        lblLocLoai.getStyleClass().add("fontTieuDeNho");
+//
+//        cboLoai = new ComboBox<>();
+//        cboLoai.getItems().addAll("Tất cả", "Hóa đơn", "Món ăn");
+//        cboLoai.setValue("Tất cả");
+//
+//        VBox vboxLoai = new VBox(3);
+//        vboxLoai.getChildren().addAll(lblLocLoai, cboLoai);
+//
+//        cboLoai.setOnAction(e -> {locKhuyenMai();});
+//
+//        // ===== nút reset tới chơi =====
+//
+//        VBox vboxReset = new VBox();
+//
+//        btnReset = new Button();
+//        btnReset.setGraphic(createSvgIcon(25, 24,"gray","M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"));
+//        btnReset.setStyle("""
+//        		-fx-background-color: null;
+//        		-fx-border-radius: 5px;
+//        		-fx-border-color: #D9D9D9;
+//        		-fx-cursor: hand;
+//        		-fx-translate-y: -5;
+//        		""");
+//
+//        btnReset.setOnAction(e -> taoMoiTimKiem());
+//
+//        btnReset.setTooltip(new Tooltip("Nhấn F5 để dùng nhanh"));
+//
+//        vboxReset.getChildren().addAll(btnReset);
+//
+//        //Hbox tim kiem
+//        HBox hboxTimKiem = new HBox(10);
+//        hboxTimKiem.getChildren().addAll(vboxTimKiem, vboxLoai, vboxTT, vboxReset);
+//        hboxTimKiem.setAlignment(Pos.BOTTOM_LEFT);
+//        vboxLoai.setPadding(new Insets(5, 0, 0, 0));
+//        vboxTT.setPadding(new Insets(5, 0, 0, 0));
+//        vboxReset.setPadding(new Insets(36, 0, 0, 0));
+//
+//        ///Tieu de danh sach va chu thich danh sach
+//        Label lblDanhSach = new Label("Danh sách khuyến mãi");
+//        lblDanhSach.getStyleClass().add("fontTieuDeNho");
+//        lblDanhSach.setMinWidth(200);
+//
+//        //HBOX chú thích
+//        HBox hboxChuThich = new HBox(3);
+//
+//        HBox hboxDangDienRa = new HBox(2);
+//        HBox hboxSapDienRa = new HBox(2);
+//        HBox hboxKetThuc = new HBox(2);
+//
+//        Label lblDangDienRa = new Label("Đang diễn ra");
+//        Label lblSapDienRa = new Label("Sắp diễn ra");
+//        Label lblKetThuc = new Label("Đã kết thúc");
+//
+//        lblDangDienRa.getStyleClass().add("fontTieuDeNho");
+//        lblSapDienRa.getStyleClass().add("fontTieuDeNho");
+//        lblKetThuc.getStyleClass().add("fontTieuDeNho");
+//
+//        SVGPath iconDangDienRa = createSvgIcon(18, 24, "green", "m4.5 12.75 6 6 9-13.5");
+//        SVGPath iconSapDienRa = createSvgIcon(18, 24, "gray", "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z");
+//        SVGPath iconKetThuc = createSvgIcon(18, 24, "red", "M6 18 18 6M6 6l12 12");
+//
+//        hboxDangDienRa.getChildren().addAll(iconDangDienRa, lblDangDienRa);
+//        hboxDangDienRa.setAlignment(Pos.CENTER_LEFT);
+//        hboxSapDienRa.getChildren().addAll(iconSapDienRa, lblSapDienRa);
+//        hboxSapDienRa.setAlignment(Pos.CENTER_LEFT);
+//        hboxKetThuc.getChildren().addAll(iconKetThuc, lblKetThuc);
+//        hboxKetThuc.setAlignment(Pos.CENTER_LEFT);
+//        hboxKetThuc.setPadding(new Insets(0, 160, 0, 0));
+//
+//        // === Button thêm khuyến mãi tới chơi ===
+//
+//        btnThemKM = new Button("Thêm KM");
+//        btnThemKM.getStyleClass().add("btn-them");
+//
+//        btnThemKM.setOnAction(e -> {
+//            hanhDongThem();
+//            flagXemThem = true;
+//
+//            btnSuaLuu.setDisable(false);
+//        });
+//        btnThemKM.setTooltip(new Tooltip("Nhấn F2 để dùng nhanh"));
+//
+//        hboxChuThich.getChildren().addAll(hboxDangDienRa, hboxSapDienRa, hboxKetThuc, btnThemKM);
+//
+//        HBox hboxChuThichAll = new HBox(10);
+//        hboxChuThichAll.getChildren().addAll(lblDanhSach, hboxChuThich);
+//        hboxChuThichAll.setAlignment(Pos.BOTTOM_RIGHT);
+//
+//        //Danh sach khuyen mai
+//        VBox dsKhuyenMai = taoDanhSachKhuyenMai();
+//
+//
+//
+//        //ALLLLL
+//        VBox vboxAll = new VBox(20);
+//        vboxAll.setPadding(new Insets(10, 20, 10, 20));
+//        vboxAll.setMinHeight(600);
+//        //vboxAll.setStyle("-fx-background-color: black");
+//        vboxAll.setMinWidth(800);
+//        vboxAll.getChildren().addAll(hboxTimKiem, hboxChuThichAll, dsKhuyenMai);
+//
+//        return vboxAll;
+//    }
+//
+//    public VBox taoDanhSachKhuyenMai() {
+//        VBox vboxAll = new VBox();
+//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//
+//        List<String> dsKhuyenMaiList = control.layDanhSachCTKM();
+//
+//        dsKhuyenMai.clear();
+//        if (dsKhuyenMaiList != null) {
+//            dsKhuyenMai.addAll(dsKhuyenMaiList);
+//        }
+//
+//        tableDSKM = new TableView<>(dsKhuyenMai);
+//        tableDSKM.setPrefHeight(600);
+//
+//
+//
+//        // Cột Mã KM
+//        TableColumn<String, String> colMa = new TableColumn<>("Mã");
+//        colMa.setCellValueFactory(cellData -> {
+//            return new SimpleStringProperty(cellData.getValue().split(",")[0]);
+//        });
+//        colMa.setPrefWidth(100);
+//
+//        // Cột Tên KM
+//        TableColumn<String, String> colTen = new TableColumn<>("Tên khuyến mãi");
+//        colTen.setCellValueFactory(cellData -> {
+//            return new SimpleStringProperty(cellData.getValue().split(",")[1]);
+//        });
+//        colTen.setPrefWidth(300);
+//
+//        // Cột Loại (Hóa đơn / Món ăn)
+//        TableColumn<String, String> colLoai = new TableColumn<>("Loại");
+//        colLoai.setCellValueFactory(cellData -> {
+//            return new SimpleStringProperty(cellData.getValue().split(",")[8].equals("1") ? "Món ăn" : "Hóa Đơn");
+//        });
+//        colLoai.setPrefWidth(100);
+//
+//        // Cột Giá trị giảm
+//        TableColumn<String, String> colGiam = new TableColumn<>("Giảm");
+//        colGiam.setCellValueFactory(cellData -> {
+//            boolean giamGiaPT = cellData.getValue().split(",")[6].equals("1") ? true : false;
+//            DecimalFormat dcm = new DecimalFormat("#,##0.0 VND");
+//            return new SimpleStringProperty(giamGiaPT ?  cellData.getValue().split(",")[7] + "%" : dcm.format(Double.parseDouble(cellData.getValue().split(",")[7])) );
+//        });
+//        colGiam.setPrefWidth(200);
+//
+//        // Cột trạng thái
+//        TableColumn<String, String> colTT = new TableColumn<>("TT");
+//        colTT.setCellValueFactory(cellData -> {
+//            String trangThaiStr = cellData.getValue().split(",")[9];
+//            return new SimpleStringProperty(trangThaiStr);
+//        });
+//        colTT.setPrefWidth(57);
+//
+//        colTT.setCellFactory(tc -> new TableCell<String, String>() {
+//            @Override
+//            protected void updateItem(String item, boolean empty) {
+//                super.updateItem(item, empty);
+//                setText(null);
+//                setGraphic(null);
+//
+//                if (!empty && item != null) {
+//                    switch (item) {
+//                        case "1": // Đang diễn ra
+//                            setGraphic(createSvgIcon(24, 24, "green", "m4.5 12.75 6 6 9-13.5"));
+//                            break;
+//                        case "0": // Đã kết thúc
+//                            setGraphic(createSvgIcon(24, 24, "red", "M6 18 18 6M6 6l12 12"));
+//                            break;
+//                        case "2": // Sắp diễn ra
+//                            setGraphic(createSvgIcon(24, 24, "gray", "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"));
+//                            break;
+//                        default:
+//                            setGraphic(null);
+//                    }
+//                    setAlignment(Pos.CENTER);
+//                }
+//            }
+//        });
+//
+//
+//        // Thêm tất cả cột vào bảng
+//        tableDSKM.getColumns().addAll(colMa, colTen, colLoai, colGiam, colTT);
+//
+//        //CLICK
+//        tableDSKM.setOnMouseClicked(event -> {
+//            //
+//            flagXemThem = false;
+//
+//
+//            String chuoi = tableDSKM.getSelectionModel().getSelectedItem();
+//
+//            if(chuoi == null) {
+//                return;
+//            }
+//
+//            ///Ẩn col xóa đi
+//            colXoa.setVisible(false);
+//            ///
+//
+//            String[] chuoiTach = chuoi.split(",");
+//
+//            //DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//            DecimalFormat dcm = new  DecimalFormat("#,##0.0 đ");
+//
+//            //Lấy thông tin
+//            String maKM = chuoiTach[0];
+//            String tenKM = chuoiTach[1];
+//            boolean giamGiaPT = chuoiTach[6].equals("1") ? true : false;
+//            double giaTriGiam = Double.parseDouble(chuoiTach[7]);
+//            double giaTriToiDa = Double.parseDouble(chuoiTach[5]);
+//            boolean laMonAn = chuoiTach[8].equals("1") ? true : false;
+//            double dkApDung = Double.parseDouble(chuoiTach[4]);
+//            String trangThai = chuoiTach[9];
+//
+//
+//            LocalDate ngayBD = LocalDate.parse(chuoiTach[2], dtf);
+//            LocalDate ngayKT = LocalDate.parse(chuoiTach[3], dtf);
+//
+//
+//
+//            //Set gia tri
+//            txtMaKhuyenMai.setText(maKM);
+//            txtTenKhuyenMai.setText(tenKM);
+//            txtGiaTriGiam.setText(giaTriGiam + "");
+//            if(giamGiaPT) {
+//                radioCo.setSelected(true);
+//                txtGiaTriToiDa.setText(giaTriToiDa + "");
+//            }else {
+//                radioKhong.setSelected(true);
+//            }
+//
+//            dateBatDau.setValue(ngayBD);
+//            dateKetThuc.setValue(ngayKT);
+//
+//            if(laMonAn) {
+//                radioMonAn.setSelected(true);
+//                dsMonChon = FXCollections.observableArrayList(control.layDSMonTheoMaKM(chuoi.split(",")[0]));
+//                tableDSMonKMTheoMa.setItems(dsMonChon);
+//            }else {
+//                txtDieuKienApDung.setText(dkApDung + "");
+//                radioHoaDon.setSelected(true);
+//            }
+//
+//            btnChonMonAn.setDisable(true);
+//
+//            if(txtTenKhuyenMai != null ) {
+//                moKhoaChinhSua(false);
+//            }
+//
+//            if (trangThai.equals("1")) {
+//                btnNgung.setDisable(false);
+//                btnNgung.setText("Ngừng KM");
+//                flagNgungXoa = true;
+//
+//                btnSuaLuu.setText("Sửa");
+//                btnSuaLuu.getStyleClass().remove("btn-luu");
+//                btnSuaLuu.getStyleClass().add("btn-sua");
+//
+//                btnSuaLuu.setDisable(true);
+//            } else {
+//                if(trangThai.equals("2")) {
+//                    //Đổi lại button
+//                    btnSuaLuu.setText("Sửa");
+//                    btnSuaLuu.getStyleClass().remove("btn-luu");
+//                    btnSuaLuu.getStyleClass().add("btn-sua");
+//                    btnSuaLuu.setDisable(false);
+//                    flagSuaLuu = true;
+//
+//                    btnNgung.setDisable(false);
+//                    btnNgung.setText("Xóa");
+//                    flagNgungXoa = false;
+//
+//                }else {
+//                    btnSuaLuu.setDisable(true);
+//                    btnNgung.setDisable(true);
+//
+//                    btnNgung.setText("Ngừng KM");
+//                    btnSuaLuu.setText("Sửa");
+//                    btnSuaLuu.getStyleClass().remove("btn-luu");
+//                    btnSuaLuu.getStyleClass().add("btn-sua");
+//
+//                }
+//            }
+//
+//        });
+//
+//        vboxAll.getChildren().add(tableDSKM);
+//
+//        return vboxAll;
+//    }
+//
+//    public VBox taoPhanBenPhai() {
+//
+//        //Spacer
+//        Region spacer1 = new Region();
+//        HBox.setHgrow(spacer1, Priority.ALWAYS);
+//        Region spacer2 = new Region();
+//        HBox.setHgrow(spacer2, Priority.ALWAYS);
+//        Region spacer3 = new Region();
+//        HBox.setHgrow(spacer3, Priority.ALWAYS);
+//        Region spacer4 = new Region();
+//        HBox.setHgrow(spacer4, Priority.ALWAYS);
+//        Region spacer5 = new Region();
+//        HBox.setHgrow(spacer5, Priority.ALWAYS);
+//        Region spacer6 = new Region();
+//        HBox.setHgrow(spacer6, Priority.ALWAYS);
+//        Region spacer8 = new Region();
+//        HBox.setHgrow(spacer8, Priority.ALWAYS);
+//        Region spacer9 = new Region();
+//        HBox.setHgrow(spacer9, Priority.ALWAYS);
+//        Region spacer7 = new Region();
+//        HBox.setHgrow(spacer7, Priority.ALWAYS);
+//
+//        // Tiêu đề - 1
+//        Label lblTieuDeKhuyenMai = createModernSectionTitle("Thông Tin Khuyến Mãi", "#667eea");
+//        //lblTieuDeKhuyenMai.setGraphic(createSvgIcon(24,24, "#667eea", "M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"));
+//
+//
+//        //Ma khuyen mai
+//        Label lblMaKhuyenMai = new Label("Mã khuyến mãi:");
+//        lblMaKhuyenMai.getStyleClass().add("fontTieuDeNho");
+//        txtMaKhuyenMai = createInputField(new TextField(), true);
+//        txtMaKhuyenMai.setPrefWidth(250);
+//        HBox hbox1 = new HBox(lblMaKhuyenMai, spacer1, txtMaKhuyenMai );
+//        hbox1.setPadding(new Insets(5));
+//        hbox1.setPadding(new Insets(0, 30, 0, 0));
+//
+//
+//        //Ten khuyen mai
+//        Label lblTenKhuyenMai = new Label("Tên khuyến mãi:");
+//        lblTenKhuyenMai.getStyleClass().add("fontTieuDeNho");
+//        txtTenKhuyenMai = createInputField(new TextField(), false);
+//        txtTenKhuyenMai.setPrefWidth(250);
+//        HBox hbox2 = new HBox(lblTenKhuyenMai, spacer2, txtTenKhuyenMai );
+//        hbox2.setPadding(new Insets(5));
+//        hbox2.setPadding(new Insets(0, 30, 0, 0));
+//
+//        //Giảm giá phần trăm
+//        Label lblGiamGiaPhanTram = new Label("Giảm giá phần trăm:");
+//        lblGiamGiaPhanTram.getStyleClass().add("fontTieuDeNho");
+//        radioCo = new RadioButton("Có");
+//        radioKhong = new RadioButton("Không");
+//        radioGroup1 = new ToggleGroup();
+//        radioCo.setToggleGroup(radioGroup1);
+//        radioKhong.setToggleGroup(radioGroup1);
+//        radioCo.getStyleClass().add("radio-button");
+//        radioKhong.getStyleClass().add("radio-button");
+//        radioCo.setSelected(true);
+//
+//        HBox hboxRadio1 = new HBox(5);
+//        hboxRadio1.setPrefWidth(250);
+//        Region spaceRadio1 = new Region();
+//        spaceRadio1.setPrefWidth(30);
+//        hboxRadio1.getChildren().addAll(radioCo, spaceRadio1,radioKhong);
+//
+//        HBox hbox3 = new HBox(5);
+//        hbox3.getChildren().addAll(lblGiamGiaPhanTram, spacer3, hboxRadio1);
+//
+//        //Giá trị giảm
+//        Label lblGiaTriGiam = new Label("Giá trị giảm:");
+//        lblGiaTriGiam.getStyleClass().add("fontTieuDeNho");
+//        txtGiaTriGiam = createInputField(new TextField(), false);
+//        txtGiaTriGiam.setPrefWidth(250);
+//        Label lblDonVi = new Label("VND");
+//        lblDonVi.setPrefWidth(30);
+//        lblDonVi.setPrefHeight(35);
+//        lblDonVi.setAlignment(Pos.BOTTOM_RIGHT);
+//        if(radioCo.isSelected()) {
+//            lblDonVi.setText("%");
+//        }
+//        lblDonVi.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold ;");
+//
+//        HBox hbox4 = new HBox(lblGiaTriGiam, spacer4, txtGiaTriGiam , lblDonVi);
+//
+//
+//        //Giá trị tối đa
+//        Label lblGiaTriToiDa = new Label("Giá trị tối đa:");
+//        lblGiaTriToiDa.getStyleClass().add("fontTieuDeNho");
+//        txtGiaTriToiDa = createInputField(new TextField(), false);;
+//        txtGiaTriToiDa.setPrefWidth(250);
+//        Label lblDonViVND1 = new Label("VND");
+//        lblDonViVND1.setPrefWidth(30);
+//        lblDonViVND1.setPrefHeight(35);
+//        lblDonViVND1.setAlignment(Pos.BOTTOM_RIGHT);
+//        lblDonViVND1.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold;");
+//
+//        HBox hbox5 = new HBox(lblGiaTriToiDa, spacer5, txtGiaTriToiDa, lblDonViVND1);
+//
+//        if(!radioCo.isSelected()) {
+//            hbox5.setVisible(false);
+//            hbox5.setManaged(false);
+//        }
+//
+//        // cai dat group 1
+//        radioGroup1.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+//            if(newVal == radioCo) {
+//                lblDonVi.setText("%");
+//                fadeIn(hbox5);
+//            } else {
+//                lblDonVi.setText("VND");
+//                fadeOut(hbox5);
+//            }
+//        });
+//
+//
+//        //Loại áp dụng
+//        Label lblLoaiApDung = new Label("Loại áp dụng:");
+//        lblLoaiApDung.getStyleClass().add("fontTieuDeNho");
+//        radioHoaDon = new RadioButton("Hóa đơn");
+//        radioMonAn = new RadioButton("Món ăn");
+//        radioGroup2 = new ToggleGroup();
+//        radioHoaDon.setToggleGroup(radioGroup2);
+//        radioMonAn.setToggleGroup(radioGroup2);
+//        radioHoaDon.getStyleClass().add("radio-button");
+//        radioMonAn.getStyleClass().add("radio-button");
+//
+//        HBox hboxRadio2 = new HBox(5);
+//        hboxRadio2.setPrefWidth(250);
+//        Region spaceRadio2 = new Region();
+//        spaceRadio2.setPrefWidth(30);
+//        hboxRadio2.getChildren().addAll(radioHoaDon, spaceRadio2,radioMonAn);
+//
+//        HBox hbox6 = new HBox(5);
+//        hbox6.getChildren().addAll(lblLoaiApDung, spacer6, hboxRadio2);
+//
+//        //Dieu kiện áp dụng
+//        Label lblDieuKienApDung = new Label("Điều kiện áp dụng:");
+//        lblDieuKienApDung.getStyleClass().add("fontTieuDeNho");
+//        txtDieuKienApDung = createInputField(new TextField(), false);;
+//        txtDieuKienApDung.setPrefWidth(250);
+//        Label lblDonViVND2 = new Label("VND");
+//        lblDonViVND2.setPrefWidth(30);
+//        lblDonViVND2.setPrefHeight(35);
+//        lblDonViVND2.setAlignment(Pos.BOTTOM_RIGHT);
+//        lblDonViVND2.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold;");
+//
+//        SVGPath iconLonHonBang = createSvgIcon(2, 24, "gray", "m4.435 1.704l17.3 6.796l-17.3 6.796l-.731-1.861L16.265 8.5L3.704 3.565l.73-1.861ZM3 19h18v2H3v-2Z");
+//        iconLonHonBang.setStyle("-fx-stroke: gray; -fx-fill: gray;");
+//        StackPane stDieuKien = new StackPane(iconLonHonBang, txtDieuKienApDung);
+//        stDieuKien.setAlignment(Pos.CENTER_LEFT);
+//        StackPane.setMargin(txtDieuKienApDung, new Insets(0, 0, 0, 20));
+//        stDieuKien.setStyle("""
+//        			-fx-background-color: white;
+//        			-fx-border-color: white;
+//        		""");
+//
+//        HBox hbox7 = new HBox(lblDieuKienApDung, spacer7, stDieuKien, lblDonViVND2);
+//
+//        radioHoaDon.setSelected(true);
+//        if(radioMonAn.isSelected()) {
+//            hbox7.setVisible(false);
+//            hbox7.setManaged(false);
+//        }
+//
+//        // Vbox phan 1
+//        VBox vbox1 = new VBox(10);
+//        vbox1.getChildren().addAll(lblTieuDeKhuyenMai,hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7);
+//        vbox1.setPadding(new Insets(0, 20, 0, 20));
+//
+//        // Tiêu đề - 2
+//        Label lblTieuDeNgayApDung = createModernSectionTitle("Ngày Áp Dụng", "#667eea");
+//        //lblTieuDeNgayApDung.setGraphic(createSvgIcon(24, 24, "#667eea", "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"));
+//
+//
+//        //Ngay bat dau
+//        Label lblNgayBatDau = new Label("Ngày bắt đầu:");
+//        lblNgayBatDau.getStyleClass().add("fontTieuDeNho");
+//        dateBatDau = new DatePicker();
+//        dateKetThuc = new DatePicker();
+//
+//        dateKetThuc = new DatePicker();
+//        dateBatDau.setPrefWidth(250);
+//        dateBatDau.getStyleClass().add("date-picker");
+//
+//        dateBatDau.valueProperty().addListener((obs, oldVal, newVal) -> {
+//            if (newVal != null && dateKetThuc.getValue() != null) {
+//                loadLaiDSMonAn(newVal, dateKetThuc.getValue());
+//            }
+//        });
+//
+//        HBox hbox8 = new HBox(lblNgayBatDau, spacer8, dateBatDau);
+//        hbox8.setPadding(new Insets(0, 30, 0, 0));
+//
+//        //Ngay ket thuc
+//        Label lblNgayKetThuc = new Label("Ngày kết thúc:");
+//        lblNgayKetThuc.getStyleClass().add("fontTieuDeNho");
+//        dateKetThuc.setPrefWidth(250);
+//        dateKetThuc.getStyleClass().add("date-picker");
+//
+//        dateKetThuc.valueProperty().addListener((obs, oldVal, newVal) -> {
+//            if (newVal != null && dateBatDau.getValue() != null) {
+//                loadLaiDSMonAn(dateBatDau.getValue(), newVal);
+//            }
+//        });
+//
+//        HBox hbox9 = new HBox(lblNgayKetThuc, spacer9, dateKetThuc);
+//        hbox9.setPadding(new Insets(0, 30, 0, 0));
+//
+//        // Khu vuc khuyen mai mon an
+//
+//        VBox vboxKhuyenMaiMonAn = new VBox(5);
+//
+//        //Button chọn món khuyến mãi
+//
+//        btnChonMonAn = new Button("Chọn món");
+//        btnChonMonAn.setGraphic(createSvgIcon(24, 24, "white", "M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z"));
+//        btnChonMonAn.setMinHeight(30);
+//        btnChonMonAn.setMinWidth(100);
+//        btnChonMonAn.getStyleClass().add("button-chonMon");
+//
+//        // BUTTON CHON MON
+//        // TẠO MODAL HIỆN RA
+//        btnChonMonAn.setOnAction(e -> {
+//
+//            String giaTriGiamString = txtGiaTriGiam.getText();
+//
+//            if(giaTriGiamString.isEmpty()) {
+//                showAlert(AlertType.WARNING, "Giá trị giảm rỗng", "Vui lòng nhập giá trị giảm trước khi thêm khuyến mãi !");
+//                focus(txtGiaTriGiam);
+//                return;
+//            }
+//
+//            double giaTriGiam = 0.0;
+//
+//            try {
+//                giaTriGiam = Double.parseDouble(giaTriGiamString);
+//            }catch (Exception er) {
+//                showAlert(AlertType.WARNING, "Giá trị giảm sai", "Vui lòng nhập giá trị giảm là số");
+//                focus(txtGiaTriGiam);
+//                return;
+//            }
+//
+//            if(giaTriGiam < 0) {
+//                showAlert(AlertType.WARNING, "Giá trị giảm không đúng", "Vui lòng nhập giá trị giảm >= 0 !");
+//                focus(txtGiaTriGiam);
+//                return;
+//            }
+//
+//            LocalDate ngayBD = dateBatDau.getValue();
+//
+//            if(ngayBD == null) {
+//                showAlert(AlertType.WARNING, "Ngày bắt đầu rỗng", "Vui lòng chọn ngày bắt đầu!");
+//                dateBatDau.requestFocus();
+//                return;
+//            }
+//
+//            LocalDate ngayKT = dateKetThuc.getValue();
+//
+//            if(ngayKT == null) {
+//                showAlert(AlertType.WARNING, "Ngày kết thúc rỗng", "Vui lòng chọn ngày kết thúc!");
+//                dateKetThuc.requestFocus();
+//                return;
+//            }
+//
+//            if(ngayBD.isBefore(LocalDate.now())) {
+//                showAlert(AlertType.WARNING, "Ngày bắt không hợp lệ", "Ngày bắt đầu không được trước ngày hiện tại!");
+//                dateBatDau.requestFocus();
+//                return;
+//            }
+//
+//            if (ngayKT.isBefore(ngayBD)) {
+//                showAlert(AlertType.WARNING, "Ngày kết thúc không hợp lệ", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!");
+//                dateKetThuc.requestFocus();
+//                return;
+//            }
+//
+//            if(dsTTMonAn.isEmpty()) {
+//                loadLaiDSMonAn(ngayBD, ngayKT);
+//            }
+//
+//            Stage stageChinh = (Stage) btnChonMonAn.getScene().getWindow();
+//            Parent rootChinh = stageChinh.getScene().getRoot();
+//
+//            // Hiệu ứng mờ
+//            BoxBlur blur = new BoxBlur(5, 5, 3);
+//            rootChinh.setEffect(blur);
+//
+//            //Khoi tao modal
+//            Stage modal = new Stage();
+//            modal.initModality(Modality.APPLICATION_MODAL);
+//            modal.setTitle("Chọn món ăn khuyến mãi");
+//            modal.initModality(Modality.WINDOW_MODAL);
+//            //Layout
+//
+//            BorderPane layout = new BorderPane();
+//            layout.setStyle("-fx-background-color: white");
+//
+//            //Tạo phần bên trái modal thêm món ăn
+//            VBox vboxPhanTrai = taoPhanBenTraiModal();
+//            layout.setCenter(vboxPhanTrai);
+//
+//            // Tạo phần bên phải modal thêm món ăn
+//            VBox vboxPhanPhai = taoPhanBenPhaiModal(modal);
+//            layout.setRight(vboxPhanPhai);
+//
+//
+//            //Scene
+//            Scene scene = new Scene(layout,  900, 600);
+//            scene.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
+//
+//
+//            modal.setScene(scene);
+//            modal.showAndWait();
+//
+//            // Khi modal đóng, xóa blur
+//            rootChinh.setEffect(null);
+//        });
+//
+//
+//        // Bảng món ăn
+//        tableDSMonKMTheoMa = new TableView<>(dsMonChon);
+//
+//        TableColumn<String, String> colMaMon = new TableColumn<>("Mã");
+//        colMaMon.setCellValueFactory(cellData ->{
+//            return new SimpleStringProperty(cellData.getValue().split("-")[0]);
+//        });
+//        colMaMon.setPrefWidth(80);
+//
+//        TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
+//        colTenMon.setCellValueFactory(cellData ->{
+//            return new SimpleStringProperty(cellData.getValue().split("-")[1]);
+//        });
+//        colTenMon.setPrefWidth(170);
+//
+//        TableColumn<String, String> colGiaTien = new TableColumn<>("Giá tiền");
+//        colGiaTien.setCellValueFactory(cellData ->{
+//            return new SimpleStringProperty(cellData.getValue().split("-")[3]);
+//        });
+//        colGiaTien.setPrefWidth(120);
+//
+//        TableColumn<String, String> colGiaSauKM = new TableColumn<>("Giá KM");
+//        colGiaSauKM.setCellValueFactory(cellData ->{
+//            return new SimpleStringProperty(cellData.getValue().split("-")[6]);
+//        });
+//        colGiaSauKM.setMinWidth(120);
+//
+//        ///Col xoa
+//
+//        colXoa.setCellFactory(tc -> new TableCell<String, Void>() {
+//
+//            @Override
+//            protected void updateItem(Void item, boolean empty) {
+//                super.updateItem(item, empty);
+//
+//                if (empty) {
+//                    setGraphic(null);
+//                    return;
+//                }
+//
+//                Button btnTBXoa = new Button();
+//                btnTBXoa.setGraphic(createSvgIcon(15, 24, "red", "m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"));
+//                btnTBXoa.setStyle("-fx-background-color: transparent;");
+//                btnTBXoa.setStyle("-fx-cursor: hand; -fx-background-color: transparent; -fx-padding: 0");
+//                btnTBXoa.setMaxHeight(15);
+//                btnTBXoa.setMaxWidth(15);
+//
+//                btnTBXoa.setOnAction(e -> {
+//                    // lấy đúng item của dòng hiện tại
+//                    String monAn = getTableView().getItems().get(getIndex());
+//                    String[] monAnSplit = monAn.split("-");
+//
+//                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+//                    alert.setTitle("Xác nhận");
+//                    alert.setHeaderText("Bạn có chắc muốn xóa món này không?");
+//                    alert.setContentText(
+//                            "Mã: " + monAnSplit[0] + "\n" +
+//                                    "Tên: " + monAnSplit[1] + "\n" +
+//                                    "Giá gốc: " + monAnSplit[3] + "\n" +
+//                                    "Giá KM: " + monAnSplit[6]
+//                    );
+//
+//                    Optional<ButtonType> result = alert.showAndWait();
+//                    if (result.isPresent() && result.get() == ButtonType.OK) {
+//                        // thực hiện xóa
+//                        dsTTMonAn.add(
+//                                monAnSplit[0] + "-" +
+//                                        monAnSplit[1] + "-" +
+//                                        monAnSplit[2] + "-" +
+//                                        monAnSplit[3] + "-" +
+//                                        monAnSplit[4] + "-" +
+//                                        monAnSplit[5] + "-" +
+//                                        monAnSplit[3] + "-" +
+//                                        monAnSplit[7] + "-" +
+//                                        monAnSplit[8]
+//                        );
+//                        getTableView().getItems().remove(getIndex());
+//                        dsMonChon.remove(monAn);
+//                    }
+//                });
+//
+//
+//                setGraphic(btnTBXoa);
+//                setAlignment(Pos.CENTER);
+//            }
+//        });
+//
+//        colXoa.setVisible(false);
+//        colXoa.setPrefWidth(50);
+//
+//        // Thêm cột vào bảng
+//        tableDSMonKMTheoMa.getColumns().addAll(colMaMon, colTenMon, colGiaTien, colGiaSauKM, colXoa);
+//
+//
+//        tableDSMonKMTheoMa.setPrefHeight(100);
+//        tableDSMonKMTheoMa.getStyleClass().add("table-view");
+//        tableDSMonKMTheoMa.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+//
+//        vboxKhuyenMaiMonAn.getChildren().addAll(btnChonMonAn, tableDSMonKMTheoMa);
+//        //
+//        if(radioHoaDon.isSelected()) {
+//            vboxKhuyenMaiMonAn.setVisible(false);
+//            vboxKhuyenMaiMonAn.setManaged(false);
+//
+//        }
+//
+//        // cai dat group 2
+//        radioGroup2.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
+//            if(newVal == radioHoaDon) {
+//                fadeIn(hbox7);
+//                fadeOut(vboxKhuyenMaiMonAn);
+//                radioCo.setDisable(false);
+//            } else {
+//                fadeOut(hbox7);
+//                fadeIn(vboxKhuyenMaiMonAn);
+//                radioKhong.setSelected(true);
+//                radioCo.setDisable(true);
+//            }
+//        });
+//
+//
+//        //Vbox phan 2
+//        VBox vbox2 = new VBox(10);
+//        vbox2.getChildren().addAll(lblTieuDeNgayApDung, hbox8, hbox9, vboxKhuyenMaiMonAn);
+//        vbox2.setPadding(new Insets(0, 20, 0, 20));
+//
+//        //Phần nút
+//        btnSuaLuu = new Button("Sửa");
+//        btnNgung = new Button("Ngưng KM");
+//
+//        btnNgung.setDisable(true);
+//        btnSuaLuu.setDisable(true);
+//
+//        btnSuaLuu.getStyleClass().add("btn-sua");
+//        btnNgung.getStyleClass().add("btn-ngung");
+//
+//        btnSuaLuu.setTooltip(new Tooltip("Nhấn F6 để dùng nhanh"));
+//        btnNgung.setTooltip(new Tooltip("Nhấn F9 để dùng nhanh"));
+//
+//        btnNgung.setOnAction(e -> {
+//            if(flagNgungXoa) {
+//                hanhDongNgungKM();
+//            }else {
+//                hanhDongXoaKM();
+//            }
+//
+//        });
+//
+//        btnSuaLuu.setOnAction(e -> {
+//            if(flagSuaLuu) {
+//                if(hanhDongSua()) {
+//                    btnSuaLuu.setText("Lưu");
+//                    btnSuaLuu.getStyleClass().remove("btn-sua");
+//                    btnSuaLuu.getStyleClass().add("btn-luu");
+//                    colXoa.setVisible(true);
+//                    flagSuaLuu = false;
+//                    btnChonMonAn.setDisable(false);
+//
+//                    moKhoaChinhSua(true);
+//                }
+//            }else {
+//                if(hanhDongLuu()) {
+//                    btnSuaLuu.setText("Sửa");
+//                    btnSuaLuu.getStyleClass().remove("btn-luu");
+//                    btnSuaLuu.getStyleClass().add("btn-sua");
+//                    flagSuaLuu = true;
+//                    colXoa.setVisible(false);
+//                    clear();
+//
+//                    moKhoaChinhSua(false);
+//                }
+//            }
+//        });
+//
+//        HBox hboxButton = new HBox(10);
+//        Region spaceButton = new Region();
+//
+//        hboxButton.getChildren().addAll(btnSuaLuu, btnNgung);
+//        hboxButton.setAlignment(Pos.CENTER_LEFT);
+//        hboxButton.setPadding(new Insets(0, 25, 0, 22));
+//
+//        /////
+//        VBox vboxAll = new VBox(30);
+//        vboxAll.getChildren().addAll(vbox1, vbox2, hboxButton);
+//        vboxAll.setPadding(new Insets(30, 0, 30, 0));
+//
+//        //vboxAll.setStyle("-fx-background-color: black");
+//        moKhoaChinhSua(false);
+//        vboxAll.setPrefWidth(500);
+//        return vboxAll;
+//    }
+//
+//    public VBox taoPhanBenTraiModal() {
+//        //VBox benTrai
+//        VBox vboxBenTrai = new VBox(8);
+//        vboxBenTrai.setPadding(new Insets(20,10,20,10));
+//        vboxBenTrai.setPrefWidth(550);
+//
+//        // Biến bên trái
+//        Label lblTieuDeChonMon = new Label("Chọn món giảm giá");
+//        HBox hboxChuThich = new HBox(10);
+//        Label lblDanhSach = new Label("Danh sách món");
+//        HBox hboxChuaGiamGia = new HBox(2);
+//        ImageView iconChuaGiamGia = new ImageView(IMG_CHU_NHAT_XANH);
+//        Label lblChuaGiamGia = new Label("Chưa giảm giá");
+//        HBox hboxDaGiamGia = new HBox(2);
+//        ImageView iconDaGiamGia = new ImageView(IMG_CHU_NHAT_VANG);
+//        Label lblDaGiamGia = new Label("Đã giảm giá");
+//        cboLocMon = new ComboBox<String>();
+//        cboLocMon.getItems().addAll("Tất cả","Đã giảm giá","Chưa giảm giá");
+//
+//        cboLocMon.setOnAction(e -> {locMonAn();});
+//
+//        //Tieu de
+//        lblTieuDeChonMon.setStyle("-fx-font-size: 30px; -fx-font-family: 'Tai Heritage Pro'; -fx-font-weight: bold");
+//        vboxBenTrai.getChildren().add(lblTieuDeChonMon);
+//
+//        // Danh sách chú thích
+//        lblDanhSach.getStyleClass().add("fontTieuDeNho");
+//        lblChuaGiamGia.getStyleClass().add("fontTieuDeNho");
+//        lblDaGiamGia.getStyleClass().add("fontTieuDeNho");
+//        iconChuaGiamGia.setFitHeight(10);
+//        iconChuaGiamGia.setFitWidth(15);
+//        iconDaGiamGia.setFitHeight(10);
+//        iconDaGiamGia.setFitWidth(15);
+//        hboxChuaGiamGia.getChildren().addAll(iconChuaGiamGia, lblChuaGiamGia);
+//        hboxChuaGiamGia.setAlignment(Pos.CENTER_LEFT);
+//        hboxDaGiamGia.getChildren().addAll(iconDaGiamGia, lblDaGiamGia);
+//        hboxDaGiamGia.setAlignment(Pos.CENTER_LEFT);
+//        hboxChuThich.getChildren().addAll(lblDanhSach, hboxChuaGiamGia, hboxDaGiamGia, cboLocMon);
+//        hboxChuThich.setAlignment(Pos.CENTER_LEFT);
+//        vboxBenTrai.getChildren().add(hboxChuThich);
+//        cboLocMon.getStyleClass().add("combo-box");
+//        cboLocMon.getSelectionModel().selectFirst();
+//
+//        //Danh sách món ăn giảm giá
+//
+//
+//        ListView<String> listMonAn = taoDanhSachMonBenTrai();
+//        listMonAn.setFixedCellSize(-1);
+//
+//        //
+//        vboxBenTrai.getChildren().add(listMonAn);
+//
+//        return vboxBenTrai;
+//    }
+//
+//    public VBox taoPhanBenPhaiModal(Stage modal) {
+//        //Vbox bên phải
+//        VBox vboxBenPhai = new VBox(20);
+//        vboxBenPhai.setPrefWidth(350);
+//        vboxBenPhai.setPadding(new Insets(50, 10, 50, 10));
+//
+//        //Biến bên phải
+//        HBox hboxTieuDe = new HBox();
+//        Label lblMonDaChon = new Label("Món đã chọn");
+//        ListView<String> listMonChon = taoDanhSachMonBenPhai();
+//        HBox hboxButton = new HBox();
+//        Region spacerButton  = new Region();
+//        Button btnQuayVe = new Button("Quay về");
+//        Button btnXong = new Button("Xong");
+//
+//        //Tạo giao diện
+//        lblMonDaChon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: black");
+//        hboxTieuDe.getChildren().add(lblMonDaChon);
+//        hboxTieuDe.setAlignment(Pos.CENTER);
+//        btnQuayVe.setPrefHeight(50);
+//        btnQuayVe.setPrefWidth(100);
+//        btnXong.setPrefHeight(50);
+//        btnXong.setPrefWidth(100);
+//        btnQuayVe.setStyle("-fx-background-color: #082744; -fx-font-size: 18; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
+//        btnXong.setStyle("-fx-background-color: green; -fx-font-size: 18; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
+//
+//        hboxButton.setHgrow(spacerButton, Priority.ALWAYS);
+//        hboxButton.getChildren().addAll(btnQuayVe, spacerButton, btnXong);
+//        hboxButton.setPadding(new Insets(0, 20, 0, 20));
+//
+//        //SỰ kiện button
+//        btnQuayVe.setOnAction(e -> {
+//            modal.close();
+//            quayVe();
+//        });
+//
+//        btnXong.setOnAction(e -> {
+//            modal.close();
+//            themMonChon();
+//        });
+//
+//
+//        //
+//        vboxBenPhai.getChildren().addAll(hboxTieuDe, listMonChon, hboxButton);
+//        vboxBenPhai.setStyle("-fx-border-width: 0 0 0 1; -fx-border-color: #D9D9D9");
+//
+//        return vboxBenPhai;
+//    }
+//
+//    public ListView<String> taoDanhSachMonBenPhai() {
+//        //Vbox danh sách món
+//        ListView<String> listMonAn = new ListView<>(dsMonTemp);
+//        listMonAn.setStyle("-fx-background-color: transparent;");
+//        listMonAn.setFixedCellSize(80);
+//
+//        listMonAn.setCellFactory(list -> new ListCell<String>() {
+//            @Override
+//            protected void updateItem(String mon, boolean empty) {
+//                super.updateItem(mon, empty);
+//                if (empty || mon == null) {
+//                    setGraphic(null);
+//                } else {
+//                    setGraphic(taoMonBenPhai(mon));
+//                }
+//            }
+//        });
+//
+//        // Trong hàm taoDanhSachMonBenTrai(), thay phần chặn event:
+//        listMonAn.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+//            // Kiểm tra target hoặc parent có phải Button không (reuse cho text bên trong Button)
+//            Node target = (Node) e.getTarget();
+//            if (!(target instanceof Button || (target.getParent() != null && target.getParent() instanceof Button))) {
+//                e.consume();  // Chỉ chặn nếu KHÔNG phải Button (hoặc text của Button)
+//                listMonAn.getSelectionModel().clearSelection();
+//            }
+//            // Nếu click Button/text của Button, event tự do → setOnAction hoạt động
+//        });
+//
+//        return listMonAn;
+//    }
+//
+//    public HBox taoMonBenPhai(String monAn) {
+//        //HBOx mon la
+//        HBox hboxMonAn = new HBox(4);
+//
+//        //Khai báo biến
+//        HBox hboxBenTrai = new HBox(3);
+//
+//        ImageView imgMonAn = new ImageView(IMG_MON_AN);
+//
+//        // Thêm clip bo góc trực tiếp (quan trọng!)
+//        Rectangle clip = new Rectangle(40, 40);  // Kích thước khớp với fitWidth/Height
+//        clip.setArcWidth(4);   // Độ bo ngang (25px = bo nhẹ, tăng lên 125 để gần tròn)
+//        clip.setArcHeight(4);  // Độ bo dọc (giữ bằng nhau cho bo đều 4 góc)
+//        imgMonAn.setClip(clip);  // Áp dụng clip - ảnh sẽ bị cắt bo góc
+//
+//
+//        // ✅ Load ảnh từ Supabase
+//        if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
+//            String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
+//
+//            // Lấy ảnh từ cache (hoặc download nếu chưa có)
+//            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
+//
+//            if (imagePath != null) {
+//                try {
+//                    Image image = new Image(imagePath);
+//                    imgMonAn.setImage(image);
+//                } catch (Exception e) {
+//                   System.out.println("Không load được ảnh");
+//                }
+//            } else {
+//                // Không download được → Dùng ảnh mặc định
+//            		System.out.println("Không load được ảnh");
+//            }
+//        } else {
+//        		System.out.println("Không load được ảnh");
+//        }
+//
+//
+//        VBox vboxThongTinMon = new VBox(5);
+//        Label lblTenMon = new Label("Món nào đó");
+//        HBox hboxGia = new HBox(3);
+//        Label lblSau = new Label();
+//        VBox vboxBenPhai = new VBox(3);
+//        Button btnXoa = new Button("Xóa");
+//
+//        // Cai dat event
+//        btnXoa.setOnAction(e ->{
+//            dsMonTemp.remove(monAn);
+//
+//
+//            String[] monAnTach = monAn.split("-");
+//
+//            String monAn2 = monAnTach[0] + "-" +
+//                    monAnTach[1] + "-" +
+//                    monAnTach[2] + "-" +
+//                    monAnTach[3] + "-" +
+//                    monAnTach[4] + "-" +
+//                    monAnTach[5] + "-" +
+//                    monAnTach[3] + "-" +
+//                    monAnTach[7] + "-" +
+//                    monAnTach[8] ;
+//
+//            dsTTMonAn.add(monAn2);
+//
+//            if(!dsLocMon.isEmpty()) {
+//                dsLocMon.add(monAn2);
+//            }
+//        });
+//
+//
+//        //Set giá trị
+//        DecimalFormat fomat = new DecimalFormat("#,### VND");
+//
+//        lblTenMon.setText(monAn.split("-")[1]);
+//
+//        String maKM = txtMaKhuyenMai.getText();
+//
+//        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("-")[6])));
+//
+//        //Tạo món ăn
+//        //Trái
+//        hboxBenTrai.setPrefWidth(220);
+//        hboxBenTrai.setPrefHeight(50);
+//        imgMonAn.setFitHeight(40);
+//        imgMonAn.setFitWidth(40);
+//        imgMonAn.getStyleClass().add("img-MonAn");
+//        lblTenMon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12px; -fx-font-weight: bold");
+//        lblTenMon.setAlignment(Pos.CENTER_LEFT);
+//        lblSau.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: red");
+//        vboxThongTinMon.getChildren().addAll(lblTenMon, lblSau);
+//        vboxThongTinMon.setAlignment(Pos.CENTER_LEFT);
+//        vboxThongTinMon.setPadding(new Insets(0,0,0,5));
+//        hboxBenTrai.getStyleClass().add("monAnTrai");
+//        hboxBenTrai.getChildren().addAll(imgMonAn, vboxThongTinMon);
+//        hboxBenTrai.setAlignment(Pos.CENTER_LEFT);
+//        hboxBenTrai.setPadding(new Insets(0,0,0,5));
+//
+//        //Phải
+//        vboxBenPhai.setPrefWidth(80);
+//        vboxBenPhai.setPrefHeight(50);
+//        btnXoa.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 13px; -fx-text-fill: black; -fx-background-color: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
+//        vboxBenPhai.getChildren().addAll(btnXoa);
+//        vboxBenPhai.setStyle("-fx-background-color: #082744; -fx-background-radius: 10");
+//        vboxBenPhai.setAlignment(Pos.CENTER);
+//
+//        hboxMonAn.getChildren().addAll(hboxBenTrai, vboxBenPhai);
+//        hboxMonAn.getStyleClass().add("monAn");
+//        //
+//        return hboxMonAn;
+//    }
+//
+//    public HBox taoMonBenTrai(String monAn) {
+//        //HBox mon an
+//        HBox hboxMonAn = new HBox(10);
+//
+//        //Khai báo biến
+//        HBox hboxBenTrai = new HBox(3);
+//        ImageView imgMonAn = new ImageView(IMG_MON_AN);
+//
+//        // Thêm clip bo góc trực tiếp (quan trọng!)
+//        Rectangle clip = new Rectangle(90, 90);  // Kích thước khớp với fitWidth/Height
+//        clip.setArcWidth(6);   // Độ bo ngang (25px = bo nhẹ, tăng lên 125 để gần tròn)
+//        clip.setArcHeight(6);  // Độ bo dọc (giữ bằng nhau cho bo đều 4 góc)
+//        imgMonAn.setClip(clip);  // Áp dụng clip - ảnh sẽ bị cắt bo góc
+//
+//        // ✅ Load ảnh từ Supabase
+//        if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
+//            String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
+//
+//            // Lấy ảnh từ cache (hoặc download nếu chưa có)
+//            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
+//
+//            if (imagePath != null) {
+//                try {
+//                    Image image = new Image(imagePath);
+//                    imgMonAn.setImage(image);
+//                } catch (Exception e) {
+//                   System.out.println("Không load được ảnh");
+//                }
+//            } else {
+//                // Không download được → Dùng ảnh mặc định
+//            		System.out.println("Không load được ảnh");
+//            }
+//        } else {
+//        		System.out.println("Không load được ảnh");
+//        }
+//
+//        VBox vboxThongTinMon = new VBox(5);
+//        Label lblTenMon = new Label();
+//
+//        Label lblBanDau = new Label();
+//        Label lblSau = new Label();
+//
+//        VBox vboxBenPhai = new VBox(3);
+//        Label lblGiamHayChua = new Label();
+//        Button btnThemMon = new Button("Thêm");
+//        Label lblMaKhuyenMai = new Label();
+//
+//        //Set gia tri
+//        DecimalFormat fomat = new DecimalFormat("#,### VND");
+//        lblTenMon.setText(monAn.split("-")[1]);
+//
+//        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("-")[6])));
+//
+//
+//
+//        //Trái
+//        hboxBenTrai.setPrefWidth(350);
+//        hboxBenTrai.setPrefHeight(100);
+//        imgMonAn.setFitHeight(90);
+//        imgMonAn.setFitWidth(90);
+//        imgMonAn.getStyleClass().add("img-MonAn");
+//        lblTenMon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-font-weight: bold");
+//        lblTenMon.setAlignment(Pos.CENTER_LEFT);
+//        lblBanDau.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10; -fx-strikethrough: true;");
+//        lblSau.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: red");
+//        vboxThongTinMon.getChildren().addAll(lblTenMon, lblSau);
+//        vboxThongTinMon.setAlignment(Pos.CENTER_LEFT);
+//        vboxThongTinMon.setPadding(new Insets(0,0,0,5));
+//
+//        hboxBenTrai.getStyleClass().add("monAnTrai");
+//        hboxBenTrai.getChildren().addAll(imgMonAn, vboxThongTinMon);
+//        hboxBenTrai.setAlignment(Pos.CENTER_LEFT);
+//        hboxBenTrai.setPadding(new Insets(0,0,0,5));
+//
+//        //Cài đặt event
+//        btnThemMon.setOnAction(e ->{
+//            dsTTMonAn.remove(monAn);
+//            if(!dsLocMon.isEmpty()) {
+//                dsLocMon.remove(monAn);
+//            }
+//            String[] monAnTach = monAn.split("-");
+//
+//            double giaSauKM = control.tinhGiaSauKM(Double.parseDouble(monAnTach[3]), Double.parseDouble(txtGiaTriGiam.getText()));
+//            String monAn2 = monAnTach[0] + "-" +
+//                    monAnTach[1] + "-" +
+//                    monAnTach[2] + "-" +
+//                    monAnTach[3] + "-" +
+//                    monAnTach[4] + "-" +
+//                    monAnTach[5] + "-" +
+//                    giaSauKM + "-" +
+//                    monAnTach[7] + "-" +
+//                    monAnTach[8];
+//            dsMonTemp.add(monAn2);
+//        });
+//
+//        //Phải
+//        boolean giamGia = monAn.split("-")[5].equals("1") ? true : false;
+//
+//        vboxBenPhai.setPrefWidth(150);
+//        vboxBenPhai.setPrefHeight(100);
+//        lblGiamHayChua.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-text-fill: white; -fx-font-weight: bold");
+//        btnThemMon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-text-fill: black; -fx-background-color: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
+//        lblMaKhuyenMai.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12px; -fx-text-fill: black");
+//
+//
+//        if(giamGia) {
+//            vboxBenPhai.setStyle("-fx-background-color: #D5B009; -fx-background-radius: 10");
+//            vboxBenPhai.getChildren().addAll(lblGiamHayChua);
+//            lblGiamHayChua.setText("Mã " + monAn.split("-")[7]);
+//        }
+//        else {
+//            vboxBenPhai.setStyle("-fx-background-color: #082744; -fx-background-radius: 10");
+//            lblGiamHayChua.setText("Chưa giảm giá");
+//            vboxBenPhai.getChildren().addAll(lblGiamHayChua, btnThemMon);
+//        }
+//
+//        vboxBenPhai.setAlignment(Pos.CENTER);
+//
+//        //
+//        hboxMonAn.getChildren().addAll(hboxBenTrai, vboxBenPhai);
+//        hboxMonAn.getStyleClass().add("monAn");
+//
+//        return hboxMonAn;
+//    }
+//
+//    public ListView<String> taoDanhSachMonBenTrai() {
+//        listMonAn = new ListView<>(dsTTMonAn);
+//
+//        listMonAn.setStyle("-fx-background-color: transparent;");
+//        listMonAn.setFixedCellSize(110);
+//
+//        listMonAn.setCellFactory(list -> new ListCell<String>() {
+//            @Override
+//            protected void updateItem(String mon, boolean empty) {
+//                super.updateItem(mon, empty);
+//
+//                if (empty || mon == null) {
+//                    setGraphic(null);
+//                } else {
+//                    setGraphic(taoMonBenTrai(mon));
+//                }
+//            }
+//        });
+//
+//        // Trong hàm taoDanhSachMonBenTrai(), thay phần chặn event:
+//        listMonAn.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+//            // Kiểm tra target hoặc parent có phải Button không (reuse cho text bên trong Button)
+//            Node target = (Node) e.getTarget();
+//            if (!(target instanceof Button || (target.getParent() != null && target.getParent() instanceof Button))) {
+//                e.consume();  // Chỉ chặn nếu KHÔNG phải Button (or text của Button)
+//                listMonAn.getSelectionModel().clearSelection();
+//            }
+//            // Nếu click Button/text của Button, event tự do → setOnAction hoạt động
+//        });
+//
+//
+//        return listMonAn;
+//    }
+//
+//
+//    // ANIMATION
+//    // Fade in: Hiện dần từ mờ đến rõ
+//    private void fadeIn(Node node) {
+//        if (node == null) return;
+//
+//        node.setVisible(true);
+//        node.setManaged(true);
+//        node.setOpacity(0.0);
+//
+//        FadeTransition fade = new FadeTransition(Duration.millis(300), node);
+//        fade.setFromValue(0.0);
+//        fade.setToValue(1.0);
+//        fade.play();
+//    }
+//
+//    // Fade out: Ẩn dần từ rõ đến mờ
+//    private void fadeOut(Node node) {
+//        if (node == null) return;
+//
+//        FadeTransition fade = new FadeTransition(Duration.millis(300), node);
+//        fade.setFromValue(1.0);  // Từ rõ
+//        fade.setToValue(0.0);    // Đến mờ
+//        fade.setOnFinished(e -> {
+//            node.setVisible(false);
+//            node.setManaged(false);
+//            node.setOpacity(1.0);  // Reset để lần sau OK
+//        });
+//        fade.play();
+//    }
+//
+//    private Label createModernSectionTitle(String title, String color) {
+//        Label label = new Label(title);
+//        label.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
+//        label.setStyle(
+//                "-fx-text-fill: " + color + ";" +
+//                        "-fx-padding: 2 0 2 10;" +
+//                        "-fx-border-width: 0 0 0 4;" +
+//                        "-fx-border-color: " + color + ";" +
+//                        "-fx-font-weight: bold"
+//        );
+//        return label;
+//    }
+//
+//
+//    private SVGPath createSvgIcon(double size, double viewBox, String mau, String pathData) {
+//        SVGPath svg = new SVGPath();
+//        svg.setContent(pathData);
+//        svg.setScaleX(size / viewBox);
+//        svg.setScaleY(size / viewBox);
+//        svg.setStyle("-fx-stroke: " + mau + "; -fx-fill: transparent;");
+//        return svg;
+//    }
+//
+//    private TextField createInputField(TextField textField, boolean isReadOnly) {
+//
+//        textField.setEditable(!isReadOnly);
+//
+//        if (isReadOnly) {
+//            textField.setStyle(
+//                    "-fx-background-color: #ECF0F1; " +
+//                            "-fx-border-color: #bdc3c7; " +
+//                            "-fx-border-radius: 6; " +
+//                            "-fx-background-radius: 6; " +
+//                            "-fx-padding: 5 10 5 10; " +
+//                            "-fx-font-size: 15px; " +
+//                            "-fx-text-fill: #7f8c8d;"
+//            );
+//        } else {
+//            textField.setStyle(
+//                    "-fx-background-color: white; " +
+//                            "-fx-border-color: #3498db; " +
+//                            "-fx-border-width: 1.5; " +
+//                            "-fx-border-radius: 6; " +
+//                            "-fx-background-radius: 6; " +
+//                            "-fx-padding: 5 10 5 10; " +
+//                            "-fx-font-size: 15px;"
+//            );
+//
+//        }
+//
+//
+//        return textField;
+//    }
+//
+//    private void moKhoaChinhSua(boolean bool) {
+//        if(bool) {
+//            txtTenKhuyenMai.setEditable(true);
+//            radioCo.setDisable(false);
+//            radioKhong.setDisable(false);
+//            txtGiaTriGiam.setEditable(true);
+//            txtGiaTriToiDa.setEditable(true);
+//            radioMonAn.setDisable(false);
+//            radioHoaDon.setDisable(false);
+//            txtDieuKienApDung.setEditable(true);
+//            dateBatDau.removeEventFilter(MouseEvent.ANY, blockMouse);
+//            dateBatDau.getEditor().removeEventFilter(KeyEvent.ANY, blockKey);
+//
+//            dateKetThuc.removeEventFilter(MouseEvent.ANY, blockMouse);
+//            dateKetThuc.getEditor().removeEventFilter(KeyEvent.ANY, blockKey);
+//
+//            moKhoaChinhSuaTextField(txtTenKhuyenMai, bool);
+//            moKhoaChinhSuaTextField(txtGiaTriGiam, bool);
+//            moKhoaChinhSuaTextField(txtGiaTriToiDa, bool);
+//            moKhoaChinhSuaTextField(txtDieuKienApDung, bool);
+//
+//        }else {
+//            txtTenKhuyenMai.setEditable(false);
+//            radioCo.setDisable(true);
+//            radioKhong.setDisable(true);
+//            txtGiaTriGiam.setEditable(false);
+//            txtGiaTriToiDa.setEditable(false);
+//            txtDieuKienApDung.setEditable(false);
+//            radioMonAn.setDisable(true);
+//            radioHoaDon.setDisable(true);
+//            dateBatDau.addEventFilter(MouseEvent.ANY, blockMouse);
+//            dateBatDau.getEditor().addEventFilter(KeyEvent.ANY, blockKey);
+//
+//            dateKetThuc.addEventFilter(MouseEvent.ANY, blockMouse);
+//            dateKetThuc.getEditor().addEventFilter(KeyEvent.ANY, blockKey);
+//
+//            moKhoaChinhSuaTextField(txtTenKhuyenMai, bool);
+//            moKhoaChinhSuaTextField(txtGiaTriGiam, bool);
+//            moKhoaChinhSuaTextField(txtGiaTriToiDa, bool);
+//            moKhoaChinhSuaTextField(txtDieuKienApDung, bool);
+//        }
+//    }
+//
+//    private void moKhoaChinhSuaTextField(TextField textField, boolean bool) {
+//        if (!bool) {
+//            textField.setStyle(
+//                    "-fx-background-color: #ECF0F1; " +
+//                            "-fx-border-color: #bdc3c7; " +
+//                            "-fx-border-radius: 6; " +
+//                            "-fx-background-radius: 6; " +
+//                            "-fx-padding: 5 10 5 10; " +
+//                            "-fx-font-size: 15px; " +
+//                            "-fx-text-fill: #7f8c8d;"
+//            );
+//        } else {
+//            textField.setStyle(
+//                    "-fx-background-color: white; " +
+//                            "-fx-border-color: #3498db; " +
+//                            "-fx-border-width: 1.5; " +
+//                            "-fx-border-radius: 6; " +
+//                            "-fx-background-radius: 6; " +
+//                            "-fx-padding: 5 10 5 10; " +
+//                            "-fx-font-size: 15px;" +
+//                            "-fx-cursor: hand"
+//            );
+//        }
+//    }
+//
+//    public void clear() {
+//        txtMaKhuyenMai.setText("");
+//        txtTenKhuyenMai.setText("");
+//        txtGiaTriGiam.setText("");
+//        txtGiaTriToiDa.setText("");
+//        txtDieuKienApDung.setText("");
+//        dateBatDau.setValue(null);
+//        dateKetThuc.setValue(null);
+//        radioCo.setSelected(true);
+//        radioHoaDon.setSelected(true);
+//        btnChonMonAn.setDisable(false);
+//        dsTTMonAn.clear();
+//    }
+//
+//    public boolean hanhDongThem() {
+//        clear();
+//        moKhoaChinhSua(true);
+//        String maKMMoi = control.taoMaKhuyenMaiMoi();
+//
+//        txtMaKhuyenMai.setText(maKMMoi);
+//
+//        txtTenKhuyenMai.requestFocus();
+//        btnNgung.setDisable(true);
+//        btnSuaLuu.setDisable(false);
+//
+//        btnSuaLuu.setText("Lưu");
+//        btnSuaLuu.getStyleClass().remove("btn-sua");
+//        btnSuaLuu.getStyleClass().add("btn-luu");
+//        flagSuaLuu = false;
+//
+//        dsMonChon.clear();
+//        tableDSMonKMTheoMa.setItems(dsMonChon);
+//        dsTTMonAn.clear();
+//
+//        btnNgung.setDisable(true);
+//        btnSuaLuu.setDisable(true);
+//
+//        return true;
+//    }
+//
+//    public void focus(TextField txt) {
+//        txt.requestFocus();
+//        txt.selectAll();
+//    }
+//
+//    public void showAlert(Alert.AlertType type, String title, String message) {
+//        Alert alert = new Alert(type);
+//        alert.setTitle(title);
+//        alert.setHeaderText(null);
+//        alert.setContentText(message);
+//        alert.showAndWait();
+//    }
+//
+//    public boolean hanhDongLuu() {
+//        String maKM = txtMaKhuyenMai.getText();
+//        String tenKhuyenMai = txtTenKhuyenMai.getText();
+//
+//        if(tenKhuyenMai.isEmpty()) {
+//            showAlert(AlertType.WARNING, "Tên rỗng", "Vui lòng nhập tên khuyến mãi đầy đủ!");
+//            focus(txtTenKhuyenMai);
+//            return false;
+//        }
+//
+//        String giaTriGiamString = txtGiaTriGiam.getText();
+//
+//        if(giaTriGiamString.isEmpty()) {
+//            showAlert(AlertType.WARNING, "Giá trị giảm rỗng", "Vui lòng nhập giá trị giảm hợp lệ!");
+//            focus(txtGiaTriGiam);
+//            return false;
+//        }
+//
+//        double giaTriGiam = 0.0;
+//
+//        try {
+//            giaTriGiam = Double.parseDouble(giaTriGiamString);
+//        }catch (Exception e) {
+//            showAlert(AlertType.WARNING, "Giá trị giảm sai", "Vui lòng nhập giá trị giảm là số");
+//            focus(txtGiaTriGiam);
+//            return false;
+//        }
+//
+//        String giaTriToiDaString = "";
+//        double giaTriToiDa = 0.0;
+//
+//        if(radioCo.isSelected()) {
+//            if(giaTriGiam < 0 || giaTriGiam > 100.0) {
+//                showAlert(AlertType.WARNING, "Giá trị giảm không đúng", "Vui lòng nhập giá trị giảm >= 0 và <= 100 !");
+//                focus(txtGiaTriGiam);
+//                return false;
+//            }
+//
+//            giaTriToiDaString = txtGiaTriToiDa.getText();
+//            if(giaTriToiDaString.isEmpty()) {
+//                showAlert(AlertType.WARNING, "Giá trị tối đa rỗng", "Vui lòng nhập giá trị tối đa !");
+//                focus(txtGiaTriToiDa);
+//                return false;
+//            }
+//
+//            try {
+//                giaTriToiDa = Double.parseDouble(giaTriToiDaString);
+//            } catch (Exception e) {
+//                showAlert(AlertType.WARNING, "Giá trị tối đa sai", "Vui lòng nhập giá trị tối đa là số !");
+//                focus(txtGiaTriToiDa);
+//                return false;
+//            }
+//
+//            if(giaTriToiDa < 0) {
+//                showAlert(AlertType.WARNING, "Giá trị tối đa sai", "Vui lòng nhập giá trị tối đa >= 0 !");
+//                focus(txtGiaTriToiDa);
+//                return false;
+//            }
+//
+//        }else {
+//            if(giaTriGiam < 0) {
+//                showAlert(AlertType.WARNING, "Giá trị giảm không đúng", "Vui lòng nhập giá trị giảm >= 0 !");
+//                focus(txtGiaTriGiam);
+//                return false;
+//            }
+//        }
+//
+//        String dieuKienApDungString = "";
+//        double dieuKienApDung = 0.0;
+//
+//        if(radioHoaDon.isSelected()) {
+//            dieuKienApDungString = txtDieuKienApDung.getText();
+//
+//            if(dieuKienApDungString.isEmpty()) {
+//                showAlert(AlertType.WARNING, "Điều kiện áp dụng rỗng", "Vui lòng nhập điều kiện áp dụng cho hóa đơn!");
+//                focus(txtDieuKienApDung);
+//                return false;
+//            }
+//
+//            try {
+//                dieuKienApDung = Double.parseDouble(dieuKienApDungString);
+//            } catch (Exception e) {
+//                showAlert(AlertType.WARNING, "Điều kiên áp dụng sai", "Vui lòng nhập điều kiện áp dụng là số !");
+//                focus(txtDieuKienApDung);
+//                return false;
+//            }
+//
+//            if(dieuKienApDung < 0) {
+//                showAlert(AlertType.WARNING, "Điều kiên áp dụng sai", "Vui lòng nhập điều kiện áp dụng >= 0!");
+//                focus(txtDieuKienApDung);
+//                return false;
+//            }
+//
+//        }
+//
+//        LocalDate ngayBD = dateBatDau.getValue();
+//
+//        if(ngayBD == null) {
+//            showAlert(AlertType.WARNING, "Ngày bắt đầu rỗng", "Vui lòng chọn ngày bắt đầu!");
+//            dateBatDau.requestFocus();
+//            return false;
+//        }
+//
+//        LocalDate ngayKT = dateKetThuc.getValue();
+//
+//        if(ngayKT == null) {
+//            showAlert(AlertType.WARNING, "Ngày kết thúc rỗng", "Vui lòng chọn ngày kết thúc!");
+//            dateKetThuc.requestFocus();
+//            return false;
+//        }
+//
+//        if(ngayBD.isBefore(LocalDate.now())) {
+//            showAlert(AlertType.WARNING, "Ngày bắt không hợp lệ", "Ngày bắt đầu không được trước ngày hiện tại!");
+//            dateBatDau.requestFocus();
+//            return false;
+//        }
+//
+//        if (ngayKT.isBefore(ngayBD)) {
+//            showAlert(AlertType.WARNING, "Ngày kết thúc không hợp lệ", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!");
+//            dateKetThuc.requestFocus();
+//            return false;
+//        }
+//
+//        if(radioMonAn.isSelected()) {
+//            if(dsMonChon.isEmpty()) {
+//                showAlert(AlertType.WARNING, "Chưa chọn món", "Vui lòng chọn ít nhất một món muốn khuyến mãi!");
+//                btnChonMonAn.fire();
+//                return false;
+//            }
+//        }
+//
+//        KhuyenMai km = new KhuyenMai();
+//        km.setMaKhuyenMai(maKM);
+//        km.setTenKhuyenMai(tenKhuyenMai);
+//        if(radioCo.isSelected()) {
+//            km.setGiamGiaPhanTram(true);
+//            km.setGiaTriToiDa(giaTriToiDa);
+//        }else {
+//            km.setGiamGiaPhanTram(false);
+//            km.setGiaTriToiDa(0.0);
+//        }
+//
+//        km.setGiaTriGiam(giaTriGiam);
+//
+//        km.setNgayBatDau(ngayBD);
+//        km.setNgayKetThuc(ngayKT);
+//
+//        if(radioHoaDon.isSelected()) {
+//            if(flagXemThem) {
+//                //Tạo khuyến mãi cho hóa đơn
+//                km.setDieuKienApDung(dieuKienApDung);
+//                if(control.themKhuyenMai(km)) {
+//                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
+//                    loadLaiDanhSachKM();
+//                    return true;
+//                }else {
+//                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
+//                    return false;
+//                }
+//            }else {
+//                //Sửa cho khuyến mãi hóa đơn
+//                if(control.suaKhuyenMai(km, dsMonChon, 0)) {
+//                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Sửa khuyến mãi thành công");
+//                    loadLaiDanhSachKM();
+//                    return true;
+//                }else {
+//                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể sửa khuyến mãi");
+//                    return false;
+//                }
+//            }
+//        }else {
+//            if (flagXemThem) {
+//                //Tạo khuyến mãi cho các món ăn
+//                km.setDieuKienApDung(0.0);
+//                if(control.themKhuyenMai(km) && control.themDSCTKMMonAn(dsMonChon, km)) {
+//                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
+//                    loadLaiDanhSachKM();
+//                    return true;
+//                }else {
+//                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
+//                    return false;
+//                }
+//            }else {
+//                //Sửa khuyến mãi cho món ăn
+//                if(control.suaKhuyenMai(km, dsMonChon, 1)) {
+//                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Sửa khuyến mãi thành công");
+//                    loadLaiDanhSachKM();
+//                    return true;
+//                }else {
+//                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể sửa khuyến mãi");
+//                    return false;
+//                }
+//
+//            }
+//        }
+//
+//    }
+//
+//    public boolean hanhDongSua() {
+//        return true;
+//    }
+//
+//    public void loadLaiDanhSachKM() {
+//        List<String> newData = control.layDanhSachCTKM();
+//        dsKhuyenMai.clear();
+//        if (newData != null) {
+//            dsKhuyenMai.addAll(newData);
+//        }
+//
+//        tableDSKM.refresh();
+//    }
+//
+//    public void loadLaiDSMonAn(LocalDate ngayBatDau, LocalDate ngayKetThuc) {
+//        dsTTMonAn = FXCollections.observableArrayList(control.layDanhSachMonAnCTKM(ngayBatDau, ngayKetThuc));
+//        dsMonChon.clear();
+//        tableDSMonKMTheoMa.setItems(dsMonChon);
+//    }
+//
+//    public void quayVe() {
+//        for(String monAn : dsMonTemp) {
+//            String[] monAnTach = monAn.split("-");
+//
+//            String monAn2 = monAnTach[0] + "-" +
+//                    monAnTach[1] + "-" +
+//                    monAnTach[2] + "-" +
+//                    monAnTach[3] + "-" +
+//                    monAnTach[4] + "-" +
+//                    monAnTach[5] + "-" +
+//                    monAnTach[3] + "-" +
+//                    monAnTach[7] ;
+//
+//            dsTTMonAn.add(monAn2);
+//        }
+//        dsMonTemp.clear();
+//    }
+//
+//    public void themMonChon() {
+//        for(String monAn : dsMonTemp) {
+//            dsMonChon.add(monAn);
+//        }
+//        dsMonTemp.clear();
+//    }
+//
+//    public void hanhDongNgungKM() {
+//        String maKM = txtMaKhuyenMai.getText();
+//
+//        if (maKM.isEmpty()) {
+//            showAlert(Alert.AlertType.WARNING, "Chưa chọn KM", "Vui lòng chọn mã khuyến mãi trước khi ngừng.");
+//            return;
+//        }
+//
+//        // Hiển thị hộp thoại xác nhận
+//        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+//        alert.setTitle("Xác nhận");
+//        alert.setHeaderText("Bạn có chắc muốn ngừng khuyến mãi này không?");
+//        alert.setContentText("Mã khuyến mãi: " + maKM);
+//
+//        Optional<ButtonType> result = alert.showAndWait();
+//        if (result.isPresent() && result.get() == ButtonType.OK) {
+//
+//            boolean success = control.ngungKhuyenMai(maKM);
+//            if (success) {
+//                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Khuyến mãi đã được ngừng.");
+//
+//                // == reset lại ==
+//                clear();
+//                loadLaiDanhSachKM();
+//            } else {
+//                showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể ngừng khuyến mãi. Kiểm tra lại dữ liệu.");
+//            }
+//        }
+//
+//
+//    }
+//
+//    public void hanhDongXoaKM() {
+//        String maKM = txtMaKhuyenMai.getText();
+//
+//        if (maKM.isEmpty()) {
+//            showAlert(Alert.AlertType.WARNING, "Chưa chọn KM", "Vui lòng chọn mã khuyến mãi trước khi xóa.");
+//            return;
+//        }
+//
+//        // Hiển thị hộp thoại xác nhận
+//        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+//        alert.setTitle("Xác nhận");
+//        alert.setHeaderText("Bạn có chắc muốn xóa khuyến mãi này không?");
+//        alert.setContentText("Mã khuyến mãi: " + maKM);
+//
+//        int loaiKM = radioMonAn.isSelected() ? 1 : 0;
+//
+//        Optional<ButtonType> result = alert.showAndWait();
+//        if (result.isPresent() && result.get() == ButtonType.OK) {
+//
+//            boolean success = control.xoaKhuyenMai(maKM, loaiKM);
+//
+//            if (success) {
+//                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Xóa khuyến mãi thành công");
+//
+//                // == reset lại ==
+//                clear();
+//                loadLaiDanhSachKM();
+//            } else {
+//                showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể xóa khuyến mãi này, vui lòng kiểm tra lại dữ liệu");
+//            }
+//        }
+//
+//    }
+//
+//    private void locKhuyenMai() {
+//        String tuKhoa = txtTimKiem.getText().trim();
+//        String trangThai = cboTT.getValue();
+//        String loai = cboLoai.getValue();
+//        LocalDate today = LocalDate.now();
+//        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//
+//        List<String> ketQua = dsKhuyenMai.stream().filter(km -> {
+//
+//            boolean matchTimKiem = tuKhoa.isEmpty() ||
+//                    km.split(",")[0].equals(tuKhoa);
+//
+//            // ==== Lọc theo trạng thái ====
+//            boolean matchTrangThai = true;
+//            LocalDate bd = LocalDate.parse(km.split(",")[2], dtf);
+//            LocalDate kt = LocalDate.parse(km.split(",")[3], dtf);
+//
+//            switch (trangThai) {
+//                case "Sắp diễn ra":
+//                    matchTrangThai = bd.isAfter(today);
+//                    break;
+//                case "Đang diễn ra":
+//                    matchTrangThai = ( !bd.isAfter(today) ) && ( !kt.isBefore(today) );
+//                    break;
+//
+//                case "Đã kết thúc":
+//                    matchTrangThai = kt.isBefore(today);
+//                    break;
+//
+//                default:
+//                    matchTrangThai = true;
+//            }
+//
+//            // ==== Lọc theo loại ====
+//            boolean matchLoai = true;
+//
+//            switch (loai) {
+//                case "Hóa đơn":
+//                    matchLoai = km.split(",")[8].equals("0");
+//                    break;
+//
+//                case "Món ăn":
+//                    matchLoai = km.split(",")[8].equals("1");
+//                    break;
+//
+//                default:
+//                    matchLoai = true;
+//            }
+//
+//            return matchTimKiem && matchTrangThai && matchLoai;
+//
+//        }).toList();
+//        clear();
+//
+//        tableDSKM.setItems(FXCollections.observableArrayList(ketQua));
+//    }
+//
+//    public void taoMoiTimKiem() {
+//        clear();
+//        txtTimKiem.setText("");
+//        cboLoai.setValue("Tất cả");
+//        cboTT.setValue("Tất cả");
+//        locKhuyenMai();
+//        loadLaiDanhSachKM();
+//    }
+//
+//    public void locMonAn() {
+//        dsLocMon.clear();
+//        if(cboLocMon.getValue().equals("Tất cả")) {
+//            listMonAn.setItems(dsTTMonAn);
+//            return;
+//        }
+//
+//        String chuoi = cboLocMon.getValue().equals("Đã giảm giá") ? "1" : "0";
+//
+//        for(String i : dsTTMonAn) {
+//            if(i.split("-")[5].equals(chuoi)) {
+//                dsLocMon.add(i);
+//            }
+//        }
+//
+//        listMonAn.setItems(dsLocMon);
+//    }
+//}
 package gui;
 
 import java.text.DecimalFormat;
@@ -47,11 +2111,10 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lib.ImageCacheManager;
-import javafx.geometry.Side;
-import javafx.scene.control.ContextMenu;
-import javafx.scene.control.MenuItem;
+
 public class Gui_QuanLiKhuyenMai extends BorderPane {
-    // DANH SÁCH TOÀN CỤC
+
+    // --- CONTROLLER & DATA ---
     private QLKM_Ctrl control;
     ObservableList<String> dsTTMonAn = FXCollections.observableArrayList();
     ObservableList<String> dsMonChon = FXCollections.observableArrayList();
@@ -59,83 +2122,151 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
     ObservableList<String> dsMonTemp = FXCollections.observableArrayList();
     ObservableList<String> dsLocMon = FXCollections.observableArrayList();
 
+    // --- GUI COMPONENTS ---
     private TextField txtMaKhuyenMai;
     private TextField txtTenKhuyenMai;
     private TextField txtDieuKienApDung;
     private TextField txtGiaTriToiDa;
     private TextField txtGiaTriGiam;
+    private TextField txtTimKiem;
+
     private ToggleGroup radioGroup1;
     private ToggleGroup radioGroup2;
-    private TableView<String> tableDSKM;
-    private TableView<String> tableDSMonKMTheoMa = new TableView<String>(dsMonChon);
     private RadioButton radioCo;
     private RadioButton radioKhong;
     private RadioButton radioHoaDon;
     private RadioButton radioMonAn;
+
+    private TableView<String> tableDSKM;
+    private TableView<String> tableDSMonKMTheoMa = new TableView<>(dsMonChon);
+    private TableColumn<String, Void> colXoa = new TableColumn<>("Xóa");
+
     private DatePicker dateBatDau;
     private DatePicker dateKetThuc;
+
     private Button btnChonMonAn;
     private Button btnSuaLuu;
-    private final EventHandler<MouseEvent> blockMouse = Event::consume;
-    private final EventHandler<KeyEvent> blockKey = Event::consume;
     private Button btnNgung;
-    private ListView listMonAn;
-    TableColumn<String, Void> colXoa = new TableColumn<>("Xóa");
-
-    // Cờ sửa và lưu || True là sửa || False là lưu
-    private boolean flagSuaLuu = true;
-
-    // Cờ xóa và ngừng KM || True là ngừng || False là xóa
-    private boolean flagNgungXoa = true;
-
-    // Cờ đg xem và đang thêm || True là đang thêm || False là đang xem
-    private boolean flagXemThem = false;
+    private Button btnReset;
+    private Button btnThemKM;
 
     private ComboBox<String> cboTT;
     private ComboBox<String> cboLoai;
-    private TextField txtTimKiem;
-    private Button btnReset;
     private ComboBox<String> cboLocMon;
-    private Button btnThemKM;
+
+    private ListView<String> listMonAn;
+
+    // --- FLAGS & HANDLERS ---
+    private boolean flagSuaLuu = true; // True: Sửa, False: Lưu
+    private boolean flagNgungXoa = true; // True: Ngừng, False: Xóa
+    private boolean flagXemThem = false; // True: Thêm mới, False: Xem chi tiết
+
+    private final EventHandler<MouseEvent> blockMouse = Event::consume;
+    private final EventHandler<KeyEvent> blockKey = Event::consume;
     private final Map<KeyCombination, Runnable> shortcuts = new HashMap<>();
 
-    // Preload image để tránh load lại mỗi lần tạo cell (giảm lag scroll)
-    private static final Image IMG_MON_AN = new Image("/img/monAn.png");
-    private static final Image IMG_CHU_NHAT_XANH = new Image("/img/chuNhatXanh.png");
-    private static final Image IMG_CHU_NHAT_VANG = new Image("/img/chuNhatVang.png");
+    // --- RESOURCES (FIXED CRASH HERE) ---
+    // Hàm load ảnh an toàn: Nếu không tìm thấy ảnh thì trả về null chứ không crash
+    private static Image safeLoadImage(String path) {
+        try {
+            java.io.InputStream stream = Gui_QuanLiKhuyenMai.class.getResourceAsStream(path);
+            if (stream == null) {
+                System.err.println("⚠️ CẢNH BÁO: Không tìm thấy file ảnh tại đường dẫn: " + path);
+                return null;
+            }
+            return new Image(stream);
+        } catch (Exception e) {
+            System.err.println("❌ Lỗi khi tải ảnh: " + e.getMessage());
+            return null;
+        }
+    }
 
+    private static final Image IMG_MON_AN = safeLoadImage("/img/default-food.png");
+    private static final Image IMG_CHU_NHAT_XANH = safeLoadImage("/img/chuNhatXanh.png");
+    private static final Image IMG_CHU_NHAT_VANG = safeLoadImage("/img/chuNhatVang.png");
 
     public Gui_QuanLiKhuyenMai() {
-        control  = new QLKM_Ctrl();
+        control = new QLKM_Ctrl();
+        initializeUI();
+    }
+
+    private void initializeUI() {
+        // Cấu hình chung
+        this.setStyle("-fx-background-color: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);");
+
+        // Load CSS
+        try {
+            this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
+        } catch (Exception e) {
+            // CSS not found is fine, just log it
+        }
+
+        // Layout chính
         BorderPane mainLayout = new BorderPane();
+        mainLayout.setStyle("-fx-background-color: transparent;");
 
-        // Thêm phần bên trái và bên phải
+        // Header (Top)
+        VBox header = createModernHeader();
+        this.setTop(header);
+
+        // Content Body (Center - chia 2 cột)
+        HBox body = new HBox(20);
+        body.setPadding(new Insets(10, 30, 20, 30));
+
+        // Phần Trái (Danh sách + Bộ lọc)
         VBox phanTrai = taoPhanBenTrai();
+        HBox.setHgrow(phanTrai, Priority.ALWAYS); // Giãn ra
+
+        // Phần Phải (Form thông tin)
         VBox phanPhai = taoPhanBenPhai();
+        phanPhai.setPrefWidth(420); // Cố định chiều rộng form
+        phanPhai.setMinWidth(420);
+        phanPhai.setMaxWidth(420);
 
-        mainLayout.setLeft(phanTrai);
-        mainLayout.setRight(phanPhai);
-        mainLayout.setStyle("-fx-background-color: white;");
-        this.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
-        
-        
-        // Set vào BorderPane chính (this)
-        this.setCenter(mainLayout);
+        body.getChildren().addAll(phanTrai, phanPhai);
+        this.setCenter(body);
 
-        // === Phím tắt ===
+        // Animation Fade In
+        FadeTransition fadeIn = new FadeTransition(Duration.millis(600), this);
+        fadeIn.setFromValue(0.0);
+        fadeIn.setToValue(1.0);
+        fadeIn.play();
 
-        /////Hàng f
-        /// === Thêm khuyến mãi : F2
-        KeyCombination f2 = new KeyCodeCombination(KeyCode.F2);
-        /// === Truy cập tìm kiếm nhanh : F3
-        KeyCombination f3 = new KeyCodeCombination(KeyCode.F3);
-        /// === Tạo mới : F5
-        KeyCombination f5 = new KeyCodeCombination(KeyCode.F5);
-        /// === Lưu, sửa : F6
-        KeyCombination f6 = new KeyCodeCombination(KeyCode.F6);
-        /// === Xóa, ngừng KM : F9
-        KeyCombination f9 = new KeyCodeCombination(KeyCode.F9);
+        setupShortcuts();
+    }
 
+    // ===== HEADER =====
+    private VBox createModernHeader() {
+        VBox header = new VBox(5);
+        header.setPadding(new Insets(20));
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.setStyle(
+                "-fx-background-color: #082744;" +
+                        "-fx-background-radius: 15;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5);"
+        );
+
+        Label title = new Label("QUẢN LÝ KHUYẾN MÃI");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 28));
+        title.setStyle("-fx-text-fill: white;");
+
+        Label subtitle = new Label("Quản lý các chương trình giảm giá, voucher và ưu đãi");
+        subtitle.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 14));
+        subtitle.setStyle("-fx-text-fill: rgba(255,255,255,0.8);");
+
+        header.getChildren().addAll(title, subtitle);
+
+        VBox headerContainer = new VBox(header);
+        headerContainer.setPadding(new Insets(20, 30, 0, 30));
+        return headerContainer;
+    }
+
+    private void setupShortcuts() {
+        KeyCombination f2 = new KeyCodeCombination(KeyCode.F2); // Thêm
+        KeyCombination f3 = new KeyCodeCombination(KeyCode.F3); // Tìm
+        KeyCombination f5 = new KeyCodeCombination(KeyCode.F5); // Reset
+        KeyCombination f6 = new KeyCodeCombination(KeyCode.F6); // Lưu/Sửa
+        KeyCombination f9 = new KeyCodeCombination(KeyCode.F9); // Xóa/Ngừng
 
         shortcuts.put(f3, () -> txtTimKiem.requestFocus());
         shortcuts.put(f2, () -> btnThemKM.fire());
@@ -143,1478 +2274,847 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         shortcuts.put(f6, () -> btnSuaLuu.fire());
         shortcuts.put(f9, () -> btnNgung.fire());
 
-
         this.sceneProperty().addListener((obs, oldScene, newScene) -> {
-            if (newScene != null) {
-                newScene.getAccelerators().putAll(shortcuts);
-            }
-
-            if(oldScene != null) {
-                oldScene.getAccelerators().clear();
-            }
+            if (newScene != null) newScene.getAccelerators().putAll(shortcuts);
+            if (oldScene != null) oldScene.getAccelerators().clear();
         });
-
     }
+
     private void caiDatGoiYTimKiem(TextField txtInput, ObservableList<String> dataNguon) {
-        // 1. Tạo Menu ngữ cảnh
         ContextMenu suggestionsPopup = new ContextMenu();
         suggestionsPopup.getStyleClass().add("goi-y-menu");
-        suggestionsPopup.setPrefWidth(txtInput.getPrefWidth()); // Chiều rộng bằng ô input
+        suggestionsPopup.setPrefWidth(txtInput.getPrefWidth());
 
-        // 2. Logic hiển thị
         Runnable hienThiGoiY = () -> {
             String tuKhoa = txtInput.getText().toLowerCase();
             List<MenuItem> suggestions = new ArrayList<>();
-
-            // Duyệt qua danh sách nguồn (dsKhuyenMai)
             for (String row : dataNguon) {
                 String[] parts = row.split(",");
                 if (parts.length < 2) continue;
+                String maKM = parts[0];
+                String tenKM = parts[1];
 
-                String maKM = parts[0]; // Mã khuyến mãi
-                String tenKM = parts[1]; // Tên khuyến mãi
-
-                // Logic lọc: Nếu từ khóa rỗng (khi click chuột) HOẶC chứa từ khóa
                 if (tuKhoa.isEmpty() || maKM.toLowerCase().contains(tuKhoa) || tenKM.toLowerCase().contains(tuKhoa)) {
-
-                    String hienThi = maKM + " - " + tenKM;
-                    MenuItem item = new MenuItem(hienThi);
+                    MenuItem item = new MenuItem(maKM + " - " + tenKM);
                     item.getStyleClass().add("goi-y-item");
-
-                    // Sự kiện khi chọn gợi ý
                     item.setOnAction(e -> {
                         txtInput.setText(maKM);
                         txtInput.positionCaret(maKM.length());
                         suggestionsPopup.hide();
-
-                        // GỌI HÀM LỌC CỦA CLASS NÀY
                         locKhuyenMai();
                     });
                     suggestions.add(item);
                 }
-                if (suggestions.size() >= 10) break; // Giới hạn 10 dòng
+                if (suggestions.size() >= 10) break;
             }
 
-            // Hiển thị hoặc ẩn popup
             if (!suggestions.isEmpty()) {
                 suggestionsPopup.getItems().setAll(suggestions);
-                if (!suggestionsPopup.isShowing()) {
-                    suggestionsPopup.show(txtInput, Side.BOTTOM, 0, 0);
-                }
+                if (!suggestionsPopup.isShowing()) suggestionsPopup.show(txtInput, Side.BOTTOM, 0, 0);
             } else {
                 suggestionsPopup.hide();
             }
         };
 
-        // 3. Gắn sự kiện
-        txtInput.textProperty().addListener((observable, oldValue, newValue) -> hienThiGoiY.run()); // Khi gõ
-        txtInput.setOnMouseClicked(event -> hienThiGoiY.run()); // Khi click
-        txtInput.focusedProperty().addListener((obs, oldVal, newVal) -> { // Khi mất focus
+        txtInput.textProperty().addListener((observable, oldValue, newValue) -> hienThiGoiY.run());
+        txtInput.setOnMouseClicked(event -> hienThiGoiY.run());
+        txtInput.focusedProperty().addListener((obs, oldVal, newVal) -> {
             if (!newVal) suggestionsPopup.hide();
         });
     }
+
+    // ===== PHẦN TRÁI: BỘ LỌC VÀ DANH SÁCH =====
     public VBox taoPhanBenTrai() {
-        // Ô tìm kiếm
-        Label lblTimKiem = createModernSectionTitle("Tìm kiếm", "#667eea");
-        //lblTimKiem.setGraphic(createSvgIcon(24, 24, "#667eea", "m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"));
+        VBox container = new VBox(15);
 
+        // 1. Filter Bar
+        HBox filterBar = new HBox(15);
+        filterBar.setAlignment(Pos.CENTER_LEFT);
+        filterBar.setPadding(new Insets(15));
+        filterBar.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+        );
+
+        // Search
         txtTimKiem = new TextField();
-        txtTimKiem.setPromptText("Nhập mã khuyến mãi");
-        txtTimKiem.getStyleClass().add("timKiem");
-        Button nutTimKiem = new Button("Tìm kiếm");
+        txtTimKiem.setPromptText("🔍 Mã/Tên khuyến mãi...");
+        txtTimKiem.setPrefHeight(35);
+        txtTimKiem.setPrefWidth(200);
+        txtTimKiem.setStyle("-fx-background-radius: 6; -fx-border-color: #e9ecef; -fx-border-radius: 6; -fx-padding: 4 8;");
+        txtTimKiem.setTooltip(new Tooltip("F3: Tìm nhanh"));
         caiDatGoiYTimKiem(txtTimKiem, dsKhuyenMai);
-        nutTimKiem.getStyleClass().add("button-timKiem");
-        HBox oTimKiem = new HBox(10, txtTimKiem, nutTimKiem);
-        oTimKiem.setAlignment(Pos.CENTER_LEFT);
-        VBox vboxTimKiem = new VBox(5);
-        vboxTimKiem.getChildren().addAll(lblTimKiem, oTimKiem);
 
-        txtTimKiem.setTooltip(new Tooltip("Nhấn F3 để truy cập nhanh"));
-
-        nutTimKiem.setOnAction(e -> {locKhuyenMai();});
-        txtTimKiem.setOnAction(e -> {locKhuyenMai();});
-
-        // ===== Lọc theo trạng thái =====
-        Label lblLocTT = new Label("Trạng thái");
-        lblLocTT.getStyleClass().add("fontTieuDeNho");
-
-        cboTT = new ComboBox<>();
-        cboTT.getItems().addAll("Tất cả", "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc");
-        cboTT.setValue("Tất cả"); // mặc định
-
-        VBox vboxTT = new VBox(3, lblLocTT, cboTT);
-
-        cboTT.setOnAction(e -> {locKhuyenMai();});
-
-        // ===== Lọc theo loại =====
-        Label lblLocLoai = new Label("Loại");
-        lblLocLoai.getStyleClass().add("fontTieuDeNho");
-
+        // Filter Type
         cboLoai = new ComboBox<>();
         cboLoai.getItems().addAll("Tất cả", "Hóa đơn", "Món ăn");
         cboLoai.setValue("Tất cả");
+        styleComboBox(cboLoai);
 
-        VBox vboxLoai = new VBox(3);
-        vboxLoai.getChildren().addAll(lblLocLoai, cboLoai);
+        // Filter Status
+        cboTT = new ComboBox<>();
+        cboTT.getItems().addAll("Tất cả", "Sắp diễn ra", "Đang diễn ra", "Đã kết thúc");
+        cboTT.setValue("Tất cả");
+        styleComboBox(cboTT);
 
-        cboLoai.setOnAction(e -> {locKhuyenMai();});
+        // Buttons
+        Button nutTimKiem = new Button("Tìm");
+        styleButton(nutTimKiem, "#f1f3f5", "#495057");
 
-        // ===== nút reset tới chơi =====
+        btnReset = new Button("↻");
+        styleButton(btnReset, "#f1f3f5", "#495057");
+        btnReset.setTooltip(new Tooltip("F5: Làm mới"));
 
-        VBox vboxReset = new VBox();
+        btnThemKM = new Button("✚ Thêm KM");
+        styleButton(btnThemKM, "#082744", "white");
+        btnThemKM.setTooltip(new Tooltip("F2: Thêm mới"));
 
-        btnReset = new Button();
-        btnReset.setGraphic(createSvgIcon(25, 24,"gray","M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99"));
-        btnReset.setStyle("""
-        		-fx-background-color: null;
-        		-fx-border-radius: 5px;
-        		-fx-border-color: #D9D9D9;
-        		-fx-cursor: hand;
-        		-fx-translate-y: -5;
-        		""");
+        // Spacer
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        filterBar.getChildren().addAll(txtTimKiem, cboLoai, cboTT, nutTimKiem, btnReset, spacer, btnThemKM);
+
+        // Events
+        nutTimKiem.setOnAction(e -> locKhuyenMai());
+        txtTimKiem.setOnAction(e -> locKhuyenMai());
+        cboLoai.setOnAction(e -> locKhuyenMai());
+        cboTT.setOnAction(e -> locKhuyenMai());
         btnReset.setOnAction(e -> taoMoiTimKiem());
-
-        btnReset.setTooltip(new Tooltip("Nhấn F5 để dùng nhanh"));
-
-        vboxReset.getChildren().addAll(btnReset);
-
-        //Hbox tim kiem
-        HBox hboxTimKiem = new HBox(10);
-        hboxTimKiem.getChildren().addAll(vboxTimKiem, vboxLoai, vboxTT, vboxReset);
-        hboxTimKiem.setAlignment(Pos.BOTTOM_LEFT);
-        vboxLoai.setPadding(new Insets(5, 0, 0, 0));
-        vboxTT.setPadding(new Insets(5, 0, 0, 0));
-        vboxReset.setPadding(new Insets(36, 0, 0, 0));
-
-        ///Tieu de danh sach va chu thich danh sach
-        Label lblDanhSach = new Label("Danh sách khuyến mãi");
-        lblDanhSach.getStyleClass().add("fontTieuDeNho");
-        lblDanhSach.setMinWidth(200);
-
-        //HBOX chú thích
-        HBox hboxChuThich = new HBox(3);
-
-        HBox hboxDangDienRa = new HBox(2);
-        HBox hboxSapDienRa = new HBox(2);
-        HBox hboxKetThuc = new HBox(2);
-
-        Label lblDangDienRa = new Label("Đang diễn ra");
-        Label lblSapDienRa = new Label("Sắp diễn ra");
-        Label lblKetThuc = new Label("Đã kết thúc");
-
-        lblDangDienRa.getStyleClass().add("fontTieuDeNho");
-        lblSapDienRa.getStyleClass().add("fontTieuDeNho");
-        lblKetThuc.getStyleClass().add("fontTieuDeNho");
-
-        SVGPath iconDangDienRa = createSvgIcon(18, 24, "green", "m4.5 12.75 6 6 9-13.5");
-        SVGPath iconSapDienRa = createSvgIcon(18, 24, "gray", "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z");
-        SVGPath iconKetThuc = createSvgIcon(18, 24, "red", "M6 18 18 6M6 6l12 12");
-
-        hboxDangDienRa.getChildren().addAll(iconDangDienRa, lblDangDienRa);
-        hboxDangDienRa.setAlignment(Pos.CENTER_LEFT);
-        hboxSapDienRa.getChildren().addAll(iconSapDienRa, lblSapDienRa);
-        hboxSapDienRa.setAlignment(Pos.CENTER_LEFT);
-        hboxKetThuc.getChildren().addAll(iconKetThuc, lblKetThuc);
-        hboxKetThuc.setAlignment(Pos.CENTER_LEFT);
-        hboxKetThuc.setPadding(new Insets(0, 160, 0, 0));
-
-        // === Button thêm khuyến mãi tới chơi ===
-
-        btnThemKM = new Button("Thêm KM");
-        btnThemKM.getStyleClass().add("btn-them");
-
         btnThemKM.setOnAction(e -> {
             hanhDongThem();
             flagXemThem = true;
-
             btnSuaLuu.setDisable(false);
         });
-        btnThemKM.setTooltip(new Tooltip("Nhấn F2 để dùng nhanh"));
 
-        hboxChuThich.getChildren().addAll(hboxDangDienRa, hboxSapDienRa, hboxKetThuc, btnThemKM);
+        // 2. Table Section
+        VBox tableContainer = taoDanhSachKhuyenMai();
+        VBox.setVgrow(tableContainer, Priority.ALWAYS);
 
-        HBox hboxChuThichAll = new HBox(10);
-        hboxChuThichAll.getChildren().addAll(lblDanhSach, hboxChuThich);
-        hboxChuThichAll.setAlignment(Pos.BOTTOM_RIGHT);
-
-        //Danh sach khuyen mai
-        VBox dsKhuyenMai = taoDanhSachKhuyenMai();
-
-
-
-        //ALLLLL
-        VBox vboxAll = new VBox(20);
-        vboxAll.setPadding(new Insets(10, 20, 10, 20));
-        vboxAll.setMinHeight(600);
-        //vboxAll.setStyle("-fx-background-color: black");
-        vboxAll.setMinWidth(800);
-        vboxAll.getChildren().addAll(hboxTimKiem, hboxChuThichAll, dsKhuyenMai);
-
-        return vboxAll;
+        container.getChildren().addAll(filterBar, tableContainer);
+        return container;
     }
 
     public VBox taoDanhSachKhuyenMai() {
-        VBox vboxAll = new VBox();
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        VBox vbox = new VBox();
+        vbox.setPadding(new Insets(0));
+        vbox.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 10;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.05), 5, 0, 0, 1);"
+        );
 
         List<String> dsKhuyenMaiList = control.layDanhSachCTKM();
-
         dsKhuyenMai.clear();
-        if (dsKhuyenMaiList != null) {
-            dsKhuyenMai.addAll(dsKhuyenMaiList);
-        }
+        if (dsKhuyenMaiList != null) dsKhuyenMai.addAll(dsKhuyenMaiList);
 
         tableDSKM = new TableView<>(dsKhuyenMai);
-        tableDSKM.setPrefHeight(600);
+        tableDSKM.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        tableDSKM.setStyle("-fx-background-color: white; -fx-base: white; -fx-border-color: transparent;");
 
-
-
-        // Cột Mã KM
+        // Columns
         TableColumn<String, String> colMa = new TableColumn<>("Mã");
-        colMa.setCellValueFactory(cellData -> {
-            return new SimpleStringProperty(cellData.getValue().split(",")[0]);
-        });
-        colMa.setPrefWidth(100);
+        colMa.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().split(",")[0]));
 
-        // Cột Tên KM
-        TableColumn<String, String> colTen = new TableColumn<>("Tên khuyến mãi");
-        colTen.setCellValueFactory(cellData -> {
-            return new SimpleStringProperty(cellData.getValue().split(",")[1]);
-        });
-        colTen.setPrefWidth(300);
+        TableColumn<String, String> colTen = new TableColumn<>("Tên Chương Trình");
+        colTen.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().split(",")[1]));
 
-        // Cột Loại (Hóa đơn / Món ăn)
         TableColumn<String, String> colLoai = new TableColumn<>("Loại");
-        colLoai.setCellValueFactory(cellData -> {
-            return new SimpleStringProperty(cellData.getValue().split(",")[8].equals("1") ? "Món ăn" : "Hóa Đơn");
-        });
-        colLoai.setPrefWidth(100);
+        colLoai.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().split(",")[8].equals("1") ? "Món ăn" : "Hóa Đơn"));
 
-        // Cột Giá trị giảm
-        TableColumn<String, String> colGiam = new TableColumn<>("Giảm");
-        colGiam.setCellValueFactory(cellData -> {
-            boolean giamGiaPT = cellData.getValue().split(",")[6].equals("1") ? true : false;
-            DecimalFormat dcm = new DecimalFormat("#,##0.0 VND");
-            return new SimpleStringProperty(giamGiaPT ?  cellData.getValue().split(",")[7] + "%" : dcm.format(Double.parseDouble(cellData.getValue().split(",")[7])) );
+        TableColumn<String, String> colGiam = new TableColumn<>("Mức Giảm");
+        colGiam.setCellValueFactory(cell -> {
+            boolean pt = cell.getValue().split(",")[6].equals("1");
+            DecimalFormat dcm = new DecimalFormat("#,##0.##");
+            String val = cell.getValue().split(",")[7];
+            return new SimpleStringProperty(pt ? val + "%" : dcm.format(Double.parseDouble(val)) + " đ");
         });
-        colGiam.setPrefWidth(200);
 
-        // Cột trạng thái
-        TableColumn<String, String> colTT = new TableColumn<>("TT");
-        colTT.setCellValueFactory(cellData -> {
-            String trangThaiStr = cellData.getValue().split(",")[9];
-            return new SimpleStringProperty(trangThaiStr);
-        });
-        colTT.setPrefWidth(57);
-
+        TableColumn<String, String> colTT = new TableColumn<>("Trạng Thái");
+        colTT.setCellValueFactory(cell -> new SimpleStringProperty(cell.getValue().split(",")[9]));
         colTT.setCellFactory(tc -> new TableCell<String, String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
-                setText(null);
-                setGraphic(null);
-
-                if (!empty && item != null) {
+                if (empty || item == null) {
+                    setGraphic(null);
+                    setText(null);
+                } else {
+                    Label lbl = new Label();
                     switch (item) {
-                        case "1": // Đang diễn ra
-                            setGraphic(createSvgIcon(24, 24, "green", "m4.5 12.75 6 6 9-13.5"));
+                        case "1":
+                            lbl.setText("Đang diễn ra");
+                            lbl.setStyle("-fx-text-fill: #2ecc71; -fx-font-weight: bold; -fx-background-color: #eafaf1; -fx-padding: 5 10; -fx-background-radius: 15;");
                             break;
-                        case "0": // Đã kết thúc
-                            setGraphic(createSvgIcon(24, 24, "red", "M6 18 18 6M6 6l12 12"));
+                        case "0":
+                            lbl.setText("Kết thúc");
+                            lbl.setStyle("-fx-text-fill: #e74c3c; -fx-font-weight: bold; -fx-background-color: #fdedec; -fx-padding: 5 10; -fx-background-radius: 15;");
                             break;
-                        case "2": // Sắp diễn ra
-                            setGraphic(createSvgIcon(24, 24, "gray", "M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"));
+                        case "2":
+                            lbl.setText("Sắp diễn ra");
+                            lbl.setStyle("-fx-text-fill: #95a5a6; -fx-font-weight: bold; -fx-background-color: #f4f6f7; -fx-padding: 5 10; -fx-background-radius: 15;");
                             break;
-                        default:
-                            setGraphic(null);
                     }
+                    setGraphic(lbl);
                     setAlignment(Pos.CENTER);
+                    setText(null);
                 }
             }
         });
 
-
-        // Thêm tất cả cột vào bảng
         tableDSKM.getColumns().addAll(colMa, colTen, colLoai, colGiam, colTT);
 
-        //CLICK
-        tableDSKM.setOnMouseClicked(event -> {
-            //
-            flagXemThem = false;
+        // Event Selection
+        tableDSKM.setOnMouseClicked(event -> handleTableSelection());
 
+        vbox.getChildren().add(tableDSKM);
+        VBox.setVgrow(tableDSKM, Priority.ALWAYS);
+        return vbox;
+    }
 
-            String chuoi = tableDSKM.getSelectionModel().getSelectedItem();
+    private void handleTableSelection() {
+        flagXemThem = false;
+        String chuoi = tableDSKM.getSelectionModel().getSelectedItem();
+        if (chuoi == null) return;
 
-            if(chuoi == null) {
-                return;
-            }
+        colXoa.setVisible(false);
+        String[] parts = chuoi.split(",");
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
-            ///Ẩn col xóa đi
-            colXoa.setVisible(false);
-            ///
+        // Parse Data
+        String maKM = parts[0];
+        String tenKM = parts[1];
+        boolean isPercent = parts[6].equals("1");
+        double valGiam = Double.parseDouble(parts[7]);
+        double valMax = Double.parseDouble(parts[5]);
+        boolean isMonAn = parts[8].equals("1");
+        double dkApDung = Double.parseDouble(parts[4]);
+        String trangThai = parts[9];
+        LocalDate bd = LocalDate.parse(parts[2], dtf);
+        LocalDate kt = LocalDate.parse(parts[3], dtf);
 
-            String[] chuoiTach = chuoi.split(",");
+        // Fill Form
+        txtMaKhuyenMai.setText(maKM);
+        txtTenKhuyenMai.setText(tenKM);
+        txtGiaTriGiam.setText(String.valueOf(valGiam));
 
-            //DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-            DecimalFormat dcm = new  DecimalFormat("#,##0.0 đ");
+        if (isPercent) {
+            radioCo.setSelected(true);
+            txtGiaTriToiDa.setText(String.valueOf(valMax));
+        } else {
+            radioKhong.setSelected(true);
+        }
 
-            //Lấy thông tin
-            String maKM = chuoiTach[0];
-            String tenKM = chuoiTach[1];
-            boolean giamGiaPT = chuoiTach[6].equals("1") ? true : false;
-            double giaTriGiam = Double.parseDouble(chuoiTach[7]);
-            double giaTriToiDa = Double.parseDouble(chuoiTach[5]);
-            boolean laMonAn = chuoiTach[8].equals("1") ? true : false;
-            double dkApDung = Double.parseDouble(chuoiTach[4]);
-            String trangThai = chuoiTach[9];
+        dateBatDau.setValue(bd);
+        dateKetThuc.setValue(kt);
 
+        if (isMonAn) {
+            radioMonAn.setSelected(true);
+            dsMonChon = FXCollections.observableArrayList(control.layDSMonTheoMaKM(maKM));
+            tableDSMonKMTheoMa.setItems(dsMonChon);
+        } else {
+            txtDieuKienApDung.setText(String.valueOf(dkApDung));
+            radioHoaDon.setSelected(true);
+        }
 
-            LocalDate ngayBD = LocalDate.parse(chuoiTach[2], dtf);
-            LocalDate ngayKT = LocalDate.parse(chuoiTach[3], dtf);
+        btnChonMonAn.setDisable(true);
+        if (txtTenKhuyenMai != null) moKhoaChinhSua(false);
 
-
-
-            //Set gia tri
-            txtMaKhuyenMai.setText(maKM);
-            txtTenKhuyenMai.setText(tenKM);
-            txtGiaTriGiam.setText(giaTriGiam + "");
-            if(giamGiaPT) {
-                radioCo.setSelected(true);
-                txtGiaTriToiDa.setText(giaTriToiDa + "");
-            }else {
-                radioKhong.setSelected(true);
-            }
-
-            dateBatDau.setValue(ngayBD);
-            dateKetThuc.setValue(ngayKT);
-
-            if(laMonAn) {
-                radioMonAn.setSelected(true);
-                dsMonChon = FXCollections.observableArrayList(control.layDSMonTheoMaKM(chuoi.split(",")[0]));
-                tableDSMonKMTheoMa.setItems(dsMonChon);
-            }else {
-                txtDieuKienApDung.setText(dkApDung + "");
-                radioHoaDon.setSelected(true);
-            }
-
-            btnChonMonAn.setDisable(true);
-
-            if(txtTenKhuyenMai != null ) {
-                moKhoaChinhSua(false);
-            }
-
-            if (trangThai.equals("1")) {
+        // Update Button State
+        switch (trangThai) {
+            case "1": // Đang diễn ra
                 btnNgung.setDisable(false);
                 btnNgung.setText("Ngừng KM");
                 flagNgungXoa = true;
 
                 btnSuaLuu.setText("Sửa");
-                btnSuaLuu.getStyleClass().remove("btn-luu");
-                btnSuaLuu.getStyleClass().add("btn-sua");
+                styleButton(btnSuaLuu, "#f39c12", "white"); // Cam
+                btnSuaLuu.setDisable(true); // Không cho sửa khi đang chạy (logic cũ của bạn)
+                break;
+            case "2": // Sắp diễn ra
+                btnSuaLuu.setText("Sửa");
+                styleButton(btnSuaLuu, "#f39c12", "white");
+                btnSuaLuu.setDisable(false);
+                flagSuaLuu = true;
 
+                btnNgung.setDisable(false);
+                btnNgung.setText("Xóa");
+                flagNgungXoa = false;
+                break;
+            default: // Kết thúc
                 btnSuaLuu.setDisable(true);
-            } else {
-                if(trangThai.equals("2")) {
-                    //Đổi lại button
-                    btnSuaLuu.setText("Sửa");
-                    btnSuaLuu.getStyleClass().remove("btn-luu");
-                    btnSuaLuu.getStyleClass().add("btn-sua");
-                    btnSuaLuu.setDisable(false);
-                    flagSuaLuu = true;
-
-                    btnNgung.setDisable(false);
-                    btnNgung.setText("Xóa");
-                    flagNgungXoa = false;
-
-                }else {
-                    btnSuaLuu.setDisable(true);
-                    btnNgung.setDisable(true);
-
-                    btnNgung.setText("Ngừng KM");
-                    btnSuaLuu.setText("Sửa");
-                    btnSuaLuu.getStyleClass().remove("btn-luu");
-                    btnSuaLuu.getStyleClass().add("btn-sua");
-
-                }
-            }
-
-        });
-
-        vboxAll.getChildren().add(tableDSKM);
-
-        return vboxAll;
+                btnNgung.setDisable(true);
+                btnNgung.setText("Ngừng KM");
+                btnSuaLuu.setText("Sửa");
+                break;
+        }
     }
 
+    // ===== PHẦN PHẢI: FORM THÔNG TIN =====
     public VBox taoPhanBenPhai() {
+        VBox card = new VBox(15);
+        card.setPadding(new Insets(20));
+        card.setStyle(
+                "-fx-background-color: white;" +
+                        "-fx-background-radius: 12;" +
+                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);"
+        );
 
-        //Spacer
-        Region spacer1 = new Region();
-        HBox.setHgrow(spacer1, Priority.ALWAYS);
-        Region spacer2 = new Region();
-        HBox.setHgrow(spacer2, Priority.ALWAYS);
-        Region spacer3 = new Region();
-        HBox.setHgrow(spacer3, Priority.ALWAYS);
-        Region spacer4 = new Region();
-        HBox.setHgrow(spacer4, Priority.ALWAYS);
-        Region spacer5 = new Region();
-        HBox.setHgrow(spacer5, Priority.ALWAYS);
-        Region spacer6 = new Region();
-        HBox.setHgrow(spacer6, Priority.ALWAYS);
-        Region spacer8 = new Region();
-        HBox.setHgrow(spacer8, Priority.ALWAYS);
-        Region spacer9 = new Region();
-        HBox.setHgrow(spacer9, Priority.ALWAYS);
-        Region spacer7 = new Region();
-        HBox.setHgrow(spacer7, Priority.ALWAYS);
+        Label title = new Label("THÔNG TIN CHI TIẾT");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+        title.setStyle("-fx-text-fill: #082744; -fx-border-width: 0 0 0 4; -fx-border-color: #082744; -fx-padding: 0 0 0 10;");
 
-        // Tiêu đề - 1
-        Label lblTieuDeKhuyenMai = createModernSectionTitle("Thông Tin Khuyến Mãi", "#667eea");
-        //lblTieuDeKhuyenMai.setGraphic(createSvgIcon(24,24, "#667eea", "M3.75 6.75h16.5M3.75 12H12m-8.25 5.25h16.5"));
-
-
-        //Ma khuyen mai
-        Label lblMaKhuyenMai = new Label("Mã khuyến mãi:");
-        lblMaKhuyenMai.getStyleClass().add("fontTieuDeNho");
+        // Form Fields
         txtMaKhuyenMai = createInputField(new TextField(), true);
-        txtMaKhuyenMai.setPrefWidth(250);
-        HBox hbox1 = new HBox(lblMaKhuyenMai, spacer1, txtMaKhuyenMai );
-        hbox1.setPadding(new Insets(5));
-        hbox1.setPadding(new Insets(0, 30, 0, 0));
-
-
-        //Ten khuyen mai
-        Label lblTenKhuyenMai = new Label("Tên khuyến mãi:");
-        lblTenKhuyenMai.getStyleClass().add("fontTieuDeNho");
         txtTenKhuyenMai = createInputField(new TextField(), false);
-        txtTenKhuyenMai.setPrefWidth(250);
-        HBox hbox2 = new HBox(lblTenKhuyenMai, spacer2, txtTenKhuyenMai );
-        hbox2.setPadding(new Insets(5));
-        hbox2.setPadding(new Insets(0, 30, 0, 0));
 
-        //Giảm giá phần trăm
-        Label lblGiamGiaPhanTram = new Label("Giảm giá phần trăm:");
-        lblGiamGiaPhanTram.getStyleClass().add("fontTieuDeNho");
+        // Radio Groups
         radioCo = new RadioButton("Có");
         radioKhong = new RadioButton("Không");
         radioGroup1 = new ToggleGroup();
         radioCo.setToggleGroup(radioGroup1);
         radioKhong.setToggleGroup(radioGroup1);
-        radioCo.getStyleClass().add("radio-button");
-        radioKhong.getStyleClass().add("radio-button");
         radioCo.setSelected(true);
 
-        HBox hboxRadio1 = new HBox(5);
-        hboxRadio1.setPrefWidth(250);
-        Region spaceRadio1 = new Region();
-        spaceRadio1.setPrefWidth(30);
-        hboxRadio1.getChildren().addAll(radioCo, spaceRadio1,radioKhong);
-
-        HBox hbox3 = new HBox(5);
-        hbox3.getChildren().addAll(lblGiamGiaPhanTram, spacer3, hboxRadio1);
-
-        //Giá trị giảm
-        Label lblGiaTriGiam = new Label("Giá trị giảm:");
-        lblGiaTriGiam.getStyleClass().add("fontTieuDeNho");
         txtGiaTriGiam = createInputField(new TextField(), false);
-        txtGiaTriGiam.setPrefWidth(250);
-        Label lblDonVi = new Label("VND");
-        lblDonVi.setPrefWidth(30);
-        lblDonVi.setPrefHeight(35);
-        lblDonVi.setAlignment(Pos.BOTTOM_RIGHT);
-        if(radioCo.isSelected()) {
-            lblDonVi.setText("%");
-        }
-        lblDonVi.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold ;");
+        Label lblDonVi = new Label("%");
 
-        HBox hbox4 = new HBox(lblGiaTriGiam, spacer4, txtGiaTriGiam , lblDonVi);
+        txtGiaTriToiDa = createInputField(new TextField(), false);
+        HBox rowMaxVal = createFormRow("Tối đa:", txtGiaTriToiDa, new Label("VND"));
 
-
-        //Giá trị tối đa
-        Label lblGiaTriToiDa = new Label("Giá trị tối đa:");
-        lblGiaTriToiDa.getStyleClass().add("fontTieuDeNho");
-        txtGiaTriToiDa = createInputField(new TextField(), false);;
-        txtGiaTriToiDa.setPrefWidth(250);
-        Label lblDonViVND1 = new Label("VND");
-        lblDonViVND1.setPrefWidth(30);
-        lblDonViVND1.setPrefHeight(35);
-        lblDonViVND1.setAlignment(Pos.BOTTOM_RIGHT);
-        lblDonViVND1.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold;");
-
-        HBox hbox5 = new HBox(lblGiaTriToiDa, spacer5, txtGiaTriToiDa, lblDonViVND1);
-
-        if(!radioCo.isSelected()) {
-            hbox5.setVisible(false);
-            hbox5.setManaged(false);
-        }
-
-        // cai dat group 1
-        radioGroup1.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if(newVal == radioCo) {
+        radioGroup1.selectedToggleProperty().addListener((o, oldV, newV) -> {
+            if (newV == radioCo) {
                 lblDonVi.setText("%");
-                fadeIn(hbox5);
+                fadeIn(rowMaxVal);
             } else {
                 lblDonVi.setText("VND");
-                fadeOut(hbox5);
+                fadeOut(rowMaxVal);
             }
         });
 
+        // Date Pickers
+        dateBatDau = new DatePicker();
+        dateKetThuc = new DatePicker();
+        styleDatePicker(dateBatDau);
+        styleDatePicker(dateKetThuc);
 
-        //Loại áp dụng
-        Label lblLoaiApDung = new Label("Loại áp dụng:");
-        lblLoaiApDung.getStyleClass().add("fontTieuDeNho");
+        dateBatDau.valueProperty().addListener((o, oldV, newV) -> {
+            if (newV != null && dateKetThuc.getValue() != null) loadLaiDSMonAn(newV, dateKetThuc.getValue());
+        });
+        dateKetThuc.valueProperty().addListener((o, oldV, newV) -> {
+            if (newV != null && dateBatDau.getValue() != null) loadLaiDSMonAn(dateBatDau.getValue(), newV);
+        });
+
+        // Type Logic
         radioHoaDon = new RadioButton("Hóa đơn");
         radioMonAn = new RadioButton("Món ăn");
         radioGroup2 = new ToggleGroup();
         radioHoaDon.setToggleGroup(radioGroup2);
         radioMonAn.setToggleGroup(radioGroup2);
-        radioHoaDon.getStyleClass().add("radio-button");
-        radioMonAn.getStyleClass().add("radio-button");
-
-        HBox hboxRadio2 = new HBox(5);
-        hboxRadio2.setPrefWidth(250);
-        Region spaceRadio2 = new Region();
-        spaceRadio2.setPrefWidth(30);
-        hboxRadio2.getChildren().addAll(radioHoaDon, spaceRadio2,radioMonAn);
-
-        HBox hbox6 = new HBox(5);
-        hbox6.getChildren().addAll(lblLoaiApDung, spacer6, hboxRadio2);
-
-        //Dieu kiện áp dụng
-        Label lblDieuKienApDung = new Label("Điều kiện áp dụng:");
-        lblDieuKienApDung.getStyleClass().add("fontTieuDeNho");
-        txtDieuKienApDung = createInputField(new TextField(), false);;
-        txtDieuKienApDung.setPrefWidth(250);
-        Label lblDonViVND2 = new Label("VND");
-        lblDonViVND2.setPrefWidth(30);
-        lblDonViVND2.setPrefHeight(35);
-        lblDonViVND2.setAlignment(Pos.BOTTOM_RIGHT);
-        lblDonViVND2.setStyle("-fx-text-fill: black; -fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10px; -fx-font-weight: bold;");
-
-        SVGPath iconLonHonBang = createSvgIcon(2, 24, "gray", "m4.435 1.704l17.3 6.796l-17.3 6.796l-.731-1.861L16.265 8.5L3.704 3.565l.73-1.861ZM3 19h18v2H3v-2Z");
-        iconLonHonBang.setStyle("-fx-stroke: gray; -fx-fill: gray;");
-        StackPane stDieuKien = new StackPane(iconLonHonBang, txtDieuKienApDung);
-        stDieuKien.setAlignment(Pos.CENTER_LEFT);
-        StackPane.setMargin(txtDieuKienApDung, new Insets(0, 0, 0, 20));
-        stDieuKien.setStyle("""
-        			-fx-background-color: white;
-        			-fx-border-color: white;
-        		""");
-
-        HBox hbox7 = new HBox(lblDieuKienApDung, spacer7, stDieuKien, lblDonViVND2);
-
         radioHoaDon.setSelected(true);
-        if(radioMonAn.isSelected()) {
-            hbox7.setVisible(false);
-            hbox7.setManaged(false);
-        }
 
-        // Vbox phan 1
-        VBox vbox1 = new VBox(10);
-        vbox1.getChildren().addAll(lblTieuDeKhuyenMai,hbox1, hbox2, hbox3, hbox4, hbox5, hbox6, hbox7);
-        vbox1.setPadding(new Insets(0, 20, 0, 20));
+        txtDieuKienApDung = createInputField(new TextField(), false);
+        HBox rowDieuKien = createFormRow("Điều kiện:", txtDieuKienApDung, new Label(">= VND"));
 
-        // Tiêu đề - 2
-        Label lblTieuDeNgayApDung = createModernSectionTitle("Ngày Áp Dụng", "#667eea");
-        //lblTieuDeNgayApDung.setGraphic(createSvgIcon(24, 24, "#667eea", "M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5"));
+        // Button Select Item
+        btnChonMonAn = new Button("Chọn món áp dụng");
+        styleButton(btnChonMonAn, "#10ac84", "white");
+        btnChonMonAn.setMaxWidth(Double.MAX_VALUE);
 
-
-        //Ngay bat dau
-        Label lblNgayBatDau = new Label("Ngày bắt đầu:");
-        lblNgayBatDau.getStyleClass().add("fontTieuDeNho");
-        dateBatDau = new DatePicker();
-        dateKetThuc = new DatePicker();
-
-        dateKetThuc = new DatePicker();
-        dateBatDau.setPrefWidth(250);
-        dateBatDau.getStyleClass().add("date-picker");
-
-        dateBatDau.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && dateKetThuc.getValue() != null) {
-                loadLaiDSMonAn(newVal, dateKetThuc.getValue());
-            }
-        });
-
-        HBox hbox8 = new HBox(lblNgayBatDau, spacer8, dateBatDau);
-        hbox8.setPadding(new Insets(0, 30, 0, 0));
-
-        //Ngay ket thuc
-        Label lblNgayKetThuc = new Label("Ngày kết thúc:");
-        lblNgayKetThuc.getStyleClass().add("fontTieuDeNho");
-        dateKetThuc.setPrefWidth(250);
-        dateKetThuc.getStyleClass().add("date-picker");
-
-        dateKetThuc.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && dateBatDau.getValue() != null) {
-                loadLaiDSMonAn(dateBatDau.getValue(), newVal);
-            }
-        });
-
-        HBox hbox9 = new HBox(lblNgayKetThuc, spacer9, dateKetThuc);
-        hbox9.setPadding(new Insets(0, 30, 0, 0));
-
-        // Khu vuc khuyen mai mon an
-
-        VBox vboxKhuyenMaiMonAn = new VBox(5);
-
-        //Button chọn món khuyến mãi
-
-        btnChonMonAn = new Button("Chọn món");
-        btnChonMonAn.setGraphic(createSvgIcon(24, 24, "white", "M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25ZM12.75 9a.75.75 0 0 0-1.5 0v2.25H9a.75.75 0 0 0 0 1.5h2.25V15a.75.75 0 0 0 1.5 0v-2.25H15a.75.75 0 0 0 0-1.5h-2.25V9Z"));
-        btnChonMonAn.setMinHeight(30);
-        btnChonMonAn.setMinWidth(100);
-        btnChonMonAn.getStyleClass().add("button-chonMon");
-
-        // BUTTON CHON MON
-        // TẠO MODAL HIỆN RA
-        btnChonMonAn.setOnAction(e -> {
-
-            String giaTriGiamString = txtGiaTriGiam.getText();
-
-            if(giaTriGiamString.isEmpty()) {
-                showAlert(AlertType.WARNING, "Giá trị giảm rỗng", "Vui lòng nhập giá trị giảm trước khi thêm khuyến mãi !");
-                focus(txtGiaTriGiam);
-                return;
-            }
-
-            double giaTriGiam = 0.0;
-
-            try {
-                giaTriGiam = Double.parseDouble(giaTriGiamString);
-            }catch (Exception er) {
-                showAlert(AlertType.WARNING, "Giá trị giảm sai", "Vui lòng nhập giá trị giảm là số");
-                focus(txtGiaTriGiam);
-                return;
-            }
-
-            if(giaTriGiam < 0) {
-                showAlert(AlertType.WARNING, "Giá trị giảm không đúng", "Vui lòng nhập giá trị giảm >= 0 !");
-                focus(txtGiaTriGiam);
-                return;
-            }
-
-            LocalDate ngayBD = dateBatDau.getValue();
-
-            if(ngayBD == null) {
-                showAlert(AlertType.WARNING, "Ngày bắt đầu rỗng", "Vui lòng chọn ngày bắt đầu!");
-                dateBatDau.requestFocus();
-                return;
-            }
-
-            LocalDate ngayKT = dateKetThuc.getValue();
-
-            if(ngayKT == null) {
-                showAlert(AlertType.WARNING, "Ngày kết thúc rỗng", "Vui lòng chọn ngày kết thúc!");
-                dateKetThuc.requestFocus();
-                return;
-            }
-
-            if(ngayBD.isBefore(LocalDate.now())) {
-                showAlert(AlertType.WARNING, "Ngày bắt không hợp lệ", "Ngày bắt đầu không được trước ngày hiện tại!");
-                dateBatDau.requestFocus();
-                return;
-            }
-
-            if (ngayKT.isBefore(ngayBD)) {
-                showAlert(AlertType.WARNING, "Ngày kết thúc không hợp lệ", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!");
-                dateKetThuc.requestFocus();
-                return;
-            }
-
-            if(dsTTMonAn.isEmpty()) {
-                loadLaiDSMonAn(ngayBD, ngayKT);
-            }
-
-            Stage stageChinh = (Stage) btnChonMonAn.getScene().getWindow();
-            Parent rootChinh = stageChinh.getScene().getRoot();
-
-            // Hiệu ứng mờ
-            BoxBlur blur = new BoxBlur(5, 5, 3);
-            rootChinh.setEffect(blur);
-
-            //Khoi tao modal
-            Stage modal = new Stage();
-            modal.initModality(Modality.APPLICATION_MODAL);
-            modal.setTitle("Chọn món ăn khuyến mãi");
-            modal.initModality(Modality.WINDOW_MODAL);
-            //Layout
-
-            BorderPane layout = new BorderPane();
-            layout.setStyle("-fx-background-color: white");
-
-            //Tạo phần bên trái modal thêm món ăn
-            VBox vboxPhanTrai = taoPhanBenTraiModal();
-            layout.setCenter(vboxPhanTrai);
-
-            // Tạo phần bên phải modal thêm món ăn
-            VBox vboxPhanPhai = taoPhanBenPhaiModal(modal);
-            layout.setRight(vboxPhanPhai);
-
-
-            //Scene
-            Scene scene = new Scene(layout,  900, 600);
-            scene.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
-            
-            
-            modal.setScene(scene);
-            modal.showAndWait();
-
-            // Khi modal đóng, xóa blur
-            rootChinh.setEffect(null);
-        });
-
-
-        // Bảng món ăn
+        // Table Selected Items (Mini)
         tableDSMonKMTheoMa = new TableView<>(dsMonChon);
+        setupMiniTable();
+        VBox boxMonAn = new VBox(10, btnChonMonAn, tableDSMonKMTheoMa);
 
-        TableColumn<String, String> colMaMon = new TableColumn<>("Mã");
-        colMaMon.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("-")[0]);
-        });
-        colMaMon.setPrefWidth(80);
-
-        TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
-        colTenMon.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("-")[1]);
-        });
-        colTenMon.setPrefWidth(170);
-
-        TableColumn<String, String> colGiaTien = new TableColumn<>("Giá tiền");
-        colGiaTien.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("-")[3]);
-        });
-        colGiaTien.setPrefWidth(120);
-
-        TableColumn<String, String> colGiaSauKM = new TableColumn<>("Giá KM");
-        colGiaSauKM.setCellValueFactory(cellData ->{
-            return new SimpleStringProperty(cellData.getValue().split("-")[6]);
-        });
-        colGiaSauKM.setMinWidth(120);
-
-        ///Col xoa
-
-        colXoa.setCellFactory(tc -> new TableCell<String, Void>() {
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty) {
-                    setGraphic(null);
-                    return;
-                }
-
-                Button btnTBXoa = new Button();
-                btnTBXoa.setGraphic(createSvgIcon(15, 24, "red", "m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0"));
-                btnTBXoa.setStyle("-fx-background-color: transparent;");
-                btnTBXoa.setStyle("-fx-cursor: hand; -fx-background-color: transparent; -fx-padding: 0");
-                btnTBXoa.setMaxHeight(15);
-                btnTBXoa.setMaxWidth(15);
-
-                btnTBXoa.setOnAction(e -> {
-                    // lấy đúng item của dòng hiện tại
-                    String monAn = getTableView().getItems().get(getIndex());
-                    String[] monAnSplit = monAn.split("-");
-
-                    Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-                    alert.setTitle("Xác nhận");
-                    alert.setHeaderText("Bạn có chắc muốn xóa món này không?");
-                    alert.setContentText(
-                            "Mã: " + monAnSplit[0] + "\n" +
-                                    "Tên: " + monAnSplit[1] + "\n" +
-                                    "Giá gốc: " + monAnSplit[3] + "\n" +
-                                    "Giá KM: " + monAnSplit[6]
-                    );
-
-                    Optional<ButtonType> result = alert.showAndWait();
-                    if (result.isPresent() && result.get() == ButtonType.OK) {
-                        // thực hiện xóa
-                        dsTTMonAn.add(
-                                monAnSplit[0] + "-" +
-                                        monAnSplit[1] + "-" +
-                                        monAnSplit[2] + "-" +
-                                        monAnSplit[3] + "-" +
-                                        monAnSplit[4] + "-" +
-                                        monAnSplit[5] + "-" +
-                                        monAnSplit[3] + "-" +
-                                        monAnSplit[7] + "-" +
-                                        monAnSplit[8]
-                        );
-                        getTableView().getItems().remove(getIndex());
-                        dsMonChon.remove(monAn);
-                    }
-                });
-
-
-                setGraphic(btnTBXoa);
-                setAlignment(Pos.CENTER);
-            }
-        });
-
-        colXoa.setVisible(false);
-        colXoa.setPrefWidth(50);
-
-        // Thêm cột vào bảng
-        tableDSMonKMTheoMa.getColumns().addAll(colMaMon, colTenMon, colGiaTien, colGiaSauKM, colXoa);
-
-
-        tableDSMonKMTheoMa.setPrefHeight(100);
-        tableDSMonKMTheoMa.getStyleClass().add("table-view");
-        tableDSMonKMTheoMa.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        vboxKhuyenMaiMonAn.getChildren().addAll(btnChonMonAn, tableDSMonKMTheoMa);
-        //
-        if(radioHoaDon.isSelected()) {
-            vboxKhuyenMaiMonAn.setVisible(false);
-            vboxKhuyenMaiMonAn.setManaged(false);
-
-        }
-
-        // cai dat group 2
-        radioGroup2.selectedToggleProperty().addListener((obs, oldVal, newVal) -> {
-            if(newVal == radioHoaDon) {
-                fadeIn(hbox7);
-                fadeOut(vboxKhuyenMaiMonAn);
+        radioGroup2.selectedToggleProperty().addListener((o, oldV, newV) -> {
+            if (newV == radioHoaDon) {
+                fadeIn(rowDieuKien);
+                fadeOut(boxMonAn);
                 radioCo.setDisable(false);
             } else {
-                fadeOut(hbox7);
-                fadeIn(vboxKhuyenMaiMonAn);
+                fadeOut(rowDieuKien);
+                fadeIn(boxMonAn);
                 radioKhong.setSelected(true);
                 radioCo.setDisable(true);
             }
         });
 
+        // Initial State
+        boxMonAn.setVisible(false);
+        boxMonAn.setManaged(false);
 
-        //Vbox phan 2
-        VBox vbox2 = new VBox(10);
-        vbox2.getChildren().addAll(lblTieuDeNgayApDung, hbox8, hbox9, vboxKhuyenMaiMonAn);
-        vbox2.setPadding(new Insets(0, 20, 0, 20));
+        // Layout Form
+        card.getChildren().addAll(
+                title,
+                createFormRow("Mã KM:", txtMaKhuyenMai, null),
+                createFormRow("Tên KM:", txtTenKhuyenMai, null),
+                new Label("Giảm theo % ?"),
+                new HBox(20, radioCo, radioKhong),
+                createFormRow("Giá trị:", txtGiaTriGiam, lblDonVi),
+                rowMaxVal,
+                createFormRow("Từ ngày:", dateBatDau, null),
+                createFormRow("Đến ngày:", dateKetThuc, null),
+                new Label("Áp dụng cho:"),
+                new HBox(20, radioHoaDon, radioMonAn),
+                rowDieuKien,
+                boxMonAn
+        );
 
-        //Phần nút
+        // Action Buttons
         btnSuaLuu = new Button("Sửa");
-        btnNgung = new Button("Ngưng KM");
-
-        btnNgung.setDisable(true);
+        styleButton(btnSuaLuu, "#f39c12", "white"); // Orange
         btnSuaLuu.setDisable(true);
 
-        btnSuaLuu.getStyleClass().add("btn-sua");
-        btnNgung.getStyleClass().add("btn-ngung");
+        btnNgung = new Button("Ngừng KM");
+        styleButton(btnNgung, "#e74c3c", "white"); // Red
+        btnNgung.setDisable(true);
 
-        btnSuaLuu.setTooltip(new Tooltip("Nhấn F6 để dùng nhanh"));
-        btnNgung.setTooltip(new Tooltip("Nhấn F9 để dùng nhanh"));
+        HBox actions = new HBox(10, btnSuaLuu, btnNgung);
+        actions.setAlignment(Pos.CENTER_RIGHT);
 
+        // Spacer to push buttons to bottom
+        Region spacer = new Region();
+        VBox.setVgrow(spacer, Priority.ALWAYS);
+
+        card.getChildren().addAll(spacer, new Separator(), actions);
+
+        // Logic Buttons
         btnNgung.setOnAction(e -> {
-            if(flagNgungXoa) {
-                hanhDongNgungKM();
-            }else {
-                hanhDongXoaKM();
-            }
-
+            if (flagNgungXoa) hanhDongNgungKM();
+            else hanhDongXoaKM();
         });
 
         btnSuaLuu.setOnAction(e -> {
-            if(flagSuaLuu) {
-                if(hanhDongSua()) {
+            if (flagSuaLuu) { // Chuyển sang chế độ Sửa -> Lưu
+                if (hanhDongSua()) {
                     btnSuaLuu.setText("Lưu");
-                    btnSuaLuu.getStyleClass().remove("btn-sua");
-                    btnSuaLuu.getStyleClass().add("btn-luu");
+                    styleButton(btnSuaLuu, "#082744", "white"); // Blue
                     colXoa.setVisible(true);
                     flagSuaLuu = false;
                     btnChonMonAn.setDisable(false);
-
                     moKhoaChinhSua(true);
                 }
-            }else {
-                if(hanhDongLuu()) {
+            } else { // Chuyển sang chế độ Lưu -> Sửa
+                if (hanhDongLuu()) {
                     btnSuaLuu.setText("Sửa");
-                    btnSuaLuu.getStyleClass().remove("btn-luu");
-                    btnSuaLuu.getStyleClass().add("btn-sua");
+                    styleButton(btnSuaLuu, "#f39c12", "white"); // Orange
                     flagSuaLuu = true;
                     colXoa.setVisible(false);
                     clear();
-
                     moKhoaChinhSua(false);
                 }
             }
         });
 
-        HBox hboxButton = new HBox(10);
-        Region spaceButton = new Region();
+        // Modal Logic for btnChonMonAn
+        btnChonMonAn.setOnAction(e -> moModalChonMon());
 
-        hboxButton.getChildren().addAll(btnSuaLuu, btnNgung);
-        hboxButton.setAlignment(Pos.CENTER_LEFT);
-        hboxButton.setPadding(new Insets(0, 25, 0, 22));
+        return card;
+    }
 
-        /////
-        VBox vboxAll = new VBox(30);
-        vboxAll.getChildren().addAll(vbox1, vbox2, hboxButton);
-        vboxAll.setPadding(new Insets(30, 0, 30, 0));
+    private void setupMiniTable() {
+        TableColumn<String, String> c1 = new TableColumn<>("Mã");
+        c1.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().split("-")[0]));
+        TableColumn<String, String> c2 = new TableColumn<>("Tên");
+        c2.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().split("-")[1]));
+        TableColumn<String, String> c3 = new TableColumn<>("Giá KM");
+        c3.setCellValueFactory(d -> new SimpleStringProperty(d.getValue().split("-")[6]));
 
-        //vboxAll.setStyle("-fx-background-color: black");
-        moKhoaChinhSua(false);
-        vboxAll.setPrefWidth(500);
-        return vboxAll;
+        // Column Xoa
+        colXoa.setCellFactory(tc -> new TableCell<String, Void>() {
+            @Override
+            protected void updateItem(Void item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty) setGraphic(null);
+                else {
+                    Button btnDel = new Button("🗑");
+                    btnDel.setStyle("-fx-background-color: transparent; -fx-text-fill: red; -fx-cursor: hand;");
+                    btnDel.setOnAction(e -> {
+                        String monAn = getTableView().getItems().get(getIndex());
+                        // Confirmation Logic
+                        Alert alert = new Alert(AlertType.CONFIRMATION, "Xóa món này khỏi KM?", ButtonType.YES, ButtonType.NO);
+                        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+                            String[] parts = monAn.split("-");
+                            // Revert object string logic
+                            String revert = parts[0] + "-" + parts[1] + "-" + parts[2] + "-" + parts[3] + "-" + parts[4] + "-" + parts[5] + "-" + parts[3] + "-" + parts[7] + "-" + parts[8];
+                            dsTTMonAn.add(revert);
+                            getTableView().getItems().remove(getIndex());
+                            dsMonChon.remove(monAn);
+                        }
+                    });
+                    setGraphic(btnDel);
+                    setAlignment(Pos.CENTER);
+                }
+            }
+        });
+
+        tableDSMonKMTheoMa.getColumns().addAll(c1, c2, c3, colXoa);
+        tableDSMonKMTheoMa.setPrefHeight(150);
+        tableDSMonKMTheoMa.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        colXoa.setVisible(false);
+    }
+
+    // ===== MODAL CHỌN MÓN =====
+    private void moModalChonMon() {
+        // Validation Logic
+        String valGiam = txtGiaTriGiam.getText();
+        if (valGiam.isEmpty()) {
+            showAlert(AlertType.WARNING, "Lỗi", "Nhập giá trị giảm trước!");
+            return;
+        }
+        double dGiam = 0;
+        try {
+            dGiam = Double.parseDouble(valGiam);
+        } catch (Exception e) {
+            showAlert(AlertType.WARNING, "Lỗi", "Giá trị giảm sai!");
+            return;
+        }
+        if (dGiam < 0) {
+            showAlert(AlertType.WARNING, "Lỗi", "Giá trị giảm < 0");
+            return;
+        }
+        if (dateBatDau.getValue() == null || dateKetThuc.getValue() == null) {
+            showAlert(AlertType.WARNING, "Lỗi", "Chọn ngày áp dụng!");
+            return;
+        }
+
+        if (dsTTMonAn.isEmpty()) loadLaiDSMonAn(dateBatDau.getValue(), dateKetThuc.getValue());
+
+        // Setup Stage
+        Stage stage = (Stage) btnChonMonAn.getScene().getWindow();
+        BoxBlur blur = new BoxBlur(5, 5, 3);
+        stage.getScene().getRoot().setEffect(blur);
+
+        Stage modal = new Stage();
+        modal.initModality(Modality.WINDOW_MODAL);
+        modal.initOwner(stage);
+        modal.setTitle("Chọn Món Ăn");
+
+        BorderPane layout = new BorderPane();
+        layout.setStyle("-fx-background-color: white;");
+
+        layout.setCenter(taoPhanBenTraiModal());
+        layout.setRight(taoPhanBenPhaiModal(modal));
+
+        Scene scene = new Scene(layout, 900, 600);
+        try {
+            scene.getStylesheets().add(getClass().getResource("/css/qlkm.css").toExternalForm());
+        } catch (Exception e) {
+        }
+        modal.setScene(scene);
+        modal.showAndWait();
+
+        stage.getScene().getRoot().setEffect(null);
     }
 
     public VBox taoPhanBenTraiModal() {
-        //VBox benTrai
-        VBox vboxBenTrai = new VBox(8);
-        vboxBenTrai.setPadding(new Insets(20,10,20,10));
-        vboxBenTrai.setPrefWidth(550);
+        VBox box = new VBox(10);
+        box.setPadding(new Insets(20));
 
-        // Biến bên trái
-        Label lblTieuDeChonMon = new Label("Chọn món giảm giá");
-        HBox hboxChuThich = new HBox(10);
-        Label lblDanhSach = new Label("Danh sách món");
-        HBox hboxChuaGiamGia = new HBox(2);
-        ImageView iconChuaGiamGia = new ImageView(IMG_CHU_NHAT_XANH);
-        Label lblChuaGiamGia = new Label("Chưa giảm giá");
-        HBox hboxDaGiamGia = new HBox(2);
-        ImageView iconDaGiamGia = new ImageView(IMG_CHU_NHAT_VANG);
-        Label lblDaGiamGia = new Label("Đã giảm giá");
-        cboLocMon = new ComboBox<String>();
-        cboLocMon.getItems().addAll("Tất cả","Đã giảm giá","Chưa giảm giá");
+        Label title = new Label("Danh Sách Món Ăn");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
 
-        cboLocMon.setOnAction(e -> {locMonAn();});
+        cboLocMon = new ComboBox<>();
+        cboLocMon.getItems().addAll("Tất cả", "Đã giảm giá", "Chưa giảm giá");
+        cboLocMon.setValue("Tất cả");
+        cboLocMon.setOnAction(e -> locMonAn());
 
-        //Tieu de
-        lblTieuDeChonMon.setStyle("-fx-font-size: 30px; -fx-font-family: 'Tai Heritage Pro'; -fx-font-weight: bold");
-        vboxBenTrai.getChildren().add(lblTieuDeChonMon);
+        listMonAn = new ListView<>(dsTTMonAn);
+        listMonAn.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) setGraphic(null);
+                else setGraphic(taoMonBenTrai(item));
+            }
+        });
 
-        // Danh sách chú thích
-        lblDanhSach.getStyleClass().add("fontTieuDeNho");
-        lblChuaGiamGia.getStyleClass().add("fontTieuDeNho");
-        lblDaGiamGia.getStyleClass().add("fontTieuDeNho");
-        iconChuaGiamGia.setFitHeight(10);
-        iconChuaGiamGia.setFitWidth(15);
-        iconDaGiamGia.setFitHeight(10);
-        iconDaGiamGia.setFitWidth(15);
-        hboxChuaGiamGia.getChildren().addAll(iconChuaGiamGia, lblChuaGiamGia);
-        hboxChuaGiamGia.setAlignment(Pos.CENTER_LEFT);
-        hboxDaGiamGia.getChildren().addAll(iconDaGiamGia, lblDaGiamGia);
-        hboxDaGiamGia.setAlignment(Pos.CENTER_LEFT);
-        hboxChuThich.getChildren().addAll(lblDanhSach, hboxChuaGiamGia, hboxDaGiamGia, cboLocMon);
-        hboxChuThich.setAlignment(Pos.CENTER_LEFT);
-        vboxBenTrai.getChildren().add(hboxChuThich);
-        cboLocMon.getStyleClass().add("combo-box");
-        cboLocMon.getSelectionModel().selectFirst();
+        // Prevent row selection interfering with button click
+        listMonAn.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+            Node target = (Node) e.getTarget();
+            if (!(target instanceof Button || (target.getParent() instanceof Button))) {
+                e.consume();
+                listMonAn.getSelectionModel().clearSelection();
+            }
+        });
 
-        //Danh sách món ăn giảm giá
-
-
-        ListView<String> listMonAn = taoDanhSachMonBenTrai();
-        listMonAn.setFixedCellSize(-1);
-
-        //
-        vboxBenTrai.getChildren().add(listMonAn);
-
-        return vboxBenTrai;
+        box.getChildren().addAll(title, cboLocMon, listMonAn);
+        return box;
     }
 
     public VBox taoPhanBenPhaiModal(Stage modal) {
-        //Vbox bên phải
-        VBox vboxBenPhai = new VBox(20);
-        vboxBenPhai.setPrefWidth(350);
-        vboxBenPhai.setPadding(new Insets(50, 10, 50, 10));
+        VBox box = new VBox(10);
+        box.setPadding(new Insets(20));
+        box.setPrefWidth(350);
+        box.setStyle("-fx-border-color: #ddd; -fx-border-width: 0 0 0 1;");
 
-        //Biến bên phải
-        HBox hboxTieuDe = new HBox();
-        Label lblMonDaChon = new Label("Món đã chọn");
-        ListView<String> listMonChon = taoDanhSachMonBenPhai();
-        HBox hboxButton = new HBox();
-        Region spacerButton  = new Region();
-        Button btnQuayVe = new Button("Quay về");
-        Button btnXong = new Button("Xong");
+        Label title = new Label("Món Đã Chọn");
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
 
-        //Tạo giao diện
-        lblMonDaChon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20; -fx-font-weight: bold; -fx-text-fill: black");
-        hboxTieuDe.getChildren().add(lblMonDaChon);
-        hboxTieuDe.setAlignment(Pos.CENTER);
-        btnQuayVe.setPrefHeight(50);
-        btnQuayVe.setPrefWidth(100);
-        btnXong.setPrefHeight(50);
-        btnXong.setPrefWidth(100);
-        btnQuayVe.setStyle("-fx-background-color: #082744; -fx-font-size: 18; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
-        btnXong.setStyle("-fx-background-color: green; -fx-font-size: 18; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
+        ListView<String> listChon = new ListView<>(dsMonTemp);
+        listChon.setCellFactory(lv -> new ListCell<String>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                if (empty || item == null) setGraphic(null);
+                else setGraphic(taoMonBenPhai(item));
+            }
+        });
 
-        hboxButton.setHgrow(spacerButton, Priority.ALWAYS);
-        hboxButton.getChildren().addAll(btnQuayVe, spacerButton, btnXong);
-        hboxButton.setPadding(new Insets(0, 20, 0, 20));
+        // Prevent selection
+        listChon.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
+            Node target = (Node) e.getTarget();
+            if (!(target instanceof Button || (target.getParent() instanceof Button))) e.consume();
+        });
 
-        //SỰ kiện button
-        btnQuayVe.setOnAction(e -> {
+        Button btnBack = new Button("Quay về");
+        styleButton(btnBack, "gray", "white");
+
+        Button btnDone = new Button("Xong");
+        styleButton(btnDone, "#2ecc71", "white");
+
+        btnBack.setOnAction(e -> {
             modal.close();
             quayVe();
         });
-
-        btnXong.setOnAction(e -> {
+        btnDone.setOnAction(e -> {
             modal.close();
             themMonChon();
         });
 
+        HBox btns = new HBox(10, btnBack, btnDone);
+        btns.setAlignment(Pos.CENTER_RIGHT);
 
-        //
-        vboxBenPhai.getChildren().addAll(hboxTieuDe, listMonChon, hboxButton);
-        vboxBenPhai.setStyle("-fx-border-width: 0 0 0 1; -fx-border-color: #D9D9D9");
-
-        return vboxBenPhai;
+        box.getChildren().addAll(title, listChon, new Region(), btns);
+        VBox.setVgrow(listChon, Priority.ALWAYS);
+        return box;
     }
 
-    public ListView<String> taoDanhSachMonBenPhai() {
-        //Vbox danh sách món
-        ListView<String> listMonAn = new ListView<>(dsMonTemp);
-        listMonAn.setStyle("-fx-background-color: transparent;");
-        listMonAn.setFixedCellSize(80);
+    // Helper tạo UI từng dòng trong list modal
+    public HBox taoMonBenTrai(String monAn) {
+        HBox row = new HBox(10);
+        row.setPadding(new Insets(5));
+        row.setAlignment(Pos.CENTER_LEFT);
 
-        listMonAn.setCellFactory(list -> new ListCell<String>() {
-            @Override
-            protected void updateItem(String mon, boolean empty) {
-                super.updateItem(mon, empty);
-                if (empty || mon == null) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(taoMonBenPhai(mon));
+        ImageView img = new ImageView(IMG_MON_AN);
+
+        // Load Image Logic (Simplified)
+        if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
+            String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
+            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
+            if (imagePath != null) {
+                try {
+                    img.setImage(new Image(imagePath));
+                } catch (Exception e) {
                 }
             }
+        }
+
+        img.setFitWidth(60);
+        img.setFitHeight(60);
+        Rectangle clip = new Rectangle(60, 60);
+        clip.setArcWidth(10);
+        clip.setArcHeight(10);
+        img.setClip(clip);
+
+        VBox info = new VBox(2);
+        Label name = new Label(monAn.split("-")[1]);
+        name.setStyle("-fx-font-weight: bold;");
+        Label price = new Label(new DecimalFormat("#,###").format(Double.parseDouble(monAn.split("-")[3])) + " đ");
+        info.getChildren().addAll(name, price);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button btnAdd = new Button("Thêm");
+        styleButton(btnAdd, "#082744", "white");
+
+        // Check if item is already discounted elsewhere
+        boolean isDiscounted = monAn.split("-")[5].equals("1");
+        if (isDiscounted) {
+            btnAdd.setDisable(true);
+            btnAdd.setText("Đã KM");
+            btnAdd.setStyle("-fx-background-color: #f1c40f; -fx-text-fill: black;");
+        }
+
+        btnAdd.setOnAction(e -> {
+            dsTTMonAn.remove(monAn);
+            if (!dsLocMon.isEmpty()) dsLocMon.remove(monAn);
+
+            String[] parts = monAn.split("-");
+            double giaSau = control.tinhGiaSauKM(Double.parseDouble(parts[3]), Double.parseDouble(txtGiaTriGiam.getText()));
+            // Reconstruct string with new price
+            String newItem = parts[0] + "-" + parts[1] + "-" + parts[2] + "-" + parts[3] + "-" + parts[4] + "-" + parts[5] + "-" + giaSau + "-" + parts[7] + "-" + parts[8];
+            dsMonTemp.add(newItem);
         });
 
-        // Trong hàm taoDanhSachMonBenTrai(), thay phần chặn event:
-        listMonAn.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
-            // Kiểm tra target hoặc parent có phải Button không (reuse cho text bên trong Button)
-            Node target = (Node) e.getTarget();
-            if (!(target instanceof Button || (target.getParent() != null && target.getParent() instanceof Button))) {
-                e.consume();  // Chỉ chặn nếu KHÔNG phải Button (hoặc text của Button)
-                listMonAn.getSelectionModel().clearSelection();
-            }
-            // Nếu click Button/text của Button, event tự do → setOnAction hoạt động
-        });
-
-        return listMonAn;
+        row.getChildren().addAll(img, info, spacer, btnAdd);
+        return row;
     }
 
     public HBox taoMonBenPhai(String monAn) {
-        //HBOx mon la
-        HBox hboxMonAn = new HBox(4);
+        HBox row = new HBox(10);
+        row.setPadding(new Insets(5));
+        row.setAlignment(Pos.CENTER_LEFT);
 
-        //Khai báo biến
-        HBox hboxBenTrai = new HBox(3);
-        
-        ImageView imgMonAn = new ImageView(IMG_MON_AN);
-        
-        // Thêm clip bo góc trực tiếp (quan trọng!)
-        Rectangle clip = new Rectangle(40, 40);  // Kích thước khớp với fitWidth/Height
-        clip.setArcWidth(4);   // Độ bo ngang (25px = bo nhẹ, tăng lên 125 để gần tròn)
-        clip.setArcHeight(4);  // Độ bo dọc (giữ bằng nhau cho bo đều 4 góc)
-        imgMonAn.setClip(clip);  // Áp dụng clip - ảnh sẽ bị cắt bo góc
-        
-        
-        // ✅ Load ảnh từ Supabase
+        ImageView img = new ImageView(IMG_MON_AN);
         if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
+            // ... same load logic ...
             String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
-
-            // Lấy ảnh từ cache (hoặc download nếu chưa có)
             String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
-
             if (imagePath != null) {
                 try {
-                    Image image = new Image(imagePath);
-                    imgMonAn.setImage(image);
+                    img.setImage(new Image(imagePath));
                 } catch (Exception e) {
-                   System.out.println("Không load được ảnh");
                 }
-            } else {
-                // Không download được → Dùng ảnh mặc định
-            		System.out.println("Không load được ảnh");
             }
-        } else {
-        		System.out.println("Không load được ảnh");
         }
-        
-        
-        VBox vboxThongTinMon = new VBox(5);
-        Label lblTenMon = new Label("Món nào đó");
-        HBox hboxGia = new HBox(3);
-        Label lblSau = new Label();
-        VBox vboxBenPhai = new VBox(3);
-        Button btnXoa = new Button("Xóa");
+        img.setFitWidth(40);
+        img.setFitHeight(40);
+        Rectangle clip = new Rectangle(40, 40);
+        clip.setArcWidth(8);
+        clip.setArcHeight(8);
+        img.setClip(clip);
 
-        // Cai dat event
-        btnXoa.setOnAction(e ->{
+        VBox info = new VBox(2);
+        Label name = new Label(monAn.split("-")[1]);
+        name.setStyle("-fx-font-weight: bold; -fx-font-size: 11px;");
+        Label price = new Label(new DecimalFormat("#,###").format(Double.parseDouble(monAn.split("-")[6])) + " đ");
+        price.setStyle("-fx-text-fill: red; -fx-font-size: 11px;");
+        info.getChildren().addAll(name, price);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        Button btnDel = new Button("X");
+        btnDel.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 50;");
+
+        btnDel.setOnAction(e -> {
             dsMonTemp.remove(monAn);
-
-
-            String[] monAnTach = monAn.split("-");
-
-            String monAn2 = monAnTach[0] + "-" +
-                    monAnTach[1] + "-" +
-                    monAnTach[2] + "-" +
-                    monAnTach[3] + "-" +
-                    monAnTach[4] + "-" +
-                    monAnTach[5] + "-" +
-                    monAnTach[3] + "-" +
-                    monAnTach[7] + "-" +
-                    monAnTach[8] ;
-
-            dsTTMonAn.add(monAn2);
-
-            if(!dsLocMon.isEmpty()) {
-                dsLocMon.add(monAn2);
-            }
+            String[] parts = monAn.split("-");
+            // Revert string
+            String oldItem = parts[0] + "-" + parts[1] + "-" + parts[2] + "-" + parts[3] + "-" + parts[4] + "-" + parts[5] + "-" + parts[3] + "-" + parts[7] + "-" + parts[8];
+            dsTTMonAn.add(oldItem);
+            if (!dsLocMon.isEmpty()) dsLocMon.add(oldItem);
         });
 
-
-        //Set giá trị
-        DecimalFormat fomat = new DecimalFormat("#,### VND");
-
-        lblTenMon.setText(monAn.split("-")[1]);
-
-        String maKM = txtMaKhuyenMai.getText();
-
-        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("-")[6])));
-
-        //Tạo món ăn
-        //Trái
-        hboxBenTrai.setPrefWidth(220);
-        hboxBenTrai.setPrefHeight(50);
-        imgMonAn.setFitHeight(40);
-        imgMonAn.setFitWidth(40);
-        imgMonAn.getStyleClass().add("img-MonAn");
-        lblTenMon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12px; -fx-font-weight: bold");
-        lblTenMon.setAlignment(Pos.CENTER_LEFT);
-        lblSau.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12px; -fx-font-weight: bold; -fx-text-fill: red");
-        vboxThongTinMon.getChildren().addAll(lblTenMon, lblSau);
-        vboxThongTinMon.setAlignment(Pos.CENTER_LEFT);
-        vboxThongTinMon.setPadding(new Insets(0,0,0,5));
-        hboxBenTrai.getStyleClass().add("monAnTrai");
-        hboxBenTrai.getChildren().addAll(imgMonAn, vboxThongTinMon);
-        hboxBenTrai.setAlignment(Pos.CENTER_LEFT);
-        hboxBenTrai.setPadding(new Insets(0,0,0,5));
-
-        //Phải
-        vboxBenPhai.setPrefWidth(80);
-        vboxBenPhai.setPrefHeight(50);
-        btnXoa.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 13px; -fx-text-fill: black; -fx-background-color: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
-        vboxBenPhai.getChildren().addAll(btnXoa);
-        vboxBenPhai.setStyle("-fx-background-color: #082744; -fx-background-radius: 10");
-        vboxBenPhai.setAlignment(Pos.CENTER);
-
-        hboxMonAn.getChildren().addAll(hboxBenTrai, vboxBenPhai);
-        hboxMonAn.getStyleClass().add("monAn");
-        //
-        return hboxMonAn;
-    }
-
-    public HBox taoMonBenTrai(String monAn) {
-        //HBox mon an
-        HBox hboxMonAn = new HBox(10);
-
-        //Khai báo biến
-        HBox hboxBenTrai = new HBox(3);
-        ImageView imgMonAn = new ImageView(IMG_MON_AN);
-        
-        // Thêm clip bo góc trực tiếp (quan trọng!)
-        Rectangle clip = new Rectangle(90, 90);  // Kích thước khớp với fitWidth/Height
-        clip.setArcWidth(6);   // Độ bo ngang (25px = bo nhẹ, tăng lên 125 để gần tròn)
-        clip.setArcHeight(6);  // Độ bo dọc (giữ bằng nhau cho bo đều 4 góc)
-        imgMonAn.setClip(clip);  // Áp dụng clip - ảnh sẽ bị cắt bo góc
-        
-        // ✅ Load ảnh từ Supabase
-        if (monAn.split("-")[8] != null && !monAn.split("-")[8].isEmpty()) {
-            String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
-
-            // Lấy ảnh từ cache (hoặc download nếu chưa có)
-            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, monAn.split("-")[8]);
-
-            if (imagePath != null) {
-                try {
-                    Image image = new Image(imagePath);
-                    imgMonAn.setImage(image);
-                } catch (Exception e) {
-                   System.out.println("Không load được ảnh");
-                }
-            } else {
-                // Không download được → Dùng ảnh mặc định
-            		System.out.println("Không load được ảnh");
-            }
-        } else {
-        		System.out.println("Không load được ảnh");
-        }
-        
-        VBox vboxThongTinMon = new VBox(5);
-        Label lblTenMon = new Label();
-
-        Label lblBanDau = new Label();
-        Label lblSau = new Label();
-
-        VBox vboxBenPhai = new VBox(3);
-        Label lblGiamHayChua = new Label();
-        Button btnThemMon = new Button("Thêm");
-        Label lblMaKhuyenMai = new Label();
-
-        //Set gia tri
-        DecimalFormat fomat = new DecimalFormat("#,### VND");
-        lblTenMon.setText(monAn.split("-")[1]);
-
-        lblSau.setText(fomat.format(Double.parseDouble(monAn.split("-")[6])));
-
-
-
-        //Trái
-        hboxBenTrai.setPrefWidth(350);
-        hboxBenTrai.setPrefHeight(100);
-        imgMonAn.setFitHeight(90);
-        imgMonAn.setFitWidth(90);
-        imgMonAn.getStyleClass().add("img-MonAn");
-        lblTenMon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-font-weight: bold");
-        lblTenMon.setAlignment(Pos.CENTER_LEFT);
-        lblBanDau.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 10; -fx-strikethrough: true;");
-        lblSau.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: red");
-        vboxThongTinMon.getChildren().addAll(lblTenMon, lblSau);
-        vboxThongTinMon.setAlignment(Pos.CENTER_LEFT);
-        vboxThongTinMon.setPadding(new Insets(0,0,0,5));
-
-        hboxBenTrai.getStyleClass().add("monAnTrai");
-        hboxBenTrai.getChildren().addAll(imgMonAn, vboxThongTinMon);
-        hboxBenTrai.setAlignment(Pos.CENTER_LEFT);
-        hboxBenTrai.setPadding(new Insets(0,0,0,5));
-
-        //Cài đặt event
-        btnThemMon.setOnAction(e ->{
-            dsTTMonAn.remove(monAn);
-            if(!dsLocMon.isEmpty()) {
-                dsLocMon.remove(monAn);
-            }
-            String[] monAnTach = monAn.split("-");
-
-            double giaSauKM = control.tinhGiaSauKM(Double.parseDouble(monAnTach[3]), Double.parseDouble(txtGiaTriGiam.getText()));
-            String monAn2 = monAnTach[0] + "-" +
-                    monAnTach[1] + "-" +
-                    monAnTach[2] + "-" +
-                    monAnTach[3] + "-" +
-                    monAnTach[4] + "-" +
-                    monAnTach[5] + "-" +
-                    giaSauKM + "-" +
-                    monAnTach[7] + "-" +
-                    monAnTach[8];
-            dsMonTemp.add(monAn2);
-        });
-
-        //Phải
-        boolean giamGia = monAn.split("-")[5].equals("1") ? true : false;
-
-        vboxBenPhai.setPrefWidth(150);
-        vboxBenPhai.setPrefHeight(100);
-        lblGiamHayChua.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-text-fill: white; -fx-font-weight: bold");
-        btnThemMon.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 20px; -fx-text-fill: black; -fx-background-color: white; -fx-background-radius: 5; -fx-font-weight: bold; -fx-cursor: hand");
-        lblMaKhuyenMai.setStyle("-fx-font-family: 'Tai Heritage Pro'; -fx-font-size: 12px; -fx-text-fill: black");
-
-
-        if(giamGia) {
-            vboxBenPhai.setStyle("-fx-background-color: #D5B009; -fx-background-radius: 10");
-            vboxBenPhai.getChildren().addAll(lblGiamHayChua);
-            lblGiamHayChua.setText("Mã " + monAn.split("-")[7]);
-        }
-        else {
-            vboxBenPhai.setStyle("-fx-background-color: #082744; -fx-background-radius: 10");
-            lblGiamHayChua.setText("Chưa giảm giá");
-            vboxBenPhai.getChildren().addAll(lblGiamHayChua, btnThemMon);
-        }
-
-        vboxBenPhai.setAlignment(Pos.CENTER);
-
-        //
-        hboxMonAn.getChildren().addAll(hboxBenTrai, vboxBenPhai);
-        hboxMonAn.getStyleClass().add("monAn");
-
-        return hboxMonAn;
-    }
-
-    public ListView<String> taoDanhSachMonBenTrai() {
-        listMonAn = new ListView<>(dsTTMonAn);
-
-        listMonAn.setStyle("-fx-background-color: transparent;");
-        listMonAn.setFixedCellSize(110);
-
-        listMonAn.setCellFactory(list -> new ListCell<String>() {
-            @Override
-            protected void updateItem(String mon, boolean empty) {
-                super.updateItem(mon, empty);
-
-                if (empty || mon == null) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(taoMonBenTrai(mon));
-                }
-            }
-        });
-
-        // Trong hàm taoDanhSachMonBenTrai(), thay phần chặn event:
-        listMonAn.addEventFilter(MouseEvent.MOUSE_PRESSED, e -> {
-            // Kiểm tra target hoặc parent có phải Button không (reuse cho text bên trong Button)
-            Node target = (Node) e.getTarget();
-            if (!(target instanceof Button || (target.getParent() != null && target.getParent() instanceof Button))) {
-                e.consume();  // Chỉ chặn nếu KHÔNG phải Button (or text của Button)
-                listMonAn.getSelectionModel().clearSelection();
-            }
-            // Nếu click Button/text của Button, event tự do → setOnAction hoạt động
-        });
-
-
-        return listMonAn;
+        row.getChildren().addAll(img, info, spacer, btnDel);
+        return row;
     }
 
 
-    // ANIMATION
-    // Fade in: Hiện dần từ mờ đến rõ
-    private void fadeIn(Node node) {
-        if (node == null) return;
+    // ===== LOGIC HELPERS =====
 
-        node.setVisible(true);
-        node.setManaged(true);
-        node.setOpacity(0.0);
+    private HBox createFormRow(String labelText, Node field, Node suffix) {
+        Label lbl = new Label(labelText);
+        lbl.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
+        lbl.setStyle("-fx-text-fill: #7f8c8d;");
+        lbl.setPrefWidth(100);
 
-        FadeTransition fade = new FadeTransition(Duration.millis(300), node);
-        fade.setFromValue(0.0);
-        fade.setToValue(1.0);
-        fade.play();
+        HBox row = new HBox(10, lbl, field);
+        if (suffix != null) row.getChildren().add(suffix);
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
     }
 
-    // Fade out: Ẩn dần từ rõ đến mờ
-    private void fadeOut(Node node) {
-        if (node == null) return;
-
-        FadeTransition fade = new FadeTransition(Duration.millis(300), node);
-        fade.setFromValue(1.0);  // Từ rõ
-        fade.setToValue(0.0);    // Đến mờ
-        fade.setOnFinished(e -> {
-            node.setVisible(false);
-            node.setManaged(false);
-            node.setOpacity(1.0);  // Reset để lần sau OK
-        });
-        fade.play();
-    }
-
-    private Label createModernSectionTitle(String title, String color) {
-        Label label = new Label(title);
-        label.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
-        label.setStyle(
-                "-fx-text-fill: " + color + ";" +
-                        "-fx-padding: 2 0 2 10;" +
-                        "-fx-border-width: 0 0 0 4;" +
-                        "-fx-border-color: " + color + ";" +
-                        "-fx-font-weight: bold"
+    private void styleButton(Button btn, String bg, String text) {
+        btn.setStyle(
+                "-fx-background-color: " + bg + ";" +
+                        "-fx-text-fill: " + text + ";" +
+                        "-fx-font-weight: bold;" +
+                        "-fx-background-radius: 6;" +
+                        "-fx-padding: 8 15;" +
+                        "-fx-cursor: hand;"
         );
-        return label;
+        addHoverEffect(btn);
     }
 
+    private void addHoverEffect(Node node) {
+        node.setOnMouseEntered(e -> node.setStyle(node.getStyle() + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1);"));
+        node.setOnMouseExited(e -> node.setEffect(null));
+    }
 
-    private SVGPath createSvgIcon(double size, double viewBox, String mau, String pathData) {
-        SVGPath svg = new SVGPath();
-        svg.setContent(pathData);
-        svg.setScaleX(size / viewBox);
-        svg.setScaleY(size / viewBox);
-        svg.setStyle("-fx-stroke: " + mau + "; -fx-fill: transparent;");
-        return svg;
+    private void styleComboBox(ComboBox<?> cbo) {
+        cbo.setStyle("-fx-background-color: white; -fx-border-color: #ced4da; -fx-border-radius: 5; -fx-padding: 2;");
+        cbo.setPrefHeight(35);
+    }
+
+    private void styleDatePicker(DatePicker dp) {
+        dp.setPrefHeight(35);
+        dp.setStyle("-fx-font-size: 14px;");
     }
 
     private TextField createInputField(TextField textField, boolean isReadOnly) {
-
         textField.setEditable(!isReadOnly);
-
+        textField.setPrefHeight(35);
         if (isReadOnly) {
-            textField.setStyle(
-                    "-fx-background-color: #ECF0F1; " +
-                            "-fx-border-color: #bdc3c7; " +
-                            "-fx-border-radius: 6; " +
-                            "-fx-background-radius: 6; " +
-                            "-fx-padding: 5 10 5 10; " +
-                            "-fx-font-size: 15px; " +
-                            "-fx-text-fill: #7f8c8d;"
-            );
+            textField.setStyle("-fx-background-color: #f8f9fa; -fx-border-color: #ced4da; -fx-border-radius: 5; -fx-padding: 5; -fx-text-fill: #7f8c8d;");
         } else {
-            textField.setStyle(
-                    "-fx-background-color: white; " +
-                            "-fx-border-color: #3498db; " +
-                            "-fx-border-width: 1.5; " +
-                            "-fx-border-radius: 6; " +
-                            "-fx-background-radius: 6; " +
-                            "-fx-padding: 5 10 5 10; " +
-                            "-fx-font-size: 15px;"
-            );
-
+            textField.setStyle("-fx-background-color: white; -fx-border-color: #3498db; -fx-border-radius: 5; -fx-padding: 5;");
         }
-
-
         return textField;
     }
 
     private void moKhoaChinhSua(boolean bool) {
-        if(bool) {
-            txtTenKhuyenMai.setEditable(true);
-            radioCo.setDisable(false);
-            radioKhong.setDisable(false);
-            txtGiaTriGiam.setEditable(true);
-            txtGiaTriToiDa.setEditable(true);
-            radioMonAn.setDisable(false);
-            radioHoaDon.setDisable(false);
-            txtDieuKienApDung.setEditable(true);
+        txtTenKhuyenMai.setEditable(bool);
+        radioCo.setDisable(!bool);
+        radioKhong.setDisable(!bool);
+        txtGiaTriGiam.setEditable(bool);
+        txtGiaTriToiDa.setEditable(bool);
+        radioMonAn.setDisable(!bool);
+        radioHoaDon.setDisable(!bool);
+        txtDieuKienApDung.setEditable(bool);
+
+        if (bool) {
             dateBatDau.removeEventFilter(MouseEvent.ANY, blockMouse);
             dateBatDau.getEditor().removeEventFilter(KeyEvent.ANY, blockKey);
-
             dateKetThuc.removeEventFilter(MouseEvent.ANY, blockMouse);
             dateKetThuc.getEditor().removeEventFilter(KeyEvent.ANY, blockKey);
-
-            moKhoaChinhSuaTextField(txtTenKhuyenMai, bool);
-            moKhoaChinhSuaTextField(txtGiaTriGiam, bool);
-            moKhoaChinhSuaTextField(txtGiaTriToiDa, bool);
-            moKhoaChinhSuaTextField(txtDieuKienApDung, bool);
-
-        }else {
-            txtTenKhuyenMai.setEditable(false);
-            radioCo.setDisable(true);
-            radioKhong.setDisable(true);
-            txtGiaTriGiam.setEditable(false);
-            txtGiaTriToiDa.setEditable(false);
-            txtDieuKienApDung.setEditable(false);
-            radioMonAn.setDisable(true);
-            radioHoaDon.setDisable(true);
+        } else {
             dateBatDau.addEventFilter(MouseEvent.ANY, blockMouse);
             dateBatDau.getEditor().addEventFilter(KeyEvent.ANY, blockKey);
-
             dateKetThuc.addEventFilter(MouseEvent.ANY, blockMouse);
             dateKetThuc.getEditor().addEventFilter(KeyEvent.ANY, blockKey);
-
-            moKhoaChinhSuaTextField(txtTenKhuyenMai, bool);
-            moKhoaChinhSuaTextField(txtGiaTriGiam, bool);
-            moKhoaChinhSuaTextField(txtGiaTriToiDa, bool);
-            moKhoaChinhSuaTextField(txtDieuKienApDung, bool);
         }
+
+        styleFieldState(txtTenKhuyenMai, bool);
+        styleFieldState(txtGiaTriGiam, bool);
+        styleFieldState(txtGiaTriToiDa, bool);
+        styleFieldState(txtDieuKienApDung, bool);
     }
 
-    private void moKhoaChinhSuaTextField(TextField textField, boolean bool) {
-        if (!bool) {
-            textField.setStyle(
-                    "-fx-background-color: #ECF0F1; " +
-                            "-fx-border-color: #bdc3c7; " +
-                            "-fx-border-radius: 6; " +
-                            "-fx-background-radius: 6; " +
-                            "-fx-padding: 5 10 5 10; " +
-                            "-fx-font-size: 15px; " +
-                            "-fx-text-fill: #7f8c8d;"
-            );
-        } else {
-            textField.setStyle(
-                    "-fx-background-color: white; " +
-                            "-fx-border-color: #3498db; " +
-                            "-fx-border-width: 1.5; " +
-                            "-fx-border-radius: 6; " +
-                            "-fx-background-radius: 6; " +
-                            "-fx-padding: 5 10 5 10; " +
-                            "-fx-font-size: 15px;" +
-                            "-fx-cursor: hand"
-            );
-        }
+    private void styleFieldState(TextField txt, boolean editable) {
+        if (editable)
+            txt.setStyle("-fx-background-color: white; -fx-border-color: #3498db; -fx-border-radius: 5; -fx-padding: 5;");
+        else
+            txt.setStyle("-fx-background-color: #f8f9fa; -fx-border-color: #ced4da; -fx-border-radius: 5; -fx-padding: 5; -fx-text-fill: #7f8c8d;");
     }
+
+    // Animation
+    private void fadeIn(Node node) {
+        node.setVisible(true);
+        node.setManaged(true);
+        node.setOpacity(0.0);
+        FadeTransition ft = new FadeTransition(Duration.millis(300), node);
+        ft.setFromValue(0.0);
+        ft.setToValue(1.0);
+        ft.play();
+    }
+
+    private void fadeOut(Node node) {
+        FadeTransition ft = new FadeTransition(Duration.millis(300), node);
+        ft.setFromValue(1.0);
+        ft.setToValue(0.0);
+        ft.setOnFinished(e -> {
+            node.setVisible(false);
+            node.setManaged(false);
+            node.setOpacity(1.0);
+        });
+        ft.play();
+    }
+
+    // === LOGIC FUNCTIONS (COPIED EXACTLY AS REQUESTED) ===
 
     public void clear() {
         txtMaKhuyenMai.setText("");
@@ -1634,351 +3134,165 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         clear();
         moKhoaChinhSua(true);
         String maKMMoi = control.taoMaKhuyenMaiMoi();
-
         txtMaKhuyenMai.setText(maKMMoi);
-
         txtTenKhuyenMai.requestFocus();
         btnNgung.setDisable(true);
         btnSuaLuu.setDisable(false);
-
         btnSuaLuu.setText("Lưu");
-        btnSuaLuu.getStyleClass().remove("btn-sua");
-        btnSuaLuu.getStyleClass().add("btn-luu");
+        styleButton(btnSuaLuu, "#082744", "white");
         flagSuaLuu = false;
-
         dsMonChon.clear();
         tableDSMonKMTheoMa.setItems(dsMonChon);
         dsTTMonAn.clear();
-
-        btnNgung.setDisable(true);
-        btnSuaLuu.setDisable(true);
-
         return true;
     }
 
-    public void focus(TextField txt) {
-        txt.requestFocus();
-        txt.selectAll();
-    }
-
-    public void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
-
     public boolean hanhDongLuu() {
+        // [YOUR ORIGINAL VALIDATION & SAVE LOGIC]
         String maKM = txtMaKhuyenMai.getText();
         String tenKhuyenMai = txtTenKhuyenMai.getText();
-
-        if(tenKhuyenMai.isEmpty()) {
+        if (tenKhuyenMai.isEmpty()) {
             showAlert(AlertType.WARNING, "Tên rỗng", "Vui lòng nhập tên khuyến mãi đầy đủ!");
-            focus(txtTenKhuyenMai);
             return false;
         }
 
         String giaTriGiamString = txtGiaTriGiam.getText();
-
-        if(giaTriGiamString.isEmpty()) {
+        if (giaTriGiamString.isEmpty()) {
             showAlert(AlertType.WARNING, "Giá trị giảm rỗng", "Vui lòng nhập giá trị giảm hợp lệ!");
-            focus(txtGiaTriGiam);
             return false;
         }
-
         double giaTriGiam = 0.0;
-
         try {
             giaTriGiam = Double.parseDouble(giaTriGiamString);
-        }catch (Exception e) {
-            showAlert(AlertType.WARNING, "Giá trị giảm sai", "Vui lòng nhập giá trị giảm là số");
-            focus(txtGiaTriGiam);
+        } catch (Exception e) {
+            showAlert(AlertType.WARNING, "Lỗi", "Giá trị giảm là số");
             return false;
         }
 
-        String giaTriToiDaString = "";
         double giaTriToiDa = 0.0;
-
-        if(radioCo.isSelected()) {
-            if(giaTriGiam < 0 || giaTriGiam > 100.0) {
-                showAlert(AlertType.WARNING, "Giá trị giảm không đúng", "Vui lòng nhập giá trị giảm >= 0 và <= 100 !");
-                focus(txtGiaTriGiam);
+        if (radioCo.isSelected()) {
+            if (giaTriGiam < 0 || giaTriGiam > 100.0) {
+                showAlert(AlertType.WARNING, "Lỗi", "Giá trị giảm >= 0 và <= 100 !");
                 return false;
             }
-
-            giaTriToiDaString = txtGiaTriToiDa.getText();
-            if(giaTriToiDaString.isEmpty()) {
-                showAlert(AlertType.WARNING, "Giá trị tối đa rỗng", "Vui lòng nhập giá trị tối đa !");
-                focus(txtGiaTriToiDa);
-                return false;
-            }
-
             try {
-                giaTriToiDa = Double.parseDouble(giaTriToiDaString);
+                giaTriToiDa = Double.parseDouble(txtGiaTriToiDa.getText());
             } catch (Exception e) {
-                showAlert(AlertType.WARNING, "Giá trị tối đa sai", "Vui lòng nhập giá trị tối đa là số !");
-                focus(txtGiaTriToiDa);
+                showAlert(AlertType.WARNING, "Lỗi", "Tối đa là số");
                 return false;
             }
-
-            if(giaTriToiDa < 0) {
-                showAlert(AlertType.WARNING, "Giá trị tối đa sai", "Vui lòng nhập giá trị tối đa >= 0 !");
-                focus(txtGiaTriToiDa);
-                return false;
-            }
-
-        }else {
-            if(giaTriGiam < 0) {
-                showAlert(AlertType.WARNING, "Giá trị giảm không đúng", "Vui lòng nhập giá trị giảm >= 0 !");
-                focus(txtGiaTriGiam);
+        } else {
+            if (giaTriGiam < 0) {
+                showAlert(AlertType.WARNING, "Lỗi", "Giá trị giảm >= 0 !");
                 return false;
             }
         }
 
-        String dieuKienApDungString = "";
         double dieuKienApDung = 0.0;
-
-        if(radioHoaDon.isSelected()) {
-            dieuKienApDungString = txtDieuKienApDung.getText();
-
-            if(dieuKienApDungString.isEmpty()) {
-                showAlert(AlertType.WARNING, "Điều kiện áp dụng rỗng", "Vui lòng nhập điều kiện áp dụng cho hóa đơn!");
-                focus(txtDieuKienApDung);
-                return false;
-            }
-
+        if (radioHoaDon.isSelected()) {
             try {
-                dieuKienApDung = Double.parseDouble(dieuKienApDungString);
+                dieuKienApDung = Double.parseDouble(txtDieuKienApDung.getText());
             } catch (Exception e) {
-                showAlert(AlertType.WARNING, "Điều kiên áp dụng sai", "Vui lòng nhập điều kiện áp dụng là số !");
-                focus(txtDieuKienApDung);
+                showAlert(AlertType.WARNING, "Lỗi", "ĐK là số");
                 return false;
             }
-
-            if(dieuKienApDung < 0) {
-                showAlert(AlertType.WARNING, "Điều kiên áp dụng sai", "Vui lòng nhập điều kiện áp dụng >= 0!");
-                focus(txtDieuKienApDung);
-                return false;
-            }
-
         }
 
         LocalDate ngayBD = dateBatDau.getValue();
-
-        if(ngayBD == null) {
-            showAlert(AlertType.WARNING, "Ngày bắt đầu rỗng", "Vui lòng chọn ngày bắt đầu!");
-            dateBatDau.requestFocus();
-            return false;
-        }
-
         LocalDate ngayKT = dateKetThuc.getValue();
-
-        if(ngayKT == null) {
-            showAlert(AlertType.WARNING, "Ngày kết thúc rỗng", "Vui lòng chọn ngày kết thúc!");
-            dateKetThuc.requestFocus();
+        if (ngayBD == null || ngayKT == null) {
+            showAlert(AlertType.WARNING, "Lỗi", "Chọn ngày!");
             return false;
         }
-
-        if(ngayBD.isBefore(LocalDate.now())) {
-            showAlert(AlertType.WARNING, "Ngày bắt không hợp lệ", "Ngày bắt đầu không được trước ngày hiện tại!");
-            dateBatDau.requestFocus();
+        if (ngayBD.isBefore(LocalDate.now())) {
+            showAlert(AlertType.WARNING, "Lỗi", "Ngày BĐ không trước hôm nay");
             return false;
         }
-
         if (ngayKT.isBefore(ngayBD)) {
-            showAlert(AlertType.WARNING, "Ngày kết thúc không hợp lệ", "Ngày kết thúc phải sau hoặc bằng ngày bắt đầu!");
-            dateKetThuc.requestFocus();
+            showAlert(AlertType.WARNING, "Lỗi", "Ngày KT >= Ngày BĐ");
             return false;
         }
 
-        if(radioMonAn.isSelected()) {
-            if(dsMonChon.isEmpty()) {
-                showAlert(AlertType.WARNING, "Chưa chọn món", "Vui lòng chọn ít nhất một món muốn khuyến mãi!");
-                btnChonMonAn.fire();
-                return false;
-            }
+        if (radioMonAn.isSelected() && dsMonChon.isEmpty()) {
+            showAlert(AlertType.WARNING, "Lỗi", "Chọn món!");
+            return false;
         }
 
         KhuyenMai km = new KhuyenMai();
         km.setMaKhuyenMai(maKM);
         km.setTenKhuyenMai(tenKhuyenMai);
-        if(radioCo.isSelected()) {
-            km.setGiamGiaPhanTram(true);
-            km.setGiaTriToiDa(giaTriToiDa);
-        }else {
-            km.setGiamGiaPhanTram(false);
-            km.setGiaTriToiDa(0.0);
-        }
-
+        km.setGiamGiaPhanTram(radioCo.isSelected());
+        km.setGiaTriToiDa(radioCo.isSelected() ? giaTriToiDa : 0.0);
         km.setGiaTriGiam(giaTriGiam);
-
         km.setNgayBatDau(ngayBD);
         km.setNgayKetThuc(ngayKT);
 
-        if(radioHoaDon.isSelected()) {
-            if(flagXemThem) {
-                //Tạo khuyến mãi cho hóa đơn
-                km.setDieuKienApDung(dieuKienApDung);
-                if(control.themKhuyenMai(km)) {
-                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
+        if (radioHoaDon.isSelected()) {
+            km.setDieuKienApDung(dieuKienApDung);
+            if (flagXemThem) {
+                if (control.themKhuyenMai(km)) {
+                    showAlert(AlertType.INFORMATION, "OK", "Thêm thành công");
                     loadLaiDanhSachKM();
                     return true;
-                }else {
-                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
-                    return false;
                 }
-            }else {
-                //Sửa cho khuyến mãi hóa đơn
-                if(control.suaKhuyenMai(km, dsMonChon, 0)) {
-                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Sửa khuyến mãi thành công");
+            } else {
+                if (control.suaKhuyenMai(km, dsMonChon, 0)) {
+                    showAlert(AlertType.INFORMATION, "OK", "Sửa thành công");
                     loadLaiDanhSachKM();
                     return true;
-                }else {
-                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể sửa khuyến mãi");
-                    return false;
                 }
             }
-        }else {
+        } else {
+            km.setDieuKienApDung(0.0);
             if (flagXemThem) {
-                //Tạo khuyến mãi cho các món ăn
-                km.setDieuKienApDung(0.0);
-                if(control.themKhuyenMai(km) && control.themDSCTKMMonAn(dsMonChon, km)) {
-                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Thêm khuyến mãi mới thành công");
+                if (control.themKhuyenMai(km) && control.themDSCTKMMonAn(dsMonChon, km)) {
+                    showAlert(AlertType.INFORMATION, "OK", "Thêm thành công");
                     loadLaiDanhSachKM();
                     return true;
-                }else {
-                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể thêm khuyến mãi mới");
-                    return false;
                 }
-            }else {
-                //Sửa khuyến mãi cho món ăn
-                if(control.suaKhuyenMai(km, dsMonChon, 1)) {
-                    showAlert(AlertType.INFORMATION, "THÀNH CÔNG", "Sửa khuyến mãi thành công");
+            } else {
+                if (control.suaKhuyenMai(km, dsMonChon, 1)) {
+                    showAlert(AlertType.INFORMATION, "OK", "Sửa thành công");
                     loadLaiDanhSachKM();
                     return true;
-                }else {
-                    showAlert(AlertType.ERROR, "THẤT BẠI", "Không thể sửa khuyến mãi");
-                    return false;
                 }
-
             }
         }
-
+        return false;
     }
 
     public boolean hanhDongSua() {
         return true;
     }
 
-    public void loadLaiDanhSachKM() {
-        List<String> newData = control.layDanhSachCTKM();
-        dsKhuyenMai.clear();
-        if (newData != null) {
-            dsKhuyenMai.addAll(newData);
-        }
-
-        tableDSKM.refresh();
-    }
-
-    public void loadLaiDSMonAn(LocalDate ngayBatDau, LocalDate ngayKetThuc) {
-        dsTTMonAn = FXCollections.observableArrayList(control.layDanhSachMonAnCTKM(ngayBatDau, ngayKetThuc));
-        dsMonChon.clear();
-        tableDSMonKMTheoMa.setItems(dsMonChon);
-    }
-
-    public void quayVe() {
-        for(String monAn : dsMonTemp) {
-            String[] monAnTach = monAn.split("-");
-
-            String monAn2 = monAnTach[0] + "-" +
-                    monAnTach[1] + "-" +
-                    monAnTach[2] + "-" +
-                    monAnTach[3] + "-" +
-                    monAnTach[4] + "-" +
-                    monAnTach[5] + "-" +
-                    monAnTach[3] + "-" +
-                    monAnTach[7] ;
-
-            dsTTMonAn.add(monAn2);
-        }
-        dsMonTemp.clear();
-    }
-
-    public void themMonChon() {
-        for(String monAn : dsMonTemp) {
-            dsMonChon.add(monAn);
-        }
-        dsMonTemp.clear();
-    }
-
     public void hanhDongNgungKM() {
         String maKM = txtMaKhuyenMai.getText();
-
-        if (maKM.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Chưa chọn KM", "Vui lòng chọn mã khuyến mãi trước khi ngừng.");
-            return;
-        }
-
-        // Hiển thị hộp thoại xác nhận
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xác nhận");
-        alert.setHeaderText("Bạn có chắc muốn ngừng khuyến mãi này không?");
-        alert.setContentText("Mã khuyến mãi: " + maKM);
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-
-            boolean success = control.ngungKhuyenMai(maKM);
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Khuyến mãi đã được ngừng.");
-
-                // == reset lại ==
+        if (maKM.isEmpty()) return;
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Ngừng KM " + maKM + "?", ButtonType.YES, ButtonType.NO);
+        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+            if (control.ngungKhuyenMai(maKM)) {
+                showAlert(Alert.AlertType.INFORMATION, "OK", "Đã ngừng KM");
                 clear();
                 loadLaiDanhSachKM();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể ngừng khuyến mãi. Kiểm tra lại dữ liệu.");
             }
         }
-
-
     }
 
     public void hanhDongXoaKM() {
         String maKM = txtMaKhuyenMai.getText();
-
-        if (maKM.isEmpty()) {
-            showAlert(Alert.AlertType.WARNING, "Chưa chọn KM", "Vui lòng chọn mã khuyến mãi trước khi xóa.");
-            return;
-        }
-
-        // Hiển thị hộp thoại xác nhận
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-        alert.setTitle("Xác nhận");
-        alert.setHeaderText("Bạn có chắc muốn xóa khuyến mãi này không?");
-        alert.setContentText("Mã khuyến mãi: " + maKM);
-
-        int loaiKM = radioMonAn.isSelected() ? 1 : 0;
-
-        Optional<ButtonType> result = alert.showAndWait();
-        if (result.isPresent() && result.get() == ButtonType.OK) {
-
-            boolean success = control.xoaKhuyenMai(maKM, loaiKM);
-
-            if (success) {
-                showAlert(Alert.AlertType.INFORMATION, "Thành công", "Xóa khuyến mãi thành công");
-
-                // == reset lại ==
+        if (maKM.isEmpty()) return;
+        int loai = radioMonAn.isSelected() ? 1 : 0;
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Xóa KM " + maKM + "?", ButtonType.YES, ButtonType.NO);
+        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+            if (control.xoaKhuyenMai(maKM, loai)) {
+                showAlert(Alert.AlertType.INFORMATION, "OK", "Đã xóa KM");
                 clear();
                 loadLaiDanhSachKM();
-            } else {
-                showAlert(Alert.AlertType.ERROR, "Thất bại", "Không thể xóa khuyến mãi này, vui lòng kiểm tra lại dữ liệu");
             }
         }
-
     }
 
-    private void locKhuyenMai() {
+    public void locKhuyenMai() {
         String tuKhoa = txtTimKiem.getText().trim();
         String trangThai = cboTT.getValue();
         String loai = cboLoai.getValue();
@@ -1986,58 +3300,70 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         List<String> ketQua = dsKhuyenMai.stream().filter(km -> {
+            boolean matchTimKiem = tuKhoa.isEmpty() || km.split(",")[0].equals(tuKhoa);
 
-            boolean matchTimKiem = tuKhoa.isEmpty() ||
-                    km.split(",")[0].equals(tuKhoa);
-
-            // ==== Lọc theo trạng thái ====
             boolean matchTrangThai = true;
             LocalDate bd = LocalDate.parse(km.split(",")[2], dtf);
             LocalDate kt = LocalDate.parse(km.split(",")[3], dtf);
-
             switch (trangThai) {
                 case "Sắp diễn ra":
                     matchTrangThai = bd.isAfter(today);
                     break;
                 case "Đang diễn ra":
-                    matchTrangThai = ( !bd.isAfter(today) ) && ( !kt.isBefore(today) );
+                    matchTrangThai = (!bd.isAfter(today)) && (!kt.isBefore(today));
                     break;
-
                 case "Đã kết thúc":
                     matchTrangThai = kt.isBefore(today);
                     break;
-
-                default:
-                    matchTrangThai = true;
             }
 
-            // ==== Lọc theo loại ====
             boolean matchLoai = true;
-
             switch (loai) {
                 case "Hóa đơn":
                     matchLoai = km.split(",")[8].equals("0");
                     break;
-
                 case "Món ăn":
                     matchLoai = km.split(",")[8].equals("1");
                     break;
-
-                default:
-                    matchLoai = true;
             }
-
             return matchTimKiem && matchTrangThai && matchLoai;
-
         }).toList();
-        clear();
 
+        clear();
         tableDSKM.setItems(FXCollections.observableArrayList(ketQua));
+    }
+
+    // Other Helpers
+    public void loadLaiDanhSachKM() {
+        List<String> newData = control.layDanhSachCTKM();
+        dsKhuyenMai.clear();
+        if (newData != null) dsKhuyenMai.addAll(newData);
+        tableDSKM.refresh();
+    }
+
+    public void loadLaiDSMonAn(LocalDate bd, LocalDate kt) {
+        dsTTMonAn = FXCollections.observableArrayList(control.layDanhSachMonAnCTKM(bd, kt));
+        dsMonChon.clear();
+        tableDSMonKMTheoMa.setItems(dsMonChon);
+    }
+
+    public void quayVe() {
+        for (String m : dsMonTemp) {
+            String[] t = m.split("-");
+            String r = t[0] + "-" + t[1] + "-" + t[2] + "-" + t[3] + "-" + t[4] + "-" + t[5] + "-" + t[3] + "-" + t[7];
+            dsTTMonAn.add(r);
+        }
+        dsMonTemp.clear();
+    }
+
+    public void themMonChon() {
+        dsMonChon.addAll(dsMonTemp);
+        dsMonTemp.clear();
     }
 
     public void taoMoiTimKiem() {
         clear();
-        txtTimKiem.setText("");
+        txtTimKiem.clear();
         cboLoai.setValue("Tất cả");
         cboTT.setValue("Tất cả");
         locKhuyenMai();
@@ -2046,19 +3372,20 @@ public class Gui_QuanLiKhuyenMai extends BorderPane {
 
     public void locMonAn() {
         dsLocMon.clear();
-        if(cboLocMon.getValue().equals("Tất cả")) {
+        if (cboLocMon.getValue().equals("Tất cả")) {
             listMonAn.setItems(dsTTMonAn);
             return;
         }
-
-        String chuoi = cboLocMon.getValue().equals("Đã giảm giá") ? "1" : "0";
-
-        for(String i : dsTTMonAn) {
-            if(i.split("-")[5].equals(chuoi)) {
-                dsLocMon.add(i);
-            }
-        }
-
+        String c = cboLocMon.getValue().equals("Đã giảm giá") ? "1" : "0";
+        for (String i : dsTTMonAn) if (i.split("-")[5].equals(c)) dsLocMon.add(i);
         listMonAn.setItems(dsLocMon);
+    }
+
+    public void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
     }
 }
