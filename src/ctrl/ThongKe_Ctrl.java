@@ -17,9 +17,11 @@ import java.util.Map;
  */
 public class ThongKe_Ctrl {
     ThongKe_DAO thongKeDao = new ThongKe_DAO();
-
-    public double getTongDoanhThu(){
-        return  thongKeDao.getTongDoanhThu();
+    public double getDoanhThuThangTruoc(){
+        return  thongKeDao.getDoanhThuThangTruoc();
+    }
+    public double getTongTienThangNay(){
+        return thongKeDao.getDoanhThuThangNay();
     }
     public double getDoanhThuTBBan(){
         return thongKeDao.getDoanhThuTrungBinhBan();
@@ -69,5 +71,24 @@ public class ThongKe_Ctrl {
 
     public double[] getThongKeDoUong() {
         return thongKeDao.getThongKeDoUong();
+    }
+    public int getTongLuotDatBan(){
+        return thongKeDao.getTongLuotDatBan();
+    }
+
+    public double getTyLeLapDay() {
+        return thongKeDao.getTyLeLapDay();
+    }
+
+    public double getTyLeHuyDat() {
+        return thongKeDao.getTyLeHuyDat();
+    }
+
+    public double getThoiGianSuDungTB() {
+        return thongKeDao.getThoiGianSuDungTB();
+    }
+
+    public Map<String, Double> getHieuSuatKhuVuc() {
+        return thongKeDao.getHieuSuatKhuVuc();
     }
 }

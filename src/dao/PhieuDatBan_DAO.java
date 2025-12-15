@@ -476,5 +476,134 @@ public class PhieuDatBan_DAO {
 
         return null;  // Không tìm thấy
     }
+// Thay thế toàn bộ hàm chuyenBanNhieuSangNhieu cũ bằng hàm này:
 
+    public boolean chuyenBanNhieuSangNhieu(List<String> dsMaBanCu, List<String> dsMaBanMoi, String maHoaDon,String trangThaiMoi) {
+        Connection con = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false); // --- BẮT ĐẦU TRANSACTION ---
+
+            // 1. LẤY THÔNG TIN CƠ BẢN TỪ 1 PHIẾU CŨ
+            String sqlGetInfo = "SELECT TOP 1 maKhachHang, maNhanVien, ghiChu, soNguoi FROM PhieuDatBan WHERE maHoaDon = ?";
+            pstmt = con.prepareStatement(sqlGetInfo);
+            pstmt.setString(1, maHoaDon);
+            rs = pstmt.executeQuery();
+
+            String maKhachHang = null;
+            String maNhanVien = null;
+            String ghiChu = "";
+            int soNguoi = 0;
+
+            if (rs.next()) {
+                maKhachHang = rs.getString("maKhachHang");
+                maNhanVien = rs.getString("maNhanVien");
+                ghiChu = rs.getString("ghiChu");
+                soNguoi = rs.getInt("soNguoi");
+            }
+            rs.close();
+            pstmt.close();
+
+            // 2. CẬP NHẬT TRẠNG THÁI BÀN CŨ -> 'TRỐNG'
+            String sqlUpdateOldBan = "UPDATE BanAn SET trangThai = N'Trống' WHERE maBan = ?";
+            pstmt = con.prepareStatement(sqlUpdateOldBan);
+            for (String maCu : dsMaBanCu) {
+                pstmt.setString(1, maCu);
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+            pstmt.close();
+
+            // 3. CẬP NHẬT TRẠNG THÁI BÀN MỚI -> 'ĐANG SỬ DỤNG'
+            String trangThaiBanAn = trangThaiMoi.equals("Đang dùng") ? "Đang sử dụng" : trangThaiMoi;
+            String sqlUpdateNewBan = "UPDATE BanAn SET trangThai = ? WHERE maBan = ?";
+            pstmt = con.prepareStatement(sqlUpdateNewBan);
+            for (String maMoi : dsMaBanMoi) {
+                pstmt.setString(1, trangThaiBanAn); // <--- Dùng biến, không dùng cứng N'Đang ...'
+                pstmt.setString(2, maMoi);
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+            pstmt.close();
+
+            // 4. XÓA CÁC PHIẾU ĐẶT BÀN CŨ
+            String sqlDeleteOldPDB = "DELETE FROM PhieuDatBan WHERE maHoaDon = ? AND maBan = ?";
+            pstmt = con.prepareStatement(sqlDeleteOldPDB);
+            for (String maCu : dsMaBanCu) {
+                pstmt.setString(1, maHoaDon);
+                pstmt.setString(2, maCu);
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+            pstmt.close();
+
+            // 5. TẠO PHIẾU ĐẶT BÀN MỚI
+
+            // --- KHẮC PHỤC LỖI TREO: Lấy mã phiếu cuối cùng TRONG CÙNG KẾT NỐI (con) ---
+            LocalDate today = LocalDate.now();
+            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
+            String ngayFormat = today.format(dtf);
+            String prefix = "PDB-" + ngayFormat + "-";
+
+            // Query trực tiếp bằng 'con' để tránh Deadlock
+            String sqlGetMaxID = "SELECT TOP 1 maPhieu FROM PhieuDatBan WHERE maPhieu LIKE '" + prefix + "%' ORDER BY maPhieu DESC";
+            Statement stMax = con.createStatement();
+            ResultSet rsMax = stMax.executeQuery(sqlGetMaxID);
+
+            int currentSuffix = 0;
+            if (rsMax.next()) {
+                String maCuoi = rsMax.getString("maPhieu");
+                try {
+                    currentSuffix = Integer.parseInt(maCuoi.substring(13));
+                } catch (Exception e) { currentSuffix = 0; }
+            }
+            rsMax.close();
+            stMax.close();
+            // --------------------------------------------------------------------------
+
+            String nowStr = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            String sqlInsertNewPDB = "INSERT INTO PhieuDatBan (maPhieu, thoiGianBatDau, trangThai, soNguoi, ghiChu, maKhachHang, maBan, maNhanVien, maHoaDon) "
+                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
+            pstmt = con.prepareStatement(sqlInsertNewPDB);
+
+            for (String maMoi : dsMaBanMoi) {
+                currentSuffix++;
+                String maPhieuMoi = prefix + String.format("%03d", currentSuffix);
+
+                pstmt.setString(1, maPhieuMoi);
+                pstmt.setString(2, nowStr);
+                pstmt.setString(3, trangThaiMoi);
+                pstmt.setInt(4, soNguoi);
+                pstmt.setString(5, ghiChu);
+                pstmt.setString(6, maKhachHang);
+                pstmt.setString(7, maMoi);
+                pstmt.setString(8, maNhanVien);
+                pstmt.setString(9, maHoaDon);
+
+                pstmt.addBatch();
+            }
+            pstmt.executeBatch();
+
+            con.commit(); // XÁC NHẬN GIAO DỊCH
+            return true;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+            try {
+                if (con != null) con.rollback();
+            } catch (SQLException ex) { ex.printStackTrace(); }
+            return false;
+        } finally {
+            try {
+                if (pstmt != null) pstmt.close();
+                if (con != null) {
+                    con.setAutoCommit(true);
+                    con.close();
+                }
+            } catch (SQLException ex) { ex.printStackTrace(); }
+        }
+    }
 }

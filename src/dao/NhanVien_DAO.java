@@ -145,54 +145,121 @@ public class NhanVien_DAO {
 
     // Cho nhân viên thôi việc
     public boolean thoiViecNhanVien(String maNhanVien) {
-        String sql = "UPDATE NhanVien SET ngayThoiViec = ? WHERE maNhanVien = ?";
+        // 1. Cập nhật ngày thôi việc cho nhân viên
+        String sqlNhanVien = "UPDATE NhanVien SET ngayThoiViec = ? WHERE maNhanVien = ?";
+        // 2. Khóa tài khoản của nhân viên đó (trangThaiHoatDong = 0/false)
+        String sqlTaiKhoan = "UPDATE TaiKhoan SET trangThaiHoatDong = 0 WHERE maNhanVien = ?";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = null;
+        PreparedStatement psNV = null;
+        PreparedStatement psTK = null;
 
-            ps.setDate(1, Date.valueOf(LocalDate.now()));
-            ps.setString(2, maNhanVien);
+        try {
+            con = ConnectDB.getConnection();
+            // Tắt auto-commit để bắt đầu transaction
+            con.setAutoCommit(false);
 
-            return ps.executeUpdate() > 0;
+            // --- Cập nhật Nhân viên ---
+            psNV = con.prepareStatement(sqlNhanVien);
+            psNV.setDate(1, Date.valueOf(LocalDate.now()));
+            psNV.setString(2, maNhanVien);
+            int resultNV = psNV.executeUpdate();
+
+            // --- Cập nhật Tài khoản ---
+            psTK = con.prepareStatement(sqlTaiKhoan);
+            psTK.setString(1, maNhanVien);
+            int resultTK = psTK.executeUpdate();
+            // Lưu ý: resultTK có thể = 0 nếu nhân viên này chưa có tài khoản, điều này vẫn chấp nhận được.
+
+            if (resultNV > 0) {
+                con.commit(); // Xác nhận giao dịch thành công
+                return true;
+            } else {
+                con.rollback(); // Hoàn tác nếu cập nhật nhân viên thất bại
+                return false;
+            }
+
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                if (con != null) con.rollback(); // Hoàn tác nếu có lỗi
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        } finally {
+            // Đóng resources thủ công vì không dùng try-with-resources để control transaction
+            try {
+                if (psNV != null) psNV.close();
+                if (psTK != null) psTK.close();
+                if (con != null) {
+                    con.setAutoCommit(true); // Trả lại trạng thái mặc định
+                    con.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-        return false;
     }
 
     // Tái tuyển nhân viên
     public boolean taiTuyenNhanVien(String maNhanVien) {
-        String sql = "UPDATE NhanVien SET ngayThoiViec = NULL WHERE maNhanVien = ?";
+        // 1. Cập nhật ngày thôi việc về NULL (tức là đang làm việc)
+        String sqlNhanVien = "UPDATE NhanVien SET ngayThoiViec = NULL WHERE maNhanVien = ?";
+        // 2. Mở khóa tài khoản (trangThaiHoatDong = 1 hoặc true)
+        String sqlTaiKhoan = "UPDATE TaiKhoan SET trangThaiHoatDong = 1 WHERE maNhanVien = ?";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+        Connection con = null;
+        PreparedStatement psNV = null;
+        PreparedStatement psTK = null;
 
-            ps.setString(1, maNhanVien);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
+        try {
+            con = ConnectDB.getConnection();
+            con.setAutoCommit(false); // Bắt đầu Transaction
 
-    // Kiểm tra số điện thoại đã tồn tại chưa
-    public boolean isSoDienThoaiExists(String soDienThoai) {
-        String sql = "SELECT COUNT(*) FROM NhanVien WHERE soDienThoai = ?";
+            // --- Bước 1: Cập nhật Nhân viên ---
+            psNV = con.prepareStatement(sqlNhanVien);
+            psNV.setString(1, maNhanVien);
+            int resultNV = psNV.executeUpdate();
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+            // --- Bước 2: Cập nhật Tài khoản ---
+            psTK = con.prepareStatement(sqlTaiKhoan);
+            psTK.setString(1, maNhanVien);
+            psTK.executeUpdate();
+            // Không cần kiểm tra kết quả update tài khoản, vì có thể nhân viên này chưa có tài khoản.
+            // Chỉ cần update nhân viên thành công là được.
 
-            ps.setString(1, soDienThoai);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
+            if (resultNV > 0) {
+                con.commit(); // Xác nhận thành công cả 2
+                return true;
+            } else {
+                con.rollback(); // Hoàn tác nếu không tìm thấy nhân viên
+                return false;
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
+            try {
+                if (con != null) con.rollback(); // Gặp lỗi thì hoàn tác
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+            }
+            return false;
+        } finally {
+            // Đóng kết nối
+            try {
+                if (psNV != null) psNV.close();
+                if (psTK != null) psTK.close();
+                if (con != null) {
+                    con.setAutoCommit(true);
+                    con.close();
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
         }
-        return false;
     }
+
 
     // Kiểm tra số điện thoại đã tồn tại cho nhân viên khác
     public boolean isSoDienThoaiExistsForOther(String soDienThoai, String maNhanVien) {
@@ -203,25 +270,6 @@ public class NhanVien_DAO {
 
             ps.setString(1, soDienThoai);
             ps.setString(2, maNhanVien);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return rs.getInt(1) > 0;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // Kiểm tra CCCD đã tồn tại chưa
-    public boolean isCCCDExists(String cccd) {
-        String sql = "SELECT COUNT(*) FROM NhanVien WHERE CCCD = ?";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, cccd);
             ResultSet rs = ps.executeQuery();
 
             if (rs.next()) {
@@ -273,116 +321,10 @@ public class NhanVien_DAO {
             e.printStackTrace();
         }
 
-        return String.format("NV%06d", max + 1);
+        return String.format("NV%03d", max + 1);
     }
 
 
-    // Lấy danh sách nhân viên đang làm việc (chưa thôi việc)
-    public List<NhanVien> getNhanVienDangLamViec() {
-        List<NhanVien> list = new ArrayList<>();
-        String sql = "SELECT * FROM NhanVien WHERE ngayThoiViec IS NULL ORDER BY maNhanVien";
-
-        try (Connection con = ConnectDB.getConnection();
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                NhanVien nv = new NhanVien(
-                        rs.getString("maNhanVien"),
-                        rs.getString("tenNhanVien"),
-                        rs.getString("chucVu"),
-                        rs.getString("CCCD"),
-                        rs.getString("soDienThoai"),
-                        rs.getDate("ngaySinh") != null ? rs.getDate("ngaySinh").toLocalDate() : null,
-                        rs.getDate("ngayVaoLam") != null ? rs.getDate("ngayVaoLam").toLocalDate() : null,
-                        null
-                );
-                list.add(nv);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    // Lấy danh sách nhân viên đã thôi việc
-    public List<NhanVien> getNhanVienDaThoiViec() {
-        List<NhanVien> list = new ArrayList<>();
-        String sql = "SELECT * FROM NhanVien WHERE ngayThoiViec IS NOT NULL ORDER BY maNhanVien";
-
-        try (Connection con = ConnectDB.getConnection();
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            while (rs.next()) {
-                NhanVien nv = new NhanVien(
-                        rs.getString("maNhanVien"),
-                        rs.getString("tenNhanVien"),
-                        rs.getString("chucVu"),
-                        rs.getString("CCCD"),
-                        rs.getString("soDienThoai"),
-                        rs.getDate("ngaySinh") != null ? rs.getDate("ngaySinh").toLocalDate() : null,
-                        rs.getDate("ngayVaoLam") != null ? rs.getDate("ngayVaoLam").toLocalDate() : null,
-                        rs.getDate("ngayThoiViec") != null ? rs.getDate("ngayThoiViec").toLocalDate() : null
-                );
-                list.add(nv);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    // Đếm tổng số nhân viên
-    public int getTongSoNhanVien() {
-        String sql = "SELECT COUNT(*) FROM NhanVien";
-
-        try (Connection con = ConnectDB.getConnection();
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    public boolean updateNgayThoiViec(String maNhanVien, LocalDate ngayThoiViec) {
-        String sql = "UPDATE NhanVien SET ngayThoiViec = ? WHERE maNhanVien = ?";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setDate(1, Date.valueOf(ngayThoiViec));
-            ps.setString(2, maNhanVien);
-
-            return ps.executeUpdate() > 0;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // Đếm số nhân viên đang làm việc
-    public int getSoNhanVienDangLamViec() {
-        String sql = "SELECT COUNT(*) FROM NhanVien WHERE ngayThoiViec IS NULL";
-
-        try (Connection con = ConnectDB.getConnection();
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
     // Lấy ngày thôi việc của nhân viên theo mã
     public LocalDate getNgayThoiViec(String maNhanVien) {
         String sql = "SELECT ngayThoiViec FROM NhanVien WHERE maNhanVien = ?";
@@ -403,53 +345,4 @@ public class NhanVien_DAO {
         return null;
     }
 
-    // Kiểm tra nhân viên có đang làm việc không
-    public boolean isNhanVienDangLamViec(String maNhanVien) {
-        String sql = "SELECT ngayThoiViec FROM NhanVien WHERE maNhanVien = ?";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, maNhanVien);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                return rs.getDate("ngayThoiViec") == null;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // Lấy thông tin nhân viên kèm trạng thái làm việc
-    public NhanVien getNhanVienWithStatus(String maNhanVien) {
-        String sql = "SELECT *, " +
-                "CASE WHEN ngayThoiViec IS NULL THEN 'Đang làm việc' ELSE 'Đã nghỉ việc' END as trangThai " +
-                "FROM NhanVien WHERE maNhanVien = ?";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, maNhanVien);
-            ResultSet rs = ps.executeQuery();
-
-            if (rs.next()) {
-                NhanVien nv = new NhanVien(
-                        rs.getString("maNhanVien"),
-                        rs.getString("tenNhanVien"),
-                        rs.getString("chucVu"),
-                        rs.getString("CCCD"),
-                        rs.getString("soDienThoai"),
-                        rs.getDate("ngaySinh") != null ? rs.getDate("ngaySinh").toLocalDate() : null,
-                        rs.getDate("ngayVaoLam") != null ? rs.getDate("ngayVaoLam").toLocalDate() : null,
-                        rs.getDate("ngayThoiViec") != null ? rs.getDate("ngayThoiViec").toLocalDate() : null
-                );
-                return nv;
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
 }

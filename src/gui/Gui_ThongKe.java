@@ -9,12 +9,7 @@ import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.chart.*;
-import javafx.scene.control.Button;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
-import javafx.scene.control.ScrollPane;
+import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -26,8 +21,10 @@ import javafx.geometry.Side;
 import javafx.animation.FadeTransition;
 import javafx.util.Duration;
 
+import java.text.NumberFormat;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Map;
 
 public class Gui_ThongKe extends VBox {
@@ -35,6 +32,7 @@ public class Gui_ThongKe extends VBox {
     private ComboBox<String> cbArea;
     private DatePicker datePickerFrom;
     private DatePicker datePickerTo;
+
     ThongKe_Ctrl thongKeCtrl = new ThongKe_Ctrl();
 
     // ===== PHƯƠNG THỨC HỖ TRỢ ÁP DỤNG STYLE CHO BIỂU ĐỒ =====
@@ -89,8 +87,6 @@ public class Gui_ThongKe extends VBox {
         // Header với gradient
         VBox header = createModernHeader();
 
-        // Filter bar với modern styling
-        HBox filterBar = createModernFilterBar();
 
         // Dashboard sections
         VBox dashboardContent = new VBox(45);
@@ -101,7 +97,7 @@ public class Gui_ThongKe extends VBox {
                 createCustomerSection()
         );
 
-        rootContent.getChildren().addAll(header, filterBar, dashboardContent);
+        rootContent.getChildren().addAll(header, dashboardContent);
 
         // Smooth fade-in animation
         FadeTransition fadeIn = new FadeTransition(Duration.millis(600), rootContent);
@@ -144,183 +140,110 @@ public class Gui_ThongKe extends VBox {
         return header;
     }
 
-    // ===== MODERN FILTER BAR =====
-    private HBox createModernFilterBar() {
-        HBox filterBar = new HBox(15);
-        filterBar.setAlignment(Pos.CENTER_LEFT);
-        filterBar.setPadding(new Insets(20));
-        filterBar.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);"
-        );
 
-        // --- 1. COMBOBOX NHÓM THEO ---
-        Label lblGroup = new Label("📅 Nhóm theo:");
-        lblGroup.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
-
-        cbGroup = new ComboBox<>(FXCollections.observableArrayList(
-                "Theo Ngày", "Theo Tuần", "Theo Tháng", "Theo Năm"
-        ));
-        cbGroup.getSelectionModel().select("Theo Tháng"); // Mặc định
-        cbGroup.setStyle("-fx-background-radius: 3;");
-
-        // SỰ KIỆN: Khi chọn thay đổi -> Load lại dữ liệu
-        cbGroup.setOnAction(e -> loadDashboardData());
-
-        // --- 2. COMBOBOX KHU VỰC ---
-        Label lblArea = new Label("📍 Khu vực:");
-        lblArea.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 12));
-
-        cbArea = new ComboBox<>(FXCollections.observableArrayList(
-                "Tất cả", "Khu A", "Khu B", "Phòng VIP", "Sân vườn"
-        ));
-        cbArea.getSelectionModel().selectFirst();
-        cbArea.setStyle("-fx-background-radius: 3;");
-
-        // SỰ KIỆN: Khi chọn khu vực -> Load lại dữ liệu
-        cbArea.setOnAction(e -> loadDashboardData());
-
-        // --- 3. DATE PICKERS (TỪ NGÀY - ĐẾN NGÀY) ---
-        datePickerFrom = new DatePicker();
-        datePickerFrom.setPromptText("Từ ngày...");
-        datePickerFrom.setStyle("-fx-background-radius: 3;");
-
-        // Mặc định là ngày đầu tháng
-        datePickerFrom.setValue(java.time.LocalDate.now().withDayOfMonth(1));
-
-        datePickerTo = new DatePicker();
-        datePickerTo.setPromptText("Đến ngày...");
-        datePickerTo.setStyle("-fx-background-radius: 3;");
-
-        // Mặc định là ngày hiện tại
-        datePickerTo.setValue(java.time.LocalDate.now());
-
-        // SỰ KIỆN: Khi chọn ngày xong -> Load lại dữ liệu
-        datePickerFrom.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && datePickerTo.getValue() != null) {
-                if (newVal.isAfter(datePickerTo.getValue())) {
-                    showAlert("Lỗi ngày tháng", "Ngày bắt đầu không được lớn hơn ngày kết thúc!");
-                    datePickerFrom.setValue(oldVal); // Reset lại
-                } else {
-                    loadDashboardData();
-                }
-            }
-        });
-
-        datePickerTo.valueProperty().addListener((obs, oldVal, newVal) -> {
-            if (newVal != null && datePickerFrom.getValue() != null) {
-                if (newVal.isBefore(datePickerFrom.getValue())) {
-                    showAlert("Lỗi ngày tháng", "Ngày kết thúc không được nhỏ hơn ngày bắt đầu!");
-                    datePickerTo.setValue(oldVal);
-                } else {
-                    loadDashboardData();
-                }
-            }
-        });
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        // --- 4. BUTTON XUẤT BÁO CÁO ---
-        Button btnExport = new Button("⬇️ Xuất Báo Cáo");
-        btnExport.setStyle(
-                "-fx-background-color: #082744; -fx-text-fill: white; -fx-font-weight: bold; " +
-                        "-fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"
-        );
-        // Hover effects
-        btnExport.setOnMouseEntered(e -> btnExport.setStyle("-fx-background-color: #082744; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand; -fx-scale-x: 1.05; -fx-scale-y: 1.05;"));
-        btnExport.setOnMouseExited(e -> btnExport.setStyle("-fx-background-color: #082744; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;"));
-
-        // SỰ KIỆN: Xuất Excel
-        btnExport.setOnAction(e -> handleExportReport());
-
-        // --- 5. BUTTON SO SÁNH ---
-        Button btnCompare = new Button("📊 So sánh Kỳ trước");
-        btnCompare.setStyle("-fx-background-color: #f1f3f5; -fx-text-fill: #495057; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;");
-
-        // SỰ KIỆN: Toggle chế độ so sánh
-        btnCompare.setOnAction(e -> {
-            boolean isSelected = btnCompare.getStyle().contains("#ffeaa7"); // Check flag đơn giản qua màu
-            if (!isSelected) {
-                btnCompare.setStyle("-fx-background-color: #ffeaa7; -fx-text-fill: #d35400; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;");
-                // Gọi hàm logic so sánh ở đây
-            } else {
-                btnCompare.setStyle("-fx-background-color: #f1f3f5; -fx-text-fill: #495057; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 10 20; -fx-cursor: hand;");
-            }
-        });
-
-        filterBar.getChildren().addAll(
-                lblGroup, cbGroup, lblArea, cbArea,
-                datePickerFrom, datePickerTo, spacer, btnCompare, btnExport
-        );
-        return filterBar;
-    }
 
     // ===== 1. REVENUE SECTION =====
     private VBox createRevenueSection() {
         Label sectionTitle = createModernSectionTitle("💰 THỐNG KÊ DOANH THU", "#667eea");
 
+        // 1. Tính toán số liệu thống kê (Giữ nguyên)
+        double dtNay = thongKeCtrl.getTongTienThangNay();
+        double dtTruoc = thongKeCtrl.getDoanhThuThangTruoc();
+        double tyLeDoanhThu = (dtTruoc == 0) ? 0 : ((dtNay - dtTruoc) / dtTruoc) * 100;
+
+        String symbol = (tyLeDoanhThu >= 0) ? "↑" : "↓";
+
+        // 2. Tạo Grid các thẻ thống kê
         GridPane statGrid = new GridPane();
         statGrid.setHgap(20);
         statGrid.setVgap(20);
         statGrid.setPadding(new Insets(15, 0, 25, 0));
-        statGrid.add(createModernStatCard("Tổng Doanh thu", String.format("%.2f", thongKeCtrl.getTongDoanhThu()), "VND", "↑ 12%", "So với tháng trước", "#667eea", "💰"), 0, 0);
-        statGrid.add(createModernStatCard("DT TB/Bàn", String.format("%.2f", thongKeCtrl.getDoanhThuTBBan()), "VND", "↑ 8%", "Cao điểm: 650K", "#764ba2", "💸"), 1, 0);
+
+        statGrid.add(createModernStatCard(
+                "Tổng Doanh thu",
+                NumberFormat.getInstance(new Locale("vi", "VN")).format(thongKeCtrl.getTongTienThangNay()),
+                "VND",
+                String.format("%s %.1f%%", symbol, Math.abs(tyLeDoanhThu)),
+                "So với tháng trước",
+                "#667eea",
+                "💰"
+        ), 0, 0);
+
+        statGrid.add(createModernStatCard(
+                "DT TB/Bàn",
+                NumberFormat.getInstance(new Locale("vi", "VN")).format(thongKeCtrl.getDoanhThuTBBan()),
+                "VND",
+                "↑ 8%",
+                "Cao điểm: 650K",
+                "#764ba2",
+                "💸"), 1, 0);
+
         statGrid.add(createModernStatCard("TT Tiền mặt", String.format("%.2f", thongKeCtrl.getTiLeTienMat()), "%", "↓ 5%", "Thẻ/Ví: " + (100 - thongKeCtrl.getTiLeTienMat()) + "%", "#f093fb", "💵"), 2, 0);
         statGrid.add(createModernStatCard("DT Ca Tối", String.format("%.2f", thongKeCtrl.getDoanhThuCaToi()), "VND", "↑ 15%", "Chiếm 50% tổng", "#4facfe", "🌙"), 3, 0);
 
-        // --- 1. SETUP COMBOBOX NĂM ---
-        ComboBox<String> cbbYear = new ComboBox<>();
-        cbbYear.getItems().addAll("2023", "2024", "2025");
-        int currentYear = java.time.Year.now().getValue();
-        cbbYear.setValue(String.valueOf(currentYear));
+        // --- 3. DÙNG SPINNER ĐỂ CHỌN NĂM (THAY DATEPICKER) ---
+        int currentYear = java.time.LocalDate.now().getYear();
 
-        cbbYear.setStyle("-fx-font-size: 11px; -fx-background-color: white; -fx-background-radius: 3; -fx-cursor: hand;" +
-                "-fx-padding: 0 5 0 5; -fx-pref-height: 22px; -fx-min-height: 22px; -fx-max-height: 22px;");
+        // Tạo Spinner chọn số nguyên (Từ năm 2020 đến 2030, mặc định là năm nay)
+        Spinner<Integer> yearSpinner = new Spinner<>(currentYear - 5, currentYear + 5, currentYear);
+        yearSpinner.setEditable(false); // Không cho gõ tay để tránh lỗi, chỉ bấm nút tăng giảm
 
-        // --- 2. TẠO BIỂU ĐỒ TRỐNG (CẤU HÌNH CƠ BẢN) ---
+        // Style cho Spinner (Tăng height lên 30px để thấy rõ chữ)
+        yearSpinner.setPrefWidth(100);
+        yearSpinner.setPrefHeight(30);
+        yearSpinner.setStyle(
+                "-fx-font-size: 13px; " +
+                        "-fx-background-color: white; " +
+                        "-fx-border-color: #ced6e0; " +
+                        "-fx-border-radius: 5; " +
+                        "-fx-background-radius: 5;" +
+                        "-fx-alignment: CENTER_RIGHT;" // Căn số sang phải
+        );
+
+        // Chỉnh style cho editor bên trong để chữ nằm giữa đẹp hơn
+        yearSpinner.getEditor().setStyle(
+                "-fx-alignment: CENTER; -fx-background-color: transparent;"
+        );
+
+        // --- 4. TẠO BIỂU ĐỒ CỘT ---
         CategoryAxis xAxis = new CategoryAxis();
         NumberAxis yAxis = new NumberAxis();
         yAxis.setLabel("Triệu VND");
+
         BarChart<String, Number> barChart = new BarChart<>(xAxis, yAxis);
         barChart.setLegendVisible(false);
         barChart.setBarGap(3);
         applyBlackTextStyle(barChart, xAxis, yAxis);
         barChart.setPrefHeight(300);
 
-        // --- 3. NẠP DỮ LIỆU LẦN ĐẦU & SỰ KIỆN COMBOBOX ---
-        // Nạp dữ liệu năm hiện tại ngay khi mở màn hình
+        // --- 5. NẠP DỮ LIỆU & SỰ KIỆN ---
+
+        // Nạp lần đầu
         updateChartData(barChart, currentYear);
 
-        // Khi chọn năm mới -> Nạp lại dữ liệu cho chính barChart này
-        cbbYear.setOnAction(e -> {
-            String selectedYearStr = cbbYear.getValue();
-            if (selectedYearStr != null) {
-                int selectedYear = Integer.parseInt(selectedYearStr);
-                updateChartData(barChart, selectedYear);
+        // Sự kiện: Khi bấm nút tăng/giảm năm -> Update biểu đồ
+        yearSpinner.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                updateChartData(barChart, newVal);
             }
         });
 
-        // --- 4. ĐÓNG GÓI VÀO UI ---
+        // --- 6. ĐÓNG GÓI VÀO UI ---
         GridPane chartGrid = new GridPane();
         chartGrid.setHgap(25);
         chartGrid.setVgap(25);
 
-        // Bọc barChart vào VBox để khớp với tham số của createStyledChart
         VBox chartContainer = new VBox(barChart);
         chartContainer.setAlignment(Pos.CENTER);
         chartContainer.setPadding(new Insets(10));
 
-        // TRUYỀN chartContainer (chứa barChart đã setup) VÀO ĐÂY
-        // Không gọi createMonthlyRevenueChart() nữa
+        // Truyền Spinner vào hàm tạo khung biểu đồ
         VBox monthlyRevenueChart = createStyledChart(
                 chartContainer,
                 "Doanh thu Theo Tháng",
-                cbbYear
+                yearSpinner // <--- Spinner nằm ở đây
         );
 
-        // BIỂU ĐỒ SO SÁNH DOANH THU THEO BUỔI
         VBox revenueBySessionChart = createStyledChart(createRevenueBySessionChart(), "Doanh thu Theo Buổi trong Ngày", null);
 
         GridPane.setHgrow(monthlyRevenueChart, Priority.ALWAYS);
@@ -333,25 +256,88 @@ public class Gui_ThongKe extends VBox {
     }
 
     // ===== 2. BOOKING SECTION =====
+    // ===== 2. BOOKING SECTION (ĐÃ CẬP NHẬT DATA & UI) =====
     private VBox createBookingSection() {
         Label sectionTitle = createModernSectionTitle("📋 THỐNG KÊ ĐẶT BÀN & SỬ DỤNG BÀN", "#082744");
 
+        // --- 1. LẤY DỮ LIỆU TỪ CONTROLLER ---
+        // (Giả sử controller đã có các hàm này, nếu chưa bạn cần thêm vào DAO/Ctrl)
+        int tongLuotDat = thongKeCtrl.getTongLuotDatBan();
+        double tyLeLapDay = thongKeCtrl.getTyLeLapDay(); // Ví dụ: 78.5
+        double tyLeHuy = thongKeCtrl.getTyLeHuyDat();    // Ví dụ: 4.5
+        double xoayVongTB = thongKeCtrl.getThoiGianSuDungTB(); // Ví dụ: 55 phút
+
+        // Tính toán tỷ lệ thành công
+        double tyLeThanhCong = 100 - tyLeHuy;
+
+        // --- 2. TẠO STAT CARDS ---
         GridPane statGrid = new GridPane();
         statGrid.setHgap(20);
         statGrid.setVgap(20);
         statGrid.setPadding(new Insets(15, 0, 25, 0));
 
-        statGrid.add(createModernStatCard("Lượt đặt bàn", "1,250", "lượt", "↑ 95%", "Thành công", "#f093fb", "📋"), 0, 0);
-        statGrid.add(createModernStatCard("Lấp đầy Bàn", "78", "%", "↑ 3%", "Cao điểm: 95%", "#4facfe", "📈"), 1, 0);
-        statGrid.add(createModernStatCard("Hủy/No-show", "4.5", "%", "↓ 1%", "Cải thiện tốt", "#43e97b", "❌"), 2, 0);
-        statGrid.add(createModernStatCard("Xoay vòng TB", "55", "phút", "↓ 5min", "Mục tiêu: <60p", "#fa709a", "⏱️"), 3, 0);
+        // Card 1: Tổng lượt đặt
+        statGrid.add(createModernStatCard(
+                "Lượt đặt bàn",
+                NumberFormat.getInstance().format(tongLuotDat),
+                "lượt",
+                "↑ 12%", // Bạn có thể tính logic tăng giảm so với tháng trước ở đây
+                "Trong tháng này",
+                "#f093fb",
+                "📋"
+        ), 0, 0);
 
+        // Card 2: Tỷ lệ lấp đầy
+        statGrid.add(createModernStatCard(
+                "Lấp đầy Bàn",
+                String.format("%.1f", tyLeLapDay),
+                "%",
+                "↑ 3%",
+                "Cao điểm: 95%",
+                "#4facfe",
+                "📈"
+        ), 1, 0);
+
+        // Card 3: Tỷ lệ Hủy
+        statGrid.add(createModernStatCard(
+                "Hủy/No-show",
+                String.format("%.1f", tyLeHuy),
+                "%",
+                "↓ 1%",
+                "Cải thiện tốt",
+                "#ff7675", // Màu đỏ nhạt
+                "❌"
+        ), 2, 0);
+
+        // Card 4: Thời gian xoay vòng (Turnover)
+        statGrid.add(createModernStatCard(
+                "Xoay vòng TB",
+                String.format("%.0f", xoayVongTB),
+                "phút",
+                "↓ 5min",
+                "Mục tiêu: <60p",
+                "#a29bfe",
+                "⏱️"
+        ), 3, 0);
+
+        // --- 3. BIỂU ĐỒ ---
         GridPane chartGrid = new GridPane();
         chartGrid.setHgap(25);
         chartGrid.setVgap(25);
 
-        VBox successChart = createStyledChart(createBookingSuccessRateChart(), "Tỷ lệ thành công", null);
-        VBox turnoverChart = createStyledChart(createTableTurnoverChart(), "Hiệu suất theo khu vực", null);
+        // Biểu đồ tròn: Tỷ lệ thành công (Truyền data vào hàm)
+        VBox successChart = createStyledChart(
+                createBookingSuccessRateChart(tyLeThanhCong, tyLeHuy),
+                "Tỷ lệ đặt bàn thành công",
+                null
+        );
+
+        // Biểu đồ cột: Hiệu suất khu vực (Lấy data từ Ctrl)
+        VBox turnoverChart = createStyledChart(
+                createTableTurnoverChart(),
+                "Hiệu suất sử dụng theo khu vực",
+                null
+        );
 
         GridPane.setHgrow(successChart, Priority.ALWAYS);
         GridPane.setHgrow(turnoverChart, Priority.ALWAYS);
@@ -361,7 +347,201 @@ public class Gui_ThongKe extends VBox {
 
         return new VBox(25, sectionTitle, statGrid, chartGrid);
     }
+//    private VBox createBookingSuccessRateChart(double successRate, double cancelRate) {
+//        // 1. Tạo Data
+//        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList(
+//                new PieChart.Data("Thành công", successRate),
+//                new PieChart.Data("Hủy/Vắng mặt", cancelRate)
+//        );
+//
+//        // 2. Tạo Chart
+//        PieChart chart = new PieChart(pieData);
+//        chart.setTitle("Tỷ lệ Thành Công");
+//        chart.setLabelsVisible(true);
+//        chart.setLegendSide(Side.RIGHT); // Đổi sang bên phải cho gọn
+//        chart.setPrefHeight(320);
+//
+//        // 3. Style & Animation (Đồng bộ với biểu đồ doanh thu)
+//        javafx.application.Platform.runLater(() -> {
+//            for (PieChart.Data data : chart.getData()) {
+//                Node node = data.getNode();
+//                if (node != null) {
+//                    // Set màu sắc thủ công để đẹp hơn
+//                    String color = data.getName().contains("Thành công") ? "#00b894" : "#ff7675";
+//                    node.setStyle("-fx-pie-color: " + color + ";");
+//
+//                    // Tooltip
+//                    String msg = String.format("%s: %.1f%%", data.getName(), data.getPieValue());
+//                    Tooltip tooltip = new Tooltip(msg);
+//                    tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 12px; -fx-background-color: #e2e7ed; -fx-padding: 5px;");
+//                    Tooltip.install(node, tooltip);
+//
+//                    // Hover Animation
+//                    javafx.animation.ScaleTransition scaleUp = new javafx.animation.ScaleTransition(Duration.millis(200), node);
+//                    scaleUp.setToX(1.1); scaleUp.setToY(1.1);
+//
+//                    javafx.animation.ScaleTransition scaleDown = new javafx.animation.ScaleTransition(Duration.millis(200), node);
+//                    scaleDown.setToX(1.0); scaleDown.setToY(1.0);
+//
+//                    node.setOnMouseEntered(e -> {
+//                        scaleUp.playFromStart();
+//                        node.setCursor(javafx.scene.Cursor.HAND);
+//                    });
+//                    node.setOnMouseExited(e -> {
+//                        scaleDown.playFromStart();
+//                        node.setCursor(javafx.scene.Cursor.DEFAULT);
+//                    });
+//                }
+//            }
+//
+//            // Style Title & Legend
+//            Node title = chart.lookup(".chart-title");
+//            if (title != null) title.setStyle("-fx-text-fill: #2d3436; -fx-font-weight: bold;");
+//
+//            for (Node item : chart.lookupAll(".chart-legend-item")) {
+//                if (item instanceof Label) ((Label) item).setStyle("-fx-text-fill: black; -fx-font-size: 11px;");
+//            }
+//        });
+//
+//        VBox container = new VBox(chart);
+//        container.setStyle("-fx-background-color: transparent;");
+//        return container;
+//    }
+private VBox createTableTurnoverChart() {
+    // 1. Cấu hình Trục
+    CategoryAxis xAxis = new CategoryAxis();
+    NumberAxis yAxis = new NumberAxis();
+    yAxis.setLabel("Tỷ lệ sử dụng (%)");
 
+    BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
+    chart.setTitle("Hiệu suất Theo Khu Vực");
+    chart.setLegendVisible(false);
+
+    // Áp dụng Style font chữ đen
+    applyBlackTextStyle(chart, xAxis, yAxis);
+
+    // 2. Lấy dữ liệu từ Controller
+    Map<String, Double> dataMap = thongKeCtrl.getHieuSuatKhuVuc();
+
+    XYChart.Series<String, Number> series = new XYChart.Series<>();
+
+    // 3. Đổ dữ liệu vào Chart
+    for (Map.Entry<String, Double> entry : dataMap.entrySet()) {
+        XYChart.Data<String, Number> data = new XYChart.Data<>(entry.getKey(), entry.getValue());
+
+        // --- LOGIC STYLE & TOOLTIP (Giống hệt updateChartData) ---
+        data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+            if (newNode != null) {
+                // Set màu Xanh dương cho cột (để khác màu Hồng của doanh thu)
+                newNode.setStyle("-fx-bar-fill: #4facfe;");
+
+                // Tạo Tooltip chuẩn style
+                double value = data.getYValue().doubleValue();
+                Tooltip tooltip = new Tooltip(String.format("%s: %.1f%%", data.getXValue(), value));
+
+                // Copy style tooltip từ hàm mẫu
+                tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 12px; -fx-background-color: #e2e7ed;");
+                Tooltip.install(newNode, tooltip);
+
+                // Gọi Animation chuẩn
+                setupBarAnimation(newNode);
+            }
+        });
+
+        series.getData().add(data);
+    }
+
+    // Xử lý nếu không có dữ liệu
+    if (dataMap.isEmpty()) {
+        series.getData().add(new XYChart.Data<>("Chưa có dữ liệu", 0));
+    }
+
+    chart.getData().add(series);
+    chart.setPrefHeight(320);
+
+    // Tinh chỉnh khoảng cách cột (Tham khảo từ mẫu)
+    chart.setBarGap(0);
+    chart.setCategoryGap(180); // Khoảng cách giữa các nhóm rộng hơn xíu vì ít cột hơn
+
+    VBox container = new VBox(chart);
+    container.setStyle("-fx-background-color: transparent;");
+
+    return container;
+}
+private VBox createBookingSuccessRateChart(double successRate, double cancelRate) {
+    // 1. Tạo Data
+    ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList(
+            new PieChart.Data("Thành công", successRate),
+            new PieChart.Data("Hủy/Vắng mặt", cancelRate)
+    );
+
+    // 2. Tạo Chart
+    PieChart chart = new PieChart(pieData);
+    chart.setTitle("Tỷ lệ Thành Công");
+    chart.setLabelsVisible(true);
+    chart.setLegendSide(Side.RIGHT);
+    chart.setPrefHeight(320);
+
+    // 3. Style & Animation (Full option)
+    javafx.application.Platform.runLater(() -> {
+
+        // A. Xử lý từng miếng bánh (Slices): Màu + Tooltip + Hover
+        for (PieChart.Data data : chart.getData()) {
+            Node node = data.getNode();
+            if (node != null) {
+                // 1. Set màu cho miếng bánh
+                String color = data.getName().equals("Thành công") ? "#00b894" : "#ff7675";
+                node.setStyle("-fx-pie-color: " + color + ";");
+
+                // 2. Tạo Tooltip
+                String msg = String.format("%s: %.1f%%", data.getName(), data.getPieValue());
+                Tooltip tooltip = new Tooltip(msg);
+                tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 12px; -fx-background-color: #e2e7ed; -fx-padding: 5px;");
+                Tooltip.install(node, tooltip);
+
+                // 3. Hiệu ứng Hover (Phóng to khi di chuột) - ĐÃ THÊM LẠI
+                javafx.animation.ScaleTransition scaleUp = new javafx.animation.ScaleTransition(Duration.millis(200), node);
+                scaleUp.setToX(1.1); scaleUp.setToY(1.1);
+
+                javafx.animation.ScaleTransition scaleDown = new javafx.animation.ScaleTransition(Duration.millis(200), node);
+                scaleDown.setToX(1.0); scaleDown.setToY(1.0);
+
+                node.setOnMouseEntered(e -> {
+                    scaleUp.playFromStart();
+                    node.setCursor(javafx.scene.Cursor.HAND);
+                });
+                node.setOnMouseExited(e -> {
+                    scaleDown.playFromStart();
+                    node.setCursor(javafx.scene.Cursor.DEFAULT);
+                });
+            }
+        }
+
+        // B. Fix màu cho Legend (Chú thích)
+        int i = 0;
+        for (Node item : chart.lookupAll(".chart-legend-item-symbol")) {
+            if (item instanceof Region) {
+                String color = (i == 0) ? "#00b894" : "#ff7675"; // 0: Thành công, 1: Hủy
+                // Dùng -fx-background-insets: 0 để màu tràn viền, không bị đè bởi style mặc định
+                item.setStyle("-fx-background-color: " + color + "; -fx-background-insets: 0; -fx-shape: null;");
+                i++;
+            }
+        }
+
+        // C. Style text cho Legend
+        for (Node item : chart.lookupAll(".chart-legend-item")) {
+            if (item instanceof Label) ((Label) item).setStyle("-fx-text-fill: black; -fx-font-size: 11px;");
+        }
+
+        // D. Style Title
+        Node title = chart.lookup(".chart-title");
+        if (title != null) title.setStyle("-fx-text-fill: #2d3436; -fx-font-weight: bold;");
+    });
+
+    VBox container = new VBox(chart);
+    container.setStyle("-fx-background-color: transparent;");
+    return container;
+}
     // ===== 3. MENU SECTION =====
     private VBox createMenuSection() {
         Label sectionTitle = createModernSectionTitle("🍽️ THỐNG KÊ MÓN ĂN & ĐỒ UỐNG", "#059a1e");
@@ -969,7 +1149,6 @@ public class Gui_ThongKe extends VBox {
     }
 
 
-
     // ===== CÁC BIỂU ĐỒ KHÁC GIỮ NGUYÊN =====
 
     private VBox createBookingSuccessRateChart() {
@@ -985,24 +1164,64 @@ public class Gui_ThongKe extends VBox {
         return new VBox(chart);
     }
 
-    private VBox createTableTurnoverChart() {
-        CategoryAxis xAxis = new CategoryAxis();
-        NumberAxis yAxis = new NumberAxis("Sử dụng (%)", 0, 100, 10);
-        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
-        chart.setTitle("Hiệu suất Bàn");
-        chart.setLegendVisible(false);
-        chart.setStyle("-fx-background-color: transparent;");
-
-        XYChart.Series<String, Number> series = new XYChart.Series<>();
-        series.getData().add(new XYChart.Data<>("Khu A", 85));
-        series.getData().add(new XYChart.Data<>("Khu B", 65));
-        series.getData().add(new XYChart.Data<>("VIP", 75));
-        series.getData().add(new XYChart.Data<>("Sân vườn", 50));
-
-        chart.getData().add(series);
-        chart.setPrefHeight(320);
-        return new VBox(chart);
-    }
+//    private VBox createTableTurnoverChart() {
+//        // 1. Cấu hình Trục
+//        CategoryAxis xAxis = new CategoryAxis();
+//        NumberAxis yAxis = new NumberAxis();
+//        yAxis.setLabel("Tỷ lệ sử dụng (%)");
+//
+//        BarChart<String, Number> chart = new BarChart<>(xAxis, yAxis);
+//        chart.setTitle("Hiệu suất Theo Khu Vực");
+//        chart.setLegendVisible(false);
+//
+//        // Áp dụng Style chuẩn (chữ đen, font đẹp)
+//        applyBlackTextStyle(chart, xAxis, yAxis);
+//
+//        // 2. Lấy dữ liệu từ Controller
+//        // Giả sử: thongKeCtrl.getHieuSuatKhuVuc() trả về Map<String, Double>
+//        // VD: {"Tầng 1": 80.0, "Tầng 2": 60.0, "VIP": 45.0}
+//        Map<String, Double> dataMap = thongKeCtrl.getHieuSuatKhuVuc();
+//
+//        XYChart.Series<String, Number> series = new XYChart.Series<>();
+//
+//        // 3. Đổ dữ liệu vào Chart
+//        for (Map.Entry<String, Double> entry : dataMap.entrySet()) {
+//            XYChart.Data<String, Number> data = new XYChart.Data<>(entry.getKey(), entry.getValue());
+//
+//            // Listener để style từng cột (Màu sắc + Tooltip)
+//            data.nodeProperty().addListener((obs, oldNode, newNode) -> {
+//                if (newNode != null) {
+//                    // Set màu Gradient xanh biển
+//                    newNode.setStyle("-fx-bar-fill: linear-gradient(to bottom, #74b9ff, #0984e3);");
+//
+//                    // Tooltip
+//                    Tooltip tooltip = new Tooltip(entry.getKey() + "\nSử dụng: " + entry.getValue() + "%");
+//                    tooltip.setStyle("-fx-text-fill: black; -fx-background-color: #dfe6e9; -fx-font-size: 12px;");
+//                    Tooltip.install(newNode, tooltip);
+//
+//                    // Hover Effect
+//                    newNode.setOnMouseEntered(e -> newNode.setStyle("-fx-bar-fill: #0984e3;")); // Đậm hơn khi hover
+//                    newNode.setOnMouseExited(e -> newNode.setStyle("-fx-bar-fill: linear-gradient(to bottom, #74b9ff, #0984e3);"));
+//                }
+//            });
+//
+//            series.getData().add(data);
+//        }
+//
+//        // Xử lý nếu không có data
+//        if (dataMap.isEmpty()) {
+//            series.getData().add(new XYChart.Data<>("Chưa có dữ liệu", 0));
+//        }
+//
+//        chart.getData().add(series);
+//        chart.setPrefHeight(320);
+//        chart.setBarGap(10);
+//        chart.setCategoryGap(30);
+//
+//        VBox container = new VBox(chart);
+//        container.setStyle("-fx-background-color: transparent;");
+//        return container;
+//    }
 
     private VBox createTopSellingMenuChart() {
         // 1. Cấu hình trục
@@ -1104,132 +1323,243 @@ public class Gui_ThongKe extends VBox {
         return container;
     }
 
-    private VBox createRevenueByMenuGroupChart() {
-        // 1. Lấy dữ liệu
-        Map<String, Double> dataMap = thongKeCtrl.getDoanhThuTheoNhomMon();
+//    private VBox createRevenueByMenuGroupChart() {
+//        // 1. Lấy dữ liệu
+//        Map<String, Double> dataMap = thongKeCtrl.getDoanhThuTheoNhomMon();
+//
+//        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
+//        double totalRevenue = 0;
+//        for (Double val : dataMap.values()) totalRevenue += val;
+//
+//        // --- THAY ĐỔI 1: Tính phần trăm và nối vào tên ---
+//        for (Map.Entry<String, Double> entry : dataMap.entrySet()) {
+//            if (entry.getValue() > 0) {
+//                double val = entry.getValue();
+//                // Tính phần trăm
+//                double percent = (val / totalRevenue) * 100;
+//
+//                // Tạo tên mới: Ví dụ "Món chính" -> "Món chính 25%"
+//                // %.0f là làm tròn số nguyên (25%), %.1f là lấy 1 số thập phân (25.5%)
+//                String nameWithPercent = String.format("%s %.0f%%", entry.getKey(), percent);
+//
+//                pieData.add(new PieChart.Data(nameWithPercent, val));
+//            }
+//        }
+//
+//        if (totalRevenue == 0) {
+//            pieData.add(new PieChart.Data("Chưa có dữ liệu", 1));
+//        }
+//
+//        // 2. Tạo biểu đồ
+//        PieChart chart = new PieChart(pieData);
+//        chart.setTitle("Doanh thu Theo Nhóm Món");
+//        chart.setLabelsVisible(true);
+//        chart.setLegendSide(Side.RIGHT);
+//        chart.setPrefHeight(320);
+//
+//        final double finalTotal = totalRevenue;
+//
+//        // ✅ ĐỢI SCENE ĐƯỢC RENDER XONG
+//        javafx.application.Platform.runLater(() -> {
+//            for (PieChart.Data data : chart.getData()) {
+//                Node node = data.getNode();
+//
+//                if (node != null) {
+//                    String name = data.getName(); // Tên bây giờ là "Món chính 25%"
+//                    String color = "#bdc3c7";
+//
+//                    // --- THAY ĐỔI 2: Sửa logic chọn màu ---
+//                    // Vì tên bây giờ chứa cả số %, nên dùng switch case cũ sẽ không khớp.
+//                    // Chuyển sang dùng if-else với startsWith hoặc contains
+//
+//                    if (name.startsWith("Món chính")) color = "#ff6b6b";
+//                    else if (name.startsWith("Đồ uống")) color = "#4ecdc4";
+//                    else if (name.startsWith("Món khai vị")) color = "#ffe66d";
+//                    else if (name.startsWith("Tráng miệng")) color = "#ff9ff3";
+//                    else if (name.startsWith("Món ăn kèm")) color = "#1a535c";
+//                    else if (name.startsWith("Nước sốt")) color = "#6a0572";
+//
+//                    node.setStyle("-fx-pie-color: " + color + ";");
+//
+//                    // --- B. TẠO TOOLTIP ---
+//                    Tooltip tooltip = new Tooltip();
+//                    tooltip.setStyle("-fx-text-fill: black; " +
+//                            "-fx-font-size: 12px; " +
+//                            "-fx-background-color: #e2e7ed; " +
+//                            "-fx-padding: 8px; " +
+//                            "-fx-background-radius: 5; " +
+//                            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);");
+//
+//                    if (finalTotal > 0) {
+//                        double amount = data.getPieValue();
+//                        // Tooltip hiển thị số tiền cụ thể
+//                        String msg = String.format("%s\n%.2f triệu VND",
+//                                name, amount / 1000000);
+//                        tooltip.setText(msg);
+//                    } else {
+//                        tooltip.setText("Chưa có dữ liệu");
+//                    }
+//
+//                    Tooltip.install(node, tooltip);
+//
+//                    // --- C. HIỆU ỨNG ---
+//                    javafx.animation.ScaleTransition scaleUp = new javafx.animation.ScaleTransition(
+//                            javafx.util.Duration.millis(200), node);
+//                    scaleUp.setToX(1.1);
+//                    scaleUp.setToY(1.1);
+//
+//                    javafx.animation.ScaleTransition scaleDown = new javafx.animation.ScaleTransition(
+//                            javafx.util.Duration.millis(200), node);
+//                    scaleDown.setToX(1.0);
+//                    scaleDown.setToY(1.0);
+//
+//                    node.setOnMouseEntered(e -> {
+//                        scaleUp.playFromStart();
+//                        node.setCursor(javafx.scene.Cursor.HAND);
+//                    });
+//
+//                    node.setOnMouseExited(e -> {
+//                        scaleDown.playFromStart();
+//                        node.setCursor(javafx.scene.Cursor.DEFAULT);
+//                    });
+//                }
+//            }
+//        });
+//
+//        // 4. Style Legend
+//        javafx.application.Platform.runLater(() -> {
+//            Node title = chart.lookup(".chart-title");
+//            if (title != null) {
+//                title.setStyle("-fx-text-fill: #2c3e50; -fx-font-weight: bold; -fx-font-size: 14px;");
+//            }
+//            // Chỉnh màu chữ Legend (Chú giải)
+//            for (Node item : chart.lookupAll(".chart-legend-item")) {
+//                if (item instanceof Label) {
+//                    Label label = (Label) item;
+//                    // Tăng chiều rộng min để chữ không bị cắt nếu dài quá
+//                    label.setMinWidth(150);
+//                    label.setStyle("-fx-text-fill: black; -fx-font-size: 11px; -fx-font-weight: bold;");
+//                }
+//            }
+//            chart.setLegendVisible(finalTotal > 0);
+//        });
+//
+//        VBox container = new VBox(chart);
+//        container.setStyle("-fx-background-color: transparent;");
+//        return container;
+//    }
+private VBox createRevenueByMenuGroupChart() {
+    // 1. Lấy dữ liệu
+    Map<String, Double> dataMap = thongKeCtrl.getDoanhThuTheoNhomMon();
+    ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
+    double totalRevenue = 0;
+    for (Double val : dataMap.values()) totalRevenue += val;
 
-        ObservableList<PieChart.Data> pieData = FXCollections.observableArrayList();
-        double totalRevenue = 0;
-        for (Double val : dataMap.values()) totalRevenue += val;
-
-        // --- THAY ĐỔI 1: Tính phần trăm và nối vào tên ---
-        for (Map.Entry<String, Double> entry : dataMap.entrySet()) {
-            if (entry.getValue() > 0) {
-                double val = entry.getValue();
-                // Tính phần trăm
-                double percent = (val / totalRevenue) * 100;
-
-                // Tạo tên mới: Ví dụ "Món chính" -> "Món chính 25%"
-                // %.0f là làm tròn số nguyên (25%), %.1f là lấy 1 số thập phân (25.5%)
-                String nameWithPercent = String.format("%s %.0f%%", entry.getKey(), percent);
-
-                pieData.add(new PieChart.Data(nameWithPercent, val));
-            }
+    // Tính phần trăm và tạo dữ liệu
+    for (Map.Entry<String, Double> entry : dataMap.entrySet()) {
+        if (entry.getValue() > 0) {
+            double percent = (entry.getValue() / totalRevenue) * 100;
+            // Tên hiển thị trong Legend: "Món chính (25%)"
+            String nameWithPercent = String.format("%s (%.0f%%)", entry.getKey(), percent);
+            pieData.add(new PieChart.Data(nameWithPercent, entry.getValue()));
         }
-
-        if (totalRevenue == 0) {
-            pieData.add(new PieChart.Data("Chưa có dữ liệu", 1));
-        }
-
-        // 2. Tạo biểu đồ
-        PieChart chart = new PieChart(pieData);
-        chart.setTitle("Doanh thu Theo Nhóm Món");
-        chart.setLabelsVisible(true);
-        chart.setLegendSide(Side.RIGHT);
-        chart.setPrefHeight(320);
-
-        final double finalTotal = totalRevenue;
-
-        // ✅ ĐỢI SCENE ĐƯỢC RENDER XONG
-        javafx.application.Platform.runLater(() -> {
-            for (PieChart.Data data : chart.getData()) {
-                Node node = data.getNode();
-
-                if (node != null) {
-                    String name = data.getName(); // Tên bây giờ là "Món chính 25%"
-                    String color = "#bdc3c7";
-
-                    // --- THAY ĐỔI 2: Sửa logic chọn màu ---
-                    // Vì tên bây giờ chứa cả số %, nên dùng switch case cũ sẽ không khớp.
-                    // Chuyển sang dùng if-else với startsWith hoặc contains
-
-                    if (name.startsWith("Món chính")) color = "#ff6b6b";
-                    else if (name.startsWith("Đồ uống")) color = "#4ecdc4";
-                    else if (name.startsWith("Món khai vị")) color = "#ffe66d";
-                    else if (name.startsWith("Tráng miệng")) color = "#ff9ff3";
-                    else if (name.startsWith("Món ăn kèm")) color = "#1a535c";
-                    else if (name.startsWith("Nước sốt")) color = "#6a0572";
-
-                    node.setStyle("-fx-pie-color: " + color + ";");
-
-                    // --- B. TẠO TOOLTIP ---
-                    Tooltip tooltip = new Tooltip();
-                    tooltip.setStyle("-fx-text-fill: black; " +
-                            "-fx-font-size: 12px; " +
-                            "-fx-background-color: #e2e7ed; " +
-                            "-fx-padding: 8px; " +
-                            "-fx-background-radius: 5; " +
-                            "-fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 5, 0, 0, 0);");
-
-                    if (finalTotal > 0) {
-                        double amount = data.getPieValue();
-                        // Tooltip hiển thị số tiền cụ thể
-                        String msg = String.format("%s\n%.2f triệu VND",
-                                name, amount / 1000000);
-                        tooltip.setText(msg);
-                    } else {
-                        tooltip.setText("Chưa có dữ liệu");
-                    }
-
-                    Tooltip.install(node, tooltip);
-
-                    // --- C. HIỆU ỨNG ---
-                    javafx.animation.ScaleTransition scaleUp = new javafx.animation.ScaleTransition(
-                            javafx.util.Duration.millis(200), node);
-                    scaleUp.setToX(1.1);
-                    scaleUp.setToY(1.1);
-
-                    javafx.animation.ScaleTransition scaleDown = new javafx.animation.ScaleTransition(
-                            javafx.util.Duration.millis(200), node);
-                    scaleDown.setToX(1.0);
-                    scaleDown.setToY(1.0);
-
-                    node.setOnMouseEntered(e -> {
-                        scaleUp.playFromStart();
-                        node.setCursor(javafx.scene.Cursor.HAND);
-                    });
-
-                    node.setOnMouseExited(e -> {
-                        scaleDown.playFromStart();
-                        node.setCursor(javafx.scene.Cursor.DEFAULT);
-                    });
-                }
-            }
-        });
-
-        // 4. Style Legend
-        javafx.application.Platform.runLater(() -> {
-            Node title = chart.lookup(".chart-title");
-            if (title != null) {
-                title.setStyle("-fx-text-fill: #2c3e50; -fx-font-weight: bold; -fx-font-size: 14px;");
-            }
-            // Chỉnh màu chữ Legend (Chú giải)
-            for (Node item : chart.lookupAll(".chart-legend-item")) {
-                if (item instanceof Label) {
-                    Label label = (Label) item;
-                    // Tăng chiều rộng min để chữ không bị cắt nếu dài quá
-                    label.setMinWidth(150);
-                    label.setStyle("-fx-text-fill: black; -fx-font-size: 11px; -fx-font-weight: bold;");
-                }
-            }
-            chart.setLegendVisible(finalTotal > 0);
-        });
-
-        VBox container = new VBox(chart);
-        container.setStyle("-fx-background-color: transparent;");
-        return container;
     }
 
+    if (totalRevenue == 0) pieData.add(new PieChart.Data("Chưa có dữ liệu", 1));
+
+    // 2. Tạo biểu đồ
+    PieChart chart = new PieChart(pieData);
+    chart.setTitle("Doanh thu Theo Nhóm Món");
+
+    // [FIX TRÀN] Tắt Label đi để biểu đồ gọn gàng, không bị tràn ra ngoài
+    chart.setLabelsVisible(false);
+    chart.setLegendSide(Side.RIGHT);
+
+    // [FIX KÍCH THƯỚC] Giảm chiều cao xuống cho vừa vặn
+    chart.setPrefHeight(220);
+    chart.setMinHeight(200);
+
+    final double finalTotal = totalRevenue;
+
+    // 3. Xử lý Màu sắc & Style
+    javafx.application.Platform.runLater(() -> {
+        // Danh sách màu sẽ lưu lại để đồng bộ giữa Slice và Legend
+        java.util.List<String> colorList = new java.util.ArrayList<>();
+
+        // A. Style cho các miếng bánh (Slices)
+        for (PieChart.Data data : chart.getData()) {
+            Node node = data.getNode();
+            if (node != null) {
+                // Logic chọn màu dựa trên tên gốc (vì tên data giờ đã có thêm %)
+                String name = data.getName();
+                String color = "#bdc3c7"; // Màu mặc định
+
+                if (name.contains("Món chính")) color = "#ff7675";      // Đỏ hồng
+                else if (name.contains("Đồ uống")) color = "#55efc4";   // Xanh mint
+                else if (name.contains("Khai vị")) color = "#ffeaa7";   // Vàng nhạt
+                else if (name.contains("Tráng miệng")) color = "#a29bfe"; // Tím
+                else if (name.contains("Ăn kèm")) color = "#81ecec";    // Xanh ngọc
+                else if (name.contains("Nước sốt")) color = "#fab1a0";  // Cam nhạt
+
+                // Lưu màu vào list để lát dùng cho Legend
+                colorList.add(color);
+
+                // Set màu cho miếng bánh
+                node.setStyle("-fx-pie-color: " + color + ";");
+
+                // Tooltip
+                String tooltipText = (finalTotal > 0)
+                        ? String.format("%s\n%.2f triệu VND", name.split("\\(")[0].trim(), data.getPieValue() / 1000000)
+                        : "Chưa có dữ liệu";
+
+                Tooltip tooltip = new Tooltip(tooltipText);
+                tooltip.setStyle("-fx-text-fill: black; -fx-font-size: 12px; -fx-background-color: #e2e7ed; -fx-padding: 5px;");
+                Tooltip.install(node, tooltip);
+
+                // Hover Effect
+                javafx.animation.ScaleTransition scaleUp = new javafx.animation.ScaleTransition(Duration.millis(200), node);
+                scaleUp.setToX(1.1); scaleUp.setToY(1.1);
+                javafx.animation.ScaleTransition scaleDown = new javafx.animation.ScaleTransition(Duration.millis(200), node);
+                scaleDown.setToX(1.0); scaleDown.setToY(1.0);
+
+                node.setOnMouseEntered(e -> { scaleUp.playFromStart(); node.setCursor(javafx.scene.Cursor.HAND); });
+                node.setOnMouseExited(e -> { scaleDown.playFromStart(); node.setCursor(javafx.scene.Cursor.DEFAULT); });
+            }
+        }
+
+        // B. [QUAN TRỌNG] Đồng bộ màu cho Legend
+        int i = 0;
+        for (Node item : chart.lookupAll(".chart-legend-item-symbol")) {
+            if (item instanceof Region && i < colorList.size()) {
+                String color = colorList.get(i);
+                // Ép màu nền cho Legend Symbol
+                item.setStyle("-fx-background-color: " + color + "; -fx-background-insets: 0; -fx-shape: null;");
+                i++;
+            }
+        }
+
+        // C. Style text Legend & Title
+        for (Node item : chart.lookupAll(".chart-legend-item")) {
+            if (item instanceof Label) {
+                Label label = (Label) item;
+                label.setStyle("-fx-text-fill: black; -fx-font-size: 11px;");
+                label.setWrapText(false); // Không xuống dòng để gọn
+            }
+        }
+        Node title = chart.lookup(".chart-title");
+        if (title != null) title.setStyle("-fx-text-fill: #2d3436; -fx-font-weight: bold; -fx-font-size: 14px;");
+
+        // Ẩn legend nếu không có dữ liệu
+        chart.setLegendVisible(finalTotal > 0);
+    });
+
+    VBox container = new VBox(chart);
+    container.setStyle("-fx-background-color: transparent;");
+    // Giới hạn chiều rộng container để khớp với các chart khác
+    container.setMaxWidth(400);
+
+    return container;
+}
     private VBox createTopCustomersList() {
         VBox container = new VBox(15); // Tăng khoảng cách giữa các dòng
         container.setPadding(new Insets(20));

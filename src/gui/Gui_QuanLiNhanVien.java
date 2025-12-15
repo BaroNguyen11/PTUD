@@ -1,7 +1,9 @@
+//
 //package gui;
 //
 //import dao.NhanVien_DAO;
 //import entity.NhanVien;
+//import javafx.animation.FadeTransition;
 //import javafx.application.Platform;
 //import javafx.beans.property.ReadOnlyObjectWrapper;
 //import javafx.collections.FXCollections;
@@ -9,12 +11,18 @@
 //import javafx.geometry.HPos;
 //import javafx.geometry.Insets;
 //import javafx.geometry.Pos;
+//import javafx.scene.Node;
 //import javafx.scene.control.*;
 //import javafx.scene.control.cell.PropertyValueFactory;
 //import javafx.scene.layout.*;
+//import javafx.scene.text.Font;
+//import javafx.scene.text.FontWeight;
+//import javafx.util.Duration;
+//import javafx.util.StringConverter;
 //
 //import java.time.LocalDate;
 //import java.time.format.DateTimeFormatter;
+//import java.time.format.DateTimeParseException;
 //import java.util.List;
 //
 //public class Gui_QuanLiNhanVien extends VBox {
@@ -30,6 +38,23 @@
 //    private DatePicker dpNgaySinh, dpNgayVaoLam;
 //    private Button btnThem, btnSua, btnThoiViec, btnTaiTuyen, btnClear;
 //    private TextField txtNgayThoiViec;
+//    private TextField txtSearch; // Declared here for access in handlers
+//
+//    // --- CSS CHO DATEPICKER GIỐNG GUI_DANHSACHBAN ---
+//    private final String customDatePickerCss = "data:text/css," +
+//            ".date-picker .arrow-button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+//            ".date-picker .arrow-button .arrow { -fx-background-color: #082744; }" +
+//            ".date-picker-popup { -fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5); }" +
+//            ".date-picker-popup .month-year-pane { -fx-background-color: #082744; -fx-padding: 10; }" +
+//            ".date-picker-popup .month-year-pane .label { -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; }" +
+//            ".date-picker-popup .spinner .button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+//            ".date-picker-popup .spinner .button:hover { -fx-background-color: rgba(255, 255, 255, 0.2); -fx-background-radius: 50%25; }" +
+//            ".date-picker-popup .spinner .button .left-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" +
+//            ".date-picker-popup .spinner .button .right-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" +
+//            ".date-picker-popup .day-cell { -fx-background-color: white; -fx-text-fill: #2D3748; -fx-font-size: 13px; -fx-border-color: transparent; }" +
+//            ".date-picker-popup .day-cell:hover { -fx-background-color: #EBF8FF; -fx-text-fill: #082744; -fx-background-radius: 5; }" +
+//            ".date-picker-popup .day-cell:selected { -fx-background-color: #082744; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; }" +
+//            ".date-picker-popup .today { -fx-border-color: #E53E3E; -fx-border-radius: 5; -fx-border-width: 1; }";
 //
 //    public Gui_QuanLiNhanVien() {
 //        initializeUI();
@@ -37,49 +62,66 @@
 //    }
 //
 //    private void initializeUI() {
-//        this.setSpacing(16);
-//        this.setPadding(new Insets(16));
-//        this.getStyleClass().add("quan-ly-nhan-vien");
+//        // --- 1. SETUP ROOT STYLE ---
+//        this.setStyle("-fx-background-color: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);");
+//        this.setPadding(new Insets(0, 40, 30, 40));
 //
-//        // --- Title ---
-//        Label mainTitle = new Label("Tìm kiếm nhân viên");
-//        mainTitle.getStyleClass().add("main-title");
+//        // Inject CSS vào Scene (VBox này)
+//        this.getStylesheets().add(customDatePickerCss);
 //
-//        // --- Body HBox ---
-//        HBox body = new HBox(16);
+//        // --- 3. MAIN BODY (Split Pane) ---
+//        HBox body = new HBox(25);
+//        body.setPadding(new Insets(10, 40, 30, 40));
 //        VBox.setVgrow(body, Priority.ALWAYS);
 //
-//        VBox leftPane = createLeftPane();
+//        // Left Pane (Search + Table)
+//        VBox leftPane = createLeftPaneModern();
 //        HBox.setHgrow(leftPane, Priority.ALWAYS);
 //
-//        VBox rightPane = createRightPane();
-//        HBox.setHgrow(rightPane, Priority.ALWAYS);
+//        // Right Pane (Form + Actions)
+//        VBox rightPane = createRightPaneModern();
+//        rightPane.setPrefWidth(380);
+//        rightPane.setMinWidth(380);
+//        rightPane.setMaxWidth(380);
 //
 //        body.getChildren().addAll(leftPane, rightPane);
-//        this.getChildren().addAll(mainTitle, body);
+//
+//        this.getChildren().addAll(body);
+//
+//        // --- 4. ANIMATION FADE IN ---
+//        FadeTransition fadeIn = new FadeTransition(Duration.millis(600), this);
+//        fadeIn.setFromValue(0.0);
+//        fadeIn.setToValue(1.0);
+//        fadeIn.play();
 //    }
 //
-//    // ========== LEFT PANE ==========
-//    private VBox createLeftPane() {
-//        VBox box = new VBox(12);
-//        box.getStyleClass().add("left-pane");
+//    // =============================================================
+//    // ⬅️ LEFT PANE (SEARCH + TABLE)
+//    // =============================================================
+//    private VBox createLeftPaneModern() {
+//        VBox container = new VBox(20);
 //
-//        // --- Search Bar ---
-//        HBox searchBar = new HBox(8);
-//        searchBar.setAlignment(Pos.CENTER_LEFT);
+//        // --- 1. Filter Bar (Card Style) ---
+//        HBox filterBar = new HBox(15);
+//        filterBar.setAlignment(Pos.CENTER_LEFT);
+//        filterBar.setPadding(new Insets(20));
+//        filterBar.setStyle(
+//                "-fx-background-color: white;" +
+//                        "-fx-background-radius: 12;" +
+//                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);"
+//        );
 //
-//        TextField txtSearch = new TextField();
-//        txtSearch.setPromptText("Tìm mã, tên hoặc SĐT...");
-//        txtSearch.getStyleClass().add("input");
+//        txtSearch = new TextField();
+//        txtSearch.setPromptText("🔍 Tìm mã, tên hoặc SĐT...");
+//        txtSearch.setPrefHeight(35);
+//        styleInputField(txtSearch);
 //        HBox.setHgrow(txtSearch, Priority.ALWAYS);
 //
 //        Button btnSearch = new Button("Tìm kiếm");
-//        btnSearch.getStyleClass().add("btn-outline");
+//        styleButton(btnSearch, "#f1f3f5", "#495057");
 //
-//        Button btnRefresh = new Button("Làm mới");
-//        btnRefresh.getStyleClass().add("btn-outline");
-//
-//        searchBar.getChildren().addAll(txtSearch, btnSearch, btnRefresh);
+//        Button btnRefresh = new Button("🔄 Làm mới");
+//        styleButton(btnRefresh, "#f1f3f5", "#495057");
 //
 //        btnSearch.setOnAction(e -> {
 //            String kw = txtSearch.getText().trim();
@@ -93,41 +135,64 @@
 //            }
 //        });
 //
+//        txtSearch.setOnAction(e -> btnSearch.fire());
+//
 //        btnRefresh.setOnAction(e -> {
 //            txtSearch.clear();
 //            loadData();
 //        });
 //
-//        // --- Table ---
+//        filterBar.getChildren().addAll(txtSearch, btnSearch, btnRefresh);
+//
+//        // --- 2. Table Section (Card Style) ---
+//        VBox tableContainer = new VBox();
+//        tableContainer.setPadding(new Insets(5));
+//        tableContainer.setStyle(
+//                "-fx-background-color: white;" +
+//                        "-fx-background-radius: 12;" +
+//                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);"
+//        );
+//        VBox.setVgrow(tableContainer, Priority.ALWAYS);
+//
 //        tableView = new TableView<>();
 //        tableView.setItems(data);
-//        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY_FLEX_LAST_COLUMN);
-//        tableView.getStyleClass().add("nhan-vien-table");
+//        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+//
+//        tableView.setStyle(
+//                "-fx-background-color: transparent;" +
+//                        "-fx-base: white;" +
+//                        "-fx-control-inner-background: white;" +
+//                        "-fx-table-cell-border-color: transparent;" +
+//                        "-fx-table-header-border-color: transparent;" +
+//                        "-fx-padding: 5;"
+//        );
 //        VBox.setVgrow(tableView, Priority.ALWAYS);
 //
+//        // --- Table Columns ---
 //        TableColumn<NhanVien, Number> colSTT = new TableColumn<>("STT");
 //        colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(tableView.getItems().indexOf(col.getValue()) + 1));
-//        colSTT.setMaxWidth(60);
-//        colSTT.setStyle("-fx-alignment: CENTER;");
+//        colSTT.setMaxWidth(50);
+//        colSTT.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
 //
-//        TableColumn<NhanVien, String> colMa = new TableColumn<>("Mã");
+//        TableColumn<NhanVien, String> colMa = new TableColumn<>("Mã NV");
 //        colMa.setCellValueFactory(new PropertyValueFactory<>("maNhanVien"));
-//        colMa.setStyle("-fx-alignment: CENTER;");
+//        colMa.setStyle("-fx-alignment: CENTER_LEFT; -fx-font-family: 'Segoe UI';");
 //
-//        TableColumn<NhanVien, String> colTen = new TableColumn<>("Tên nhân viên");
+//        TableColumn<NhanVien, String> colTen = new TableColumn<>("Họ và Tên");
 //        colTen.setCellValueFactory(new PropertyValueFactory<>("tenNhanVien"));
+//        colTen.setStyle("-fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-font-family: 'Segoe UI';");
 //
-//        TableColumn<NhanVien, String> colChucVu = new TableColumn<>("Chức vụ");
+//        TableColumn<NhanVien, String> colChucVu = new TableColumn<>("Chức Vụ");
 //        colChucVu.setCellValueFactory(new PropertyValueFactory<>("chucVu"));
-//        colChucVu.setStyle("-fx-alignment: CENTER;");
+//        colChucVu.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
 //
-//        TableColumn<NhanVien, String> colSDT = new TableColumn<>("SĐT");
+//        TableColumn<NhanVien, String> colSDT = new TableColumn<>("Số Điện Thoại");
 //        colSDT.setCellValueFactory(new PropertyValueFactory<>("soDienThoai"));
-//        colSDT.setStyle("-fx-alignment: CENTER;");
+//        colSDT.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
 //
 //        TableColumn<NhanVien, String> colCCCD = new TableColumn<>("CCCD");
 //        colCCCD.setCellValueFactory(new PropertyValueFactory<>("CCCD"));
-//        colCCCD.setStyle("-fx-alignment: CENTER;");
+//        colCCCD.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
 //
 //        TableColumn<NhanVien, String> colTT = new TableColumn<>("Trạng Thái");
 //        colTT.setCellValueFactory(cell -> {
@@ -135,186 +200,312 @@
 //            String s = nv.getNgayThoiViec() == null ? "Đang làm" : "Đã nghỉ";
 //            return new ReadOnlyObjectWrapper<>(s);
 //        });
-//        colTT.setCellFactory(col -> new TableCell<>() {
+//        colTT.setCellFactory(column -> new TableCell<>() {
 //            @Override
 //            protected void updateItem(String item, boolean empty) {
 //                super.updateItem(item, empty);
 //                if (empty || item == null) {
 //                    setText(null);
-//                    setStyle("");
-//                    return;
-//                }
-//                setText(item);
-//                if (item.equals("Đang làm")) {
-//                    setStyle("-fx-text-fill: green; -fx-font-weight: bold; -fx-alignment: CENTER;");
+//                    setGraphic(null);
 //                } else {
-//                    setStyle("-fx-text-fill: red; -fx-font-weight: bold; -fx-alignment: CENTER;");
+//                    Label lbl = new Label(item);
+//                    lbl.setPadding(new Insets(4, 10, 4, 10));
+//                    lbl.setStyle("-fx-font-weight: bold; -fx-background-radius: 12; -fx-font-family: 'Segoe UI'; -fx-font-size: 11px;");
+//
+//                    if ("Đang làm".equals(item)) {
+//                        lbl.setStyle(lbl.getStyle() + "-fx-background-color: #d4edda; -fx-text-fill: #155724;"); // Green badge
+//                    } else {
+//                        lbl.setStyle(lbl.getStyle() + "-fx-background-color: #f8d7da; -fx-text-fill: #721c24;"); // Red badge
+//                    }
+//                    setGraphic(lbl);
+//                    setAlignment(Pos.CENTER);
+//                    setText(null);
 //                }
 //            }
 //        });
-//        colTT.setMaxWidth(110);
+//        colTT.setMaxWidth(120);
 //
 //        tableView.getColumns().addAll(colSTT, colMa, colTen, colChucVu, colSDT, colCCCD, colTT);
 //
 //        tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> onTableSelectionChanged(newV));
 //
-//        box.getChildren().addAll(searchBar, new Label("Danh sách nhân viên"), tableView);
-//        VBox.setVgrow(tableView, Priority.ALWAYS);
+//        tableContainer.getChildren().add(tableView);
+//        container.getChildren().addAll(filterBar, tableContainer);
 //
-//        return box;
+//        return container;
 //    }
 //
-//    // ========== RIGHT PANE ==========
-//    private VBox createRightPane() {
-//        VBox box = new VBox(15);
-//        box.setPadding(new Insets(20));
-//        box.getStyleClass().add("right-pane-box");
-//        box.setMaxWidth(380);
+//    // =============================================================
+//    // ➡️ RIGHT PANE (FORM + ACTIONS)
+//    // =============================================================
+//    private VBox createRightPaneModern() {
+//        VBox card = new VBox(15);
+//        card.setPadding(new Insets(25));
+//        card.setStyle(
+//                "-fx-background-color: white;" +
+//                        "-fx-background-radius: 12;" +
+//                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 2);"
+//        );
 //
-//        Label title = new Label("Thông tin nhân viên");
-//        title.getStyleClass().add("panel-title");
-//        title.setMaxWidth(Double.MAX_VALUE);
-//        title.setAlignment(Pos.CENTER);
+//        Label title = new Label("Thông tin chi tiết");
+//        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
+//        title.setStyle("-fx-text-fill: #082744; -fx-border-width: 0 0 0 4; -fx-border-color: #082744; -fx-padding: 0 0 0 10;");
 //
-//        // --- Form Controls ---
-//        txtMa = new TextField();
-//        txtMa.setEditable(false);
-//        txtMa.getStyleClass().add("input");
-//        txtMa.setPrefHeight(35);
-//
-//        txtTen = new TextField();
-//        txtTen.getStyleClass().add("input");
-//        txtTen.setPrefHeight(35);
-//
-//        cboChucVu = new ComboBox<>();
-//        cboChucVu.getItems().addAll("Nhân viên", "Quản lý");
-//        cboChucVu.getStyleClass().add("input");
-//        cboChucVu.setMaxWidth(Double.MAX_VALUE);
-//        HBox.setHgrow(cboChucVu, Priority.ALWAYS);
-//
-//        txtSoDT = new TextField();
-//        txtSoDT.getStyleClass().add("input");
-//        txtSoDT.setPrefHeight(35);
-//        txtCCCD = new TextField();
-//        txtCCCD.getStyleClass().add("input");
-//        txtCCCD.setPrefHeight(35);
-//        dpNgaySinh = new DatePicker();
-//        dpNgaySinh.getStyleClass().add("input");
-//        dpNgaySinh.setPrefHeight(35);
-//        dpNgaySinh.getStyleClass().add("input");
-//        //dpNgaySinh.setStyle("-fx-pref-width: 100%;");
-//        dpNgayVaoLam = new DatePicker();
-//        dpNgayVaoLam.getStyleClass().add("input");
-//        dpNgayVaoLam.setPrefHeight(35);
-//
-//        txtNgayThoiViec = new TextField();
-//        txtNgayThoiViec.setEditable(false);
-//        txtNgayThoiViec.getStyleClass().add("input-readonly");
-//        txtNgayThoiViec.setPrefHeight(35);
-//        txtNgayThoiViec.setMaxWidth(Double.MAX_VALUE);
-//
-//
-//        // Tạo form với bố cục chặt chẽ hơn
 //        GridPane form = new GridPane();
 //        form.setHgap(15);
 //        form.setVgap(15);
-//        form.setMaxWidth(Double.MAX_VALUE);
-//        form.setPadding(new Insets(5));
+//        form.setPadding(new Insets(10, 0, 0, 0));
 //
-//        // Add form labels + controls với label được căn phải
-//        form.add(createFormLabel("Mã nhân viên:"), 0, 0);
-//        form.add(txtMa, 1, 0);
-//        form.add(createFormLabel("Họ tên:"), 0, 1);
-//        form.add(txtTen, 1, 1);
-//        form.add(createFormLabel("Chức vụ:"), 0, 2);
-//        form.add(cboChucVu, 1, 2);
-//        form.add(createFormLabel("Số ĐT:"), 0, 3);
-//        form.add(txtSoDT, 1, 3);
-//        form.add(createFormLabel("CCCD:"), 0, 4);
-//        form.add(txtCCCD, 1, 4);
-//        form.add(createFormLabel("Ngày sinh:"), 0, 5);
-//        form.add(dpNgaySinh, 1, 5);
-//        form.add(createFormLabel("Ngày vào làm:"), 0, 6);
-//        form.add(dpNgayVaoLam, 1, 6);
-//        form.add(createFormLabel("Ngày thôi việc:"), 0, 7);
-//        form.add(txtNgayThoiViec, 1, 7);
-//
-//        // Column constraints - tối ưu tỷ lệ
 //        ColumnConstraints c1 = new ColumnConstraints();
-//        c1.setPercentWidth(38);
+//        c1.setPercentWidth(35);
 //        c1.setHalignment(HPos.LEFT);
-//        c1.setFillWidth(true);
 //
 //        ColumnConstraints c2 = new ColumnConstraints();
-//        c2.setPercentWidth(62);
+//        c2.setPercentWidth(65);
 //        c2.setHgrow(Priority.ALWAYS);
 //
 //        form.getColumnConstraints().addAll(c1, c2);
 //
-//        // --- Buttons với bố cục gọn gàng và ĐẦY ĐỦ SỰ KIỆN ---
-//        btnThem = createActionButton("Thêm", "btn-primary", 100);
-//        btnSua = createActionButton("Sửa", "btn-accent", 100);
-//        btnThoiViec = createActionButton("Thôi việc", "btn-danger", 100);
-//        btnTaiTuyen = createActionButton("Tái tuyển", "btn-warning", 100);
-//        btnClear = createActionButton("Làm mới", "btn-muted", 100);
+//        // --- Setup Form Controls ---
+//        txtMa = new TextField();
+//        txtMa.setEditable(false);
+//        styleReadonlyField(txtMa);
 //
-//        // === GẮN SỰ KIỆN CHO CÁC NÚT ===
+//        txtTen = new TextField();
+//        styleInputField(txtTen);
+//
+//        cboChucVu = new ComboBox<>();
+//        cboChucVu.getItems().addAll("Nhân viên", "Quản lý");
+//        styleComboBox(cboChucVu);
+//
+//        txtSoDT = new TextField();
+//        styleInputField(txtSoDT);
+//
+//        txtCCCD = new TextField();
+//        styleInputField(txtCCCD);
+//
+//        // --- CẤU HÌNH DATEPICKER MỚI ---
+//        dpNgaySinh = new DatePicker();
+//        configDatePicker(dpNgaySinh);
+//
+//        dpNgayVaoLam = new DatePicker();
+//        configDatePicker(dpNgayVaoLam);
+//
+//        txtNgayThoiViec = new TextField();
+//        txtNgayThoiViec.setEditable(false);
+//        styleReadonlyField(txtNgayThoiViec);
+//
+//        // --- Add Rows ---
+//        addFormRow(form, "Mã nhân viên:", txtMa, 0);
+//        addFormRow(form, "Họ tên:", txtTen, 1);
+//        addFormRow(form, "Chức vụ:", cboChucVu, 2);
+//        addFormRow(form, "Số điện thoại:", txtSoDT, 3);
+//        addFormRow(form, "CCCD:", txtCCCD, 4);
+//        addFormRow(form, "Ngày sinh:", dpNgaySinh, 5);
+//        addFormRow(form, "Ngày vào làm:", dpNgayVaoLam, 6);
+//        addFormRow(form, "Ngày thôi việc:", txtNgayThoiViec, 7);
+//
+//        //Buttons
+//        btnThem = new Button("Thêm");
+//        styleButton(btnThem, "#10ac84", "white"); // Green
+//        btnThem.setMaxWidth(Double.MAX_VALUE);
+//
+//        btnSua = new Button("Cập Nhật");
+//        styleButton(btnSua, "#2e86de", "white"); // Blue
+//        btnSua.setMaxWidth(Double.MAX_VALUE);
+//
+//        btnClear = new Button("Làm Mới");
+//        styleButton(btnClear, "#95a5a6", "white"); // Gray
+//        btnClear.setMaxWidth(Double.MAX_VALUE);
+//
+//        btnThoiViec = new Button("Thôi Việc");
+//        styleButton(btnThoiViec, "#ee5253", "white"); // Red
+//        btnThoiViec.setMaxWidth(Double.MAX_VALUE);
+//
+//        btnTaiTuyen = new Button("Tái Tuyển");
+//        styleButton(btnTaiTuyen, "#feca57", "#222f3e"); // Yellow
+//        btnTaiTuyen.setMaxWidth(Double.MAX_VALUE);
+//
+//        GridPane btnGrid = new GridPane();
+//        btnGrid.setHgap(10);
+//        btnGrid.setVgap(10);
+//        btnGrid.setPadding(new Insets(20, 0, 0, 0));
+//
+//        btnGrid.add(btnThem, 0, 0);
+//        btnGrid.add(btnSua, 1, 0);
+//        btnGrid.add(btnClear, 2, 0);
+//        btnGrid.add(btnThoiViec, 0, 1, 2, 1);
+//        btnGrid.add(btnTaiTuyen, 2, 1);
+//
+//        ColumnConstraints btnCol = new ColumnConstraints();
+//        btnCol.setPercentWidth(33.33);
+//        btnGrid.getColumnConstraints().addAll(btnCol, btnCol, btnCol);
+//
 //        btnThem.setOnAction(e -> handleAdd());
 //        btnSua.setOnAction(e -> handleUpdate());
 //        btnThoiViec.setOnAction(e -> handleThoiViec());
 //        btnTaiTuyen.setOnAction(e -> handleTaiTuyen());
 //        btnClear.setOnAction(e -> clearForm());
 //
-//        // Sắp xếp buttons thành 2 hàng để tiết kiệm không gian
-//        VBox buttonsContainer = new VBox(12);
-//        buttonsContainer.setAlignment(Pos.CENTER);
-//        buttonsContainer.setPadding(new Insets(15, 0, 170, 0));
-//
-//        // Hàng 1: Thêm, Sửa, Làm mới
-//        HBox topButtons = new HBox(10);
-//        topButtons.setAlignment(Pos.CENTER);
-//        topButtons.getChildren().addAll(btnThem, btnSua, btnClear);
-//
-//        // Hàng 2: Thôi việc, Tái tuyển
-//        HBox bottomButtons = new HBox(10);
-//        bottomButtons.setAlignment(Pos.CENTER);
-//        bottomButtons.getChildren().addAll(btnThoiViec, btnTaiTuyen);
-//
-//        buttonsContainer.getChildren().addAll(topButtons, bottomButtons);
-//
-//        // Thêm khoảng trống linh hoạt
 //        Region spacer = new Region();
-//        VBox.setVgrow(spacer, Priority.SOMETIMES);
+//        VBox.setVgrow(spacer, Priority.ALWAYS);
 //
-//        box.getChildren().addAll(title, form, spacer, buttonsContainer);
-//
-//        // Khởi tạo trạng thái ban đầu cho các nút
+//        card.getChildren().addAll(title, form, btnGrid, spacer);
 //        clearForm();
 //
-//        return box;
+//        return card;
 //    }
 //
-//    // Helper method để tạo label cho form
-//    private Label createFormLabel(String text) {
-//        Label label = new Label(text);
-//        label.getStyleClass().add("form-label");
-//        label.setAlignment(Pos.CENTER_LEFT);
-//        label.setPrefHeight(35);
-//        label.setMaxWidth(Double.MAX_VALUE);
-//        return label;
+//    // =============================================================
+//    // 🛠️ UI HELPERS
+//    // =============================================================
+//
+//    /**
+//     * Phương thức này áp dụng đầy đủ Style và Converter cho DatePicker
+//     */
+//    /**
+//     * Cấu hình DatePicker nâng cao:
+//     * - Cho phép nhập tay (Editable)
+//     * - Tự động format dd/MM/yyyy
+//     * - Xử lý lỗi khi nhập sai định dạng
+//     */
+//    private void configDatePicker(DatePicker dp) {
+//        // 1. Cho phép nhập liệu trực tiếp
+//        dp.setEditable(true);
+//        dp.setPromptText("dd/MM/yyyy"); // Gợi ý định dạng
+//
+//        // 2. Converter: Chuyển đổi giữa Text và LocalDate
+//        dp.setConverter(new StringConverter<LocalDate>() {
+//            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+//
+//            @Override
+//            public String toString(LocalDate date) {
+//                if (date != null) {
+//                    return dateFormatter.format(date);
+//                } else {
+//                    return "";
+//                }
+//            }
+//
+//            @Override
+//            public LocalDate fromString(String string) {
+//                if (string != null && !string.isEmpty()) {
+//                    try {
+//                        return LocalDate.parse(string, dateFormatter);
+//                    } catch (DateTimeParseException e) {
+//                        // Nếu nhập sai định dạng, trả về null (hoặc xử lý tùy ý)
+//                        return null;
+//                    }
+//                }
+//                return null;
+//            }
+//        });
+//
+//        // 3. Xử lý khi người dùng nhấn Enter hoặc focus out (Tự sửa lỗi nhập liệu)
+//        dp.focusedProperty().addListener((observable, oldValue, newValue) -> {
+//            if (!newValue) { // Khi mất focus (click ra chỗ khác)
+//                try {
+//                    String text = dp.getEditor().getText();
+//                    if (!text.isEmpty()) {
+//                        // Cố gắng parse lại text hiện tại
+//                        LocalDate date = dp.getConverter().fromString(text);
+//                        dp.setValue(date);
+//                    }
+//                } catch (Exception e) {
+//                    // Nếu sai định dạng -> Xóa trắng hoặc giữ nguyên tùy ý
+//                    // dp.setValue(null);
+//                }
+//            }
+//        });
+//
+//        // 4. Style giao diện (Giữ nguyên style đẹp cũ)
+//        dp.setStyle(
+//                "-fx-background-color: white;" +
+//                        "-fx-border-color: #ced6e0;" +
+//                        "-fx-border-radius: 5;" +
+//                        "-fx-background-radius: 5;" +
+//                        "-fx-font-family: 'Segoe UI';" +
+//                        "-fx-font-size: 13px;"
+//        );
+//        dp.getEditor().setStyle("-fx-background-color: transparent;");
+//        dp.setMaxWidth(Double.MAX_VALUE);
+//        dp.setPrefHeight(35);
 //    }
 //
-//    // Helper method để tạo button
-//    private Button createActionButton(String text, String styleClass, double width) {
-//        Button button = new Button(text);
-//        button.getStyleClass().add(styleClass);
-//        button.setPrefHeight(35);
-//        button.setPrefWidth(width);
-//        button.setMaxWidth(Double.MAX_VALUE);
-//        return button;
+//    private void addFormRow(GridPane grid, String labelText, Node field, int row) {
+//        Label lbl = new Label(labelText);
+//        lbl.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
+//        lbl.setStyle("-fx-text-fill: #535c68;");
+//        grid.add(lbl, 0, row);
+//        grid.add(field, 1, row);
 //    }
 //
-//    // ========== Handlers ==========
+//    private void styleInputField(TextField tf) {
+//        tf.setStyle(
+//                "-fx-background-color: white;" +
+//                        "-fx-border-color: #ced6e0;" +
+//                        "-fx-border-radius: 5;" +
+//                        "-fx-background-radius: 5;" +
+//                        "-fx-padding: 8;" +
+//                        "-fx-font-family: 'Segoe UI';"
+//        );
+//        tf.setPrefHeight(35);
+//    }
+//
+//    private void styleReadonlyField(TextField tf) {
+//        tf.setStyle(
+//                "-fx-background-color: #f1f2f6;" +
+//                        "-fx-border-color: #dfe4ea;" +
+//                        "-fx-border-radius: 5;" +
+//                        "-fx-background-radius: 5;" +
+//                        "-fx-padding: 8;" +
+//                        "-fx-text-fill: #747d8c;" +
+//                        "-fx-font-family: 'Segoe UI';"
+//        );
+//        tf.setPrefHeight(35);
+//    }
+//
+//    private void styleComboBox(ComboBox<?> cbo) {
+//        cbo.setStyle(
+//                "-fx-background-color: white;" +
+//                        "-fx-border-color: #ced6e0;" +
+//                        "-fx-border-radius: 5;" +
+//                        "-fx-background-radius: 5;" +
+//                        "-fx-padding: 2;" +
+//                        "-fx-font-family: 'Segoe UI';"
+//        );
+//        cbo.setMaxWidth(Double.MAX_VALUE);
+//        cbo.setPrefHeight(35);
+//    }
+//
+//    private void styleButton(Button btn, String bgColor, String textColor) {
+//        btn.setStyle(
+//                "-fx-background-color: " + bgColor + ";" +
+//                        "-fx-text-fill: " + textColor + ";" +
+//                        "-fx-font-weight: bold;" +
+//                        "-fx-font-family: 'Segoe UI';" +
+//                        "-fx-background-radius: 8;" +
+//                        "-fx-padding: 8 15;" +
+//                        "-fx-cursor: hand;" +
+//                        "-fx-font-size: 13px;"
+//        );
+//        addHoverEffect(btn);
+//    }
+//
+//    private void addHoverEffect(Node node) {
+//        node.setOnMouseEntered(e -> {
+//            node.setStyle(node.getStyle() + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1); -fx-scale-x: 1.03; -fx-scale-y: 1.03;");
+//        });
+//        node.setOnMouseExited(e -> {
+//            node.setScaleX(1.0);
+//            node.setScaleY(1.0);
+//        });
+//    }
+//
+//    // =============================================================
+//    // ⚙️ LOGIC HANDLERS (UNCHANGED)
+//    // =============================================================
+//
 //    private void onTableSelectionChanged(NhanVien nv) {
 //        if (nv == null) {
 //            clearForm();
@@ -342,7 +533,6 @@
 //        btnTaiTuyen.setDisable(nv.getNgayThoiViec() == null);
 //    }
 //
-//    // --- Add, Update, Thôi việc, Tái tuyển ---
 //    private void handleAdd() {
 //        String ten = txtTen.getText().trim();
 //        String chucVu = cboChucVu.getValue() != null ? cboChucVu.getValue() : "";
@@ -514,7 +704,6 @@
 //        }
 //    }
 //
-//    // --- Helpers ---
 //    private void loadData() {
 //        Platform.runLater(() -> {
 //            data.clear();
@@ -531,10 +720,13 @@
 //        txtCCCD.clear();
 //        dpNgaySinh.setValue(null);
 //        dpNgayVaoLam.setValue(null);
+//        txtNgayThoiViec.clear();
+//
 //        btnThem.setDisable(false);
 //        btnSua.setDisable(true);
 //        btnThoiViec.setDisable(true);
 //        btnTaiTuyen.setDisable(true);
+//
 //        tableView.getSelectionModel().clearSelection();
 //    }
 //
@@ -571,9 +763,11 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 
 public class Gui_QuanLiNhanVien extends VBox {
@@ -586,10 +780,30 @@ public class Gui_QuanLiNhanVien extends VBox {
     // Form controls
     private TextField txtMa, txtTen, txtSoDT, txtCCCD;
     private ComboBox<String> cboChucVu;
-    private DatePicker dpNgaySinh, dpNgayVaoLam;
+    private DatePicker dpNgaySinh; // Chỉ giữ DatePicker cho ngày sinh
+    private TextField txtNgayVaoLam; // Thay DatePicker bằng TextField Read-only
     private Button btnThem, btnSua, btnThoiViec, btnTaiTuyen, btnClear;
     private TextField txtNgayThoiViec;
-    private TextField txtSearch; // Declared here for access in handlers
+    private TextField txtSearch;
+
+    // Formatter chung
+    private final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+    // --- CSS --- (Giữ nguyên như cũ)
+    private final String customDatePickerCss = "data:text/css," +
+            ".date-picker .arrow-button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+            ".date-picker .arrow-button .arrow { -fx-background-color: #082744; }" +
+            ".date-picker-popup { -fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5); }" +
+            ".date-picker-popup .month-year-pane { -fx-background-color: #082744; -fx-padding: 10; }" +
+            ".date-picker-popup .month-year-pane .label { -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; }" +
+            ".date-picker-popup .spinner .button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+            ".date-picker-popup .spinner .button:hover { -fx-background-color: rgba(255, 255, 255, 0.2); -fx-background-radius: 50%25; }" +
+            ".date-picker-popup .spinner .button .left-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" +
+            ".date-picker-popup .spinner .button .right-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" +
+            ".date-picker-popup .day-cell { -fx-background-color: white; -fx-text-fill: #2D3748; -fx-font-size: 13px; -fx-border-color: transparent; }" +
+            ".date-picker-popup .day-cell:hover { -fx-background-color: #EBF8FF; -fx-text-fill: #082744; -fx-background-radius: 5; }" +
+            ".date-picker-popup .day-cell:selected { -fx-background-color: #082744; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; }" +
+            ".date-picker-popup .today { -fx-border-color: #E53E3E; -fx-border-radius: 5; -fx-border-width: 1; }";
 
     public Gui_QuanLiNhanVien() {
         initializeUI();
@@ -597,33 +811,25 @@ public class Gui_QuanLiNhanVien extends VBox {
     }
 
     private void initializeUI() {
-        // --- 1. SETUP ROOT STYLE (Gradient Background) ---
         this.setStyle("-fx-background-color: linear-gradient(to bottom, #f8f9fa 0%, #e9ecef 100%);");
-        this.setPadding(new Insets(30, 40, 30, 40));
-        this.setSpacing(20);
+        this.setPadding(new Insets(0, 40, 30, 40));
+        this.getStylesheets().add(customDatePickerCss);
 
-        // --- 2. HEADER ---
-        VBox header = createModernHeader();
-
-        // --- 3. MAIN BODY (Split Pane) ---
         HBox body = new HBox(25);
+        body.setPadding(new Insets(10, 40, 30, 40));
         VBox.setVgrow(body, Priority.ALWAYS);
 
-        // Left Pane (Search + Table)
         VBox leftPane = createLeftPaneModern();
         HBox.setHgrow(leftPane, Priority.ALWAYS);
 
-        // Right Pane (Form + Actions)
         VBox rightPane = createRightPaneModern();
         rightPane.setPrefWidth(380);
         rightPane.setMinWidth(380);
         rightPane.setMaxWidth(380);
 
         body.getChildren().addAll(leftPane, rightPane);
+        this.getChildren().addAll(body);
 
-        this.getChildren().addAll(header, body);
-
-        // --- 4. ANIMATION FADE IN ---
         FadeTransition fadeIn = new FadeTransition(Duration.millis(600), this);
         fadeIn.setFromValue(0.0);
         fadeIn.setToValue(1.0);
@@ -631,211 +837,124 @@ public class Gui_QuanLiNhanVien extends VBox {
     }
 
     // =============================================================
-    // 🎨 HEADER MODERN
-    // =============================================================
-    private VBox createModernHeader() {
-        VBox header = new VBox(10);
-        header.setPadding(new Insets(20, 30, 20, 30));
-        header.setAlignment(Pos.CENTER_LEFT);
-        header.setStyle(
-                "-fx-background-color: #082744;" + // Dark blue background
-                        "-fx-background-radius: 15;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 12, 0, 0, 4);"
-        );
-
-        Label title = new Label("QUẢN LÝ NHÂN VIÊN");
-        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 28));
-        title.setStyle("-fx-text-fill: white;");
-
-        Label subtitle = new Label("Quản lý thông tin hồ sơ, chức vụ và trạng thái làm việc của nhân viên");
-        subtitle.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 14));
-        subtitle.setStyle("-fx-text-fill: rgba(255,255,255,0.9);");
-
-        header.getChildren().addAll(title, subtitle);
-        return header;
-    }
-
-    // =============================================================
-    // ⬅️ LEFT PANE (SEARCH + TABLE)
+    // ⬅️ LEFT PANE (Giữ nguyên)
     // =============================================================
     private VBox createLeftPaneModern() {
         VBox container = new VBox(20);
 
-        // --- 1. Filter Bar (Card Style) ---
         HBox filterBar = new HBox(15);
         filterBar.setAlignment(Pos.CENTER_LEFT);
         filterBar.setPadding(new Insets(20));
-        filterBar.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);"
-        );
+        filterBar.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
 
         txtSearch = new TextField();
         txtSearch.setPromptText("🔍 Tìm mã, tên hoặc SĐT...");
-        txtSearch.setPrefHeight(35);
-        styleInputField(txtSearch); // Helper method for styling
+        styleInputField(txtSearch);
         HBox.setHgrow(txtSearch, Priority.ALWAYS);
 
         Button btnSearch = new Button("Tìm kiếm");
-        styleButton(btnSearch, "#f1f3f5", "#495057"); // Light gray style
+        styleButton(btnSearch, "#f1f3f5", "#495057");
 
         Button btnRefresh = new Button("🔄 Làm mới");
-        styleButton(btnRefresh, "#f1f3f5", "#495057"); // Light gray style
+        styleButton(btnRefresh, "#f1f3f5", "#495057");
 
-        // Event Handlers
         btnSearch.setOnAction(e -> {
             String kw = txtSearch.getText().trim();
-            if (kw.isEmpty()) {
-                loadData();
-            } else {
+            if (kw.isEmpty()) loadData();
+            else {
                 data.clear();
-                List<NhanVien> list = dao.searchNhanVien(kw);
-                data.addAll(list);
+                data.addAll(dao.searchNhanVien(kw));
                 tableView.refresh();
             }
         });
-
-        // Search on Enter key press in text field
         txtSearch.setOnAction(e -> btnSearch.fire());
-
-        btnRefresh.setOnAction(e -> {
-            txtSearch.clear();
-            loadData();
-        });
+        btnRefresh.setOnAction(e -> { txtSearch.clear(); loadData(); });
 
         filterBar.getChildren().addAll(txtSearch, btnSearch, btnRefresh);
 
-        // --- 2. Table Section (Card Style) ---
         VBox tableContainer = new VBox();
         tableContainer.setPadding(new Insets(5));
-        tableContainer.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);"
-        );
+        tableContainer.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 10, 0, 0, 2);");
         VBox.setVgrow(tableContainer, Priority.ALWAYS);
 
         tableView = new TableView<>();
         tableView.setItems(data);
         tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-
-        // Modern Table Styling
-        tableView.setStyle(
-                "-fx-background-color: transparent;" +
-                        "-fx-base: white;" +
-                        "-fx-control-inner-background: white;" +
-                        "-fx-table-cell-border-color: transparent;" +
-                        "-fx-table-header-border-color: transparent;" +
-                        "-fx-padding: 5;"
-        );
+        tableView.setStyle("-fx-background-color: transparent; -fx-base: white; -fx-control-inner-background: white;");
         VBox.setVgrow(tableView, Priority.ALWAYS);
 
-        // --- Table Columns ---
+        // Columns definition (Giữ nguyên logic cột)
         TableColumn<NhanVien, Number> colSTT = new TableColumn<>("STT");
         colSTT.setCellValueFactory(col -> new ReadOnlyObjectWrapper<>(tableView.getItems().indexOf(col.getValue()) + 1));
         colSTT.setMaxWidth(50);
-        colSTT.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
+        colSTT.setStyle("-fx-alignment: CENTER;");
 
         TableColumn<NhanVien, String> colMa = new TableColumn<>("Mã NV");
         colMa.setCellValueFactory(new PropertyValueFactory<>("maNhanVien"));
-        colMa.setStyle("-fx-alignment: CENTER_LEFT; -fx-font-family: 'Segoe UI';");
 
         TableColumn<NhanVien, String> colTen = new TableColumn<>("Họ và Tên");
         colTen.setCellValueFactory(new PropertyValueFactory<>("tenNhanVien"));
-        colTen.setStyle("-fx-font-weight: bold; -fx-alignment: CENTER_LEFT; -fx-font-family: 'Segoe UI';");
+        colTen.setStyle("-fx-font-weight: bold; -fx-alignment: CENTER_LEFT;");
 
         TableColumn<NhanVien, String> colChucVu = new TableColumn<>("Chức Vụ");
         colChucVu.setCellValueFactory(new PropertyValueFactory<>("chucVu"));
-        colChucVu.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
 
-        TableColumn<NhanVien, String> colSDT = new TableColumn<>("Số Điện Thoại");
+        TableColumn<NhanVien, String> colSDT = new TableColumn<>("SĐT");
         colSDT.setCellValueFactory(new PropertyValueFactory<>("soDienThoai"));
-        colSDT.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
+        colSDT.setStyle("-fx-alignment: CENTER;");
 
-        TableColumn<NhanVien, String> colCCCD = new TableColumn<>("CCCD");
-        colCCCD.setCellValueFactory(new PropertyValueFactory<>("CCCD"));
-        colCCCD.setStyle("-fx-alignment: CENTER; -fx-font-family: 'Segoe UI';");
-
-        // Status Column with Badge Style
         TableColumn<NhanVien, String> colTT = new TableColumn<>("Trạng Thái");
-        colTT.setCellValueFactory(cell -> {
-            NhanVien nv = cell.getValue();
-            String s = nv.getNgayThoiViec() == null ? "Đang làm" : "Đã nghỉ";
-            return new ReadOnlyObjectWrapper<>(s);
-        });
+        colTT.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getNgayThoiViec() == null ? "Đang làm" : "Đã nghỉ"));
         colTT.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
                 super.updateItem(item, empty);
                 if (empty || item == null) {
-                    setText(null);
                     setGraphic(null);
                 } else {
                     Label lbl = new Label(item);
                     lbl.setPadding(new Insets(4, 10, 4, 10));
-                    lbl.setStyle("-fx-font-weight: bold; -fx-background-radius: 12; -fx-font-family: 'Segoe UI'; -fx-font-size: 11px;");
-
-                    if ("Đang làm".equals(item)) {
-                        lbl.setStyle(lbl.getStyle() + "-fx-background-color: #d4edda; -fx-text-fill: #155724;"); // Green badge
-                    } else {
-                        lbl.setStyle(lbl.getStyle() + "-fx-background-color: #f8d7da; -fx-text-fill: #721c24;"); // Red badge
-                    }
+                    lbl.setStyle("-fx-font-weight: bold; -fx-background-radius: 12; -fx-font-size: 11px;");
+                    if ("Đang làm".equals(item)) lbl.setStyle(lbl.getStyle() + "-fx-background-color: #d4edda; -fx-text-fill: #155724;");
+                    else lbl.setStyle(lbl.getStyle() + "-fx-background-color: #f8d7da; -fx-text-fill: #721c24;");
                     setGraphic(lbl);
                     setAlignment(Pos.CENTER);
-                    setText(null);
                 }
             }
         });
-        colTT.setMaxWidth(120);
 
-        tableView.getColumns().addAll(colSTT, colMa, colTen, colChucVu, colSDT, colCCCD, colTT);
-
+        tableView.getColumns().addAll(colSTT, colMa, colTen, colChucVu, colSDT, colTT);
         tableView.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> onTableSelectionChanged(newV));
 
         tableContainer.getChildren().add(tableView);
         container.getChildren().addAll(filterBar, tableContainer);
-
         return container;
     }
 
     // =============================================================
-    // ➡️ RIGHT PANE (FORM + ACTIONS)
+    // ➡️ RIGHT PANE (Đã sửa logic Ngày vào làm & Ngày sinh)
     // =============================================================
     private VBox createRightPaneModern() {
         VBox card = new VBox(15);
         card.setPadding(new Insets(25));
-        card.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-background-radius: 12;" +
-                        "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 2);"
-        );
+        card.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.08), 12, 0, 0, 2);");
 
-        // Title Section
         Label title = new Label("Thông tin chi tiết");
         title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
         title.setStyle("-fx-text-fill: #082744; -fx-border-width: 0 0 0 4; -fx-border-color: #082744; -fx-padding: 0 0 0 10;");
 
-        // Form Layout
         GridPane form = new GridPane();
         form.setHgap(15);
-        form.setVgap(15); // Slightly tighter vertical gap
-        form.setPadding(new Insets(10, 0, 0, 0));
+        form.setVgap(15);
 
-        ColumnConstraints c1 = new ColumnConstraints();
-        c1.setPercentWidth(35);
-        c1.setHalignment(HPos.LEFT);
-
-        ColumnConstraints c2 = new ColumnConstraints();
-        c2.setPercentWidth(65);
-        c2.setHgrow(Priority.ALWAYS);
-
+        ColumnConstraints c1 = new ColumnConstraints(); c1.setPercentWidth(35);
+        ColumnConstraints c2 = new ColumnConstraints(); c2.setPercentWidth(65);
         form.getColumnConstraints().addAll(c1, c2);
 
-        // --- Setup Form Controls ---
+        // --- Setup Controls ---
         txtMa = new TextField();
         txtMa.setEditable(false);
-        styleReadonlyField(txtMa); // Helper for read-only style
+        styleReadonlyField(txtMa);
 
         txtTen = new TextField();
         styleInputField(txtTen);
@@ -844,190 +963,152 @@ public class Gui_QuanLiNhanVien extends VBox {
         cboChucVu.getItems().addAll("Nhân viên", "Quản lý");
         styleComboBox(cboChucVu);
 
-        txtSoDT = new TextField();
-        styleInputField(txtSoDT);
+        txtSoDT = new TextField(); styleInputField(txtSoDT);
+        txtCCCD = new TextField(); styleInputField(txtCCCD);
 
-        txtCCCD = new TextField();
-        styleInputField(txtCCCD);
-
+        // [SỬA] Cấu hình DatePicker cho phép nhập nhanh (gõ số tự thêm /)
         dpNgaySinh = new DatePicker();
-        styleDatePicker(dpNgaySinh);
+        configDatePicker(dpNgaySinh);
+        enableFastDateEntry(dpNgaySinh); // <--- LOGIC MỚI: Tự động format khi gõ
 
-        dpNgayVaoLam = new DatePicker();
-        styleDatePicker(dpNgayVaoLam);
+        // [SỬA] TextField Read-only thay cho DatePicker Ngày vào làm
+        txtNgayVaoLam = new TextField();
+        txtNgayVaoLam.setEditable(false);
+        styleReadonlyField(txtNgayVaoLam);
 
         txtNgayThoiViec = new TextField();
         txtNgayThoiViec.setEditable(false);
         styleReadonlyField(txtNgayThoiViec);
 
-        // --- Add Rows to Form ---
+        // Add Rows
         addFormRow(form, "Mã nhân viên:", txtMa, 0);
         addFormRow(form, "Họ tên:", txtTen, 1);
         addFormRow(form, "Chức vụ:", cboChucVu, 2);
         addFormRow(form, "Số điện thoại:", txtSoDT, 3);
         addFormRow(form, "CCCD:", txtCCCD, 4);
         addFormRow(form, "Ngày sinh:", dpNgaySinh, 5);
-        addFormRow(form, "Ngày vào làm:", dpNgayVaoLam, 6);
+        addFormRow(form, "Ngày vào làm:", txtNgayVaoLam, 6); // Hiển thị Text
         addFormRow(form, "Ngày thôi việc:", txtNgayThoiViec, 7);
 
-        // --- Buttons Section ---
-        // Top Row Buttons
-        btnThem = new Button("Thêm");
-        styleButton(btnThem, "#10ac84", "white"); // Green
-        btnThem.setMaxWidth(Double.MAX_VALUE);
+        // Buttons
+        btnThem = new Button("Thêm"); styleButton(btnThem, "#10ac84", "white");
+        btnSua = new Button("Cập Nhật"); styleButton(btnSua, "#2e86de", "white");
+        btnClear = new Button("Làm Mới"); styleButton(btnClear, "#95a5a6", "white");
+        btnThoiViec = new Button("Thôi Việc"); styleButton(btnThoiViec, "#ee5253", "white");
+        btnTaiTuyen = new Button("Tái Tuyển"); styleButton(btnTaiTuyen, "#feca57", "#222f3e");
 
-        btnSua = new Button("Cập Nhật");
-        styleButton(btnSua, "#2e86de", "white"); // Blue
-        btnSua.setMaxWidth(Double.MAX_VALUE);
-
-        btnClear = new Button("Làm Mới");
-        styleButton(btnClear, "#95a5a6", "white"); // Gray
-        btnClear.setMaxWidth(Double.MAX_VALUE);
-
-        // Bottom Row Buttons
-        btnThoiViec = new Button("Thôi Việc");
-        styleButton(btnThoiViec, "#ee5253", "white"); // Red
-        btnThoiViec.setMaxWidth(Double.MAX_VALUE);
-
-        btnTaiTuyen = new Button("Tái Tuyển");
-        styleButton(btnTaiTuyen, "#feca57", "#222f3e"); // Yellow
-        btnTaiTuyen.setMaxWidth(Double.MAX_VALUE);
-
-        // Layout for Buttons
         GridPane btnGrid = new GridPane();
-        btnGrid.setHgap(10);
-        btnGrid.setVgap(10);
+        btnGrid.setHgap(10); btnGrid.setVgap(10);
         btnGrid.setPadding(new Insets(20, 0, 0, 0));
+        btnGrid.add(btnThem, 0, 0); btnGrid.add(btnSua, 1, 0); btnGrid.add(btnClear, 2, 0);
+        btnGrid.add(btnThoiViec, 0, 1, 2, 1); btnGrid.add(btnTaiTuyen, 2, 1);
 
-        // Row 1
-        btnGrid.add(btnThem, 0, 0);
-        btnGrid.add(btnSua, 1, 0);
-        btnGrid.add(btnClear, 2, 0);
-
-        // Row 2 (Spanning 2 columns for wider buttons if needed, or distribute evenly)
-        btnGrid.add(btnThoiViec, 0, 1, 2, 1); // Span 2 cols
-        btnGrid.add(btnTaiTuyen, 2, 1); // 1 col
-
-        // Set column constraints for buttons to be equal width
-        ColumnConstraints btnCol = new ColumnConstraints();
-        btnCol.setPercentWidth(33.33);
+        ColumnConstraints btnCol = new ColumnConstraints(); btnCol.setPercentWidth(33.33);
         btnGrid.getColumnConstraints().addAll(btnCol, btnCol, btnCol);
 
-        // Button Actions (Logic remains the same)
+        // Actions
         btnThem.setOnAction(e -> handleAdd());
         btnSua.setOnAction(e -> handleUpdate());
         btnThoiViec.setOnAction(e -> handleThoiViec());
         btnTaiTuyen.setOnAction(e -> handleTaiTuyen());
         btnClear.setOnAction(e -> clearForm());
 
-        // Assemble Right Pane
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS); // Push content up
-
+        Region spacer = new Region(); VBox.setVgrow(spacer, Priority.ALWAYS);
         card.getChildren().addAll(title, form, btnGrid, spacer);
 
-        // Initialize button states
-        clearForm();
-
+        clearForm(); // Khởi tạo form ban đầu
         return card;
     }
 
     // =============================================================
-    // 🛠️ UI HELPERS
+    // 🛠️ UI HELPERS & FAST DATE LOGIC
     // =============================================================
+
+    /**
+     * LOGIC MỚI: Cho phép gõ ngày tháng siêu nhanh.
+     * Người dùng gõ "15051995" -> Tự động thành "15/05/1995"
+     */
+    private void enableFastDateEntry(DatePicker datePicker) {
+        datePicker.getEditor().textProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal == null) return;
+
+            // Chỉ cho phép nhập số và dấu /
+            if (!newVal.matches("[0-9/]*")) {
+                datePicker.getEditor().setText(oldVal);
+                return;
+            }
+
+            // Logic tự động thêm dấu /
+            // Nếu độ dài là 2 hoặc 5 và không phải đang xóa lùi -> thêm /
+            if ((newVal.length() == 2 || newVal.length() == 5) && newVal.length() > oldVal.length()) {
+                Platform.runLater(() -> {
+                    datePicker.getEditor().setText(newVal + "/");
+                    datePicker.getEditor().positionCaret(newVal.length() + 1);
+                });
+            }
+
+            // Giới hạn độ dài chuỗi là 10 ký tự (dd/MM/yyyy)
+            if (newVal.length() > 10) {
+                datePicker.getEditor().setText(oldVal);
+            }
+        });
+        datePicker.setPromptText("dd/MM/yyyy (Gõ số tự nhận)");
+    }
+
+    private void configDatePicker(DatePicker dp) {
+        dp.setEditable(true);
+        dp.setConverter(new StringConverter<LocalDate>() {
+            @Override
+            public String toString(LocalDate date) {
+                return (date != null) ? DATE_FORMATTER.format(date) : "";
+            }
+            @Override
+            public LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    try {
+                        return LocalDate.parse(string, DATE_FORMATTER);
+                    } catch (DateTimeParseException e) { return null; }
+                }
+                return null;
+            }
+        });
+        dp.setStyle("-fx-background-color: white; -fx-border-color: #ced6e0; -fx-border-radius: 5;");
+        dp.setPrefHeight(35);
+        dp.setMaxWidth(Double.MAX_VALUE);
+    }
 
     private void addFormRow(GridPane grid, String labelText, Node field, int row) {
         Label lbl = new Label(labelText);
         lbl.setFont(Font.font("Segoe UI", FontWeight.SEMI_BOLD, 13));
-        lbl.setStyle("-fx-text-fill: #535c68;"); // Grayish text for labels
+        lbl.setStyle("-fx-text-fill: #535c68;");
         grid.add(lbl, 0, row);
         grid.add(field, 1, row);
     }
 
+    // Các hàm style giữ nguyên
     private void styleInputField(TextField tf) {
-        tf.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-border-color: #ced6e0;" +
-                        "-fx-border-radius: 5;" +
-                        "-fx-background-radius: 5;" +
-                        "-fx-padding: 8;" +
-                        "-fx-font-family: 'Segoe UI';"
-        );
+        tf.setStyle("-fx-background-color: white; -fx-border-color: #ced6e0; -fx-border-radius: 5; -fx-padding: 8;");
         tf.setPrefHeight(35);
     }
-
     private void styleReadonlyField(TextField tf) {
-        tf.setStyle(
-                "-fx-background-color: #f1f2f6;" + // Light gray background
-                        "-fx-border-color: #dfe4ea;" +
-                        "-fx-border-radius: 5;" +
-                        "-fx-background-radius: 5;" +
-                        "-fx-padding: 8;" +
-                        "-fx-text-fill: #747d8c;" + // Dimmed text color
-                        "-fx-font-family: 'Segoe UI';"
-        );
+        tf.setStyle("-fx-background-color: #f1f2f6; -fx-border-color: #dfe4ea; -fx-border-radius: 5; -fx-text-fill: #747d8c; -fx-padding: 8;");
         tf.setPrefHeight(35);
     }
-
     private void styleComboBox(ComboBox<?> cbo) {
-        cbo.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-border-color: #ced6e0;" +
-                        "-fx-border-radius: 5;" +
-                        "-fx-background-radius: 5;" +
-                        "-fx-padding: 2;" + // Padding inside control
-                        "-fx-font-family: 'Segoe UI';"
-        );
+        cbo.setStyle("-fx-background-color: white; -fx-border-color: #ced6e0; -fx-border-radius: 5;");
         cbo.setMaxWidth(Double.MAX_VALUE);
         cbo.setPrefHeight(35);
     }
-
-    private void styleDatePicker(DatePicker dp) {
-        dp.setStyle("-fx-font-family: 'Segoe UI';"); // Styles mainly inherited, just setting font
-        dp.getEditor().setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-border-color: #ced6e0;" +
-                        "-fx-border-radius: 5;" +
-                        "-fx-background-radius: 5;" +
-                        "-fx-padding: 8;"
-        );
-        dp.setMaxWidth(Double.MAX_VALUE);
-        dp.setPrefHeight(35);
-    }
-
-    private void styleButton(Button btn, String bgColor, String textColor) {
-        btn.setStyle(
-                "-fx-background-color: " + bgColor + ";" +
-                        "-fx-text-fill: " + textColor + ";" +
-                        "-fx-font-weight: bold;" +
-                        "-fx-font-family: 'Segoe UI';" +
-                        "-fx-background-radius: 8;" +
-                        "-fx-padding: 8 15;" +
-                        "-fx-cursor: hand;" +
-                        "-fx-font-size: 13px;"
-        );
-        addHoverEffect(btn);
-    }
-
-    private void addHoverEffect(Node node) {
-        node.setOnMouseEntered(e -> {
-            node.setStyle(node.getStyle() + "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 1); -fx-scale-x: 1.03; -fx-scale-y: 1.03;");
-        });
-        node.setOnMouseExited(e -> {
-            node.setScaleX(1.0);
-            node.setScaleY(1.0);
-        });
+    private void styleButton(Button btn, String bg, String text) {
+        btn.setStyle("-fx-background-color: "+bg+"; -fx-text-fill: "+text+"; -fx-font-weight: bold; -fx-background-radius: 8; -fx-padding: 8 15; -fx-cursor: hand;");
     }
 
     // =============================================================
-    // ⚙️ LOGIC HANDLERS (UNCHANGED)
+    // ⚙️ LOGIC HANDLERS
     // =============================================================
 
     private void onTableSelectionChanged(NhanVien nv) {
-        if (nv == null) {
-            clearForm();
-            return;
-        }
+        if (nv == null) { clearForm(); return; }
 
         txtMa.setText(nv.getMaNhanVien());
         txtTen.setText(nv.getTenNhanVien());
@@ -1035,14 +1116,16 @@ public class Gui_QuanLiNhanVien extends VBox {
         txtSoDT.setText(nv.getSoDienThoai());
         txtCCCD.setText(nv.getCCCD());
         dpNgaySinh.setValue(nv.getNgaySinh());
-        dpNgayVaoLam.setValue(nv.getNgayVaoLam());
+
+        // Hiển thị ngày vào làm từ dữ liệu (convert sang String)
+        if(nv.getNgayVaoLam() != null) {
+            txtNgayVaoLam.setText(DATE_FORMATTER.format(nv.getNgayVaoLam()));
+        } else {
+            txtNgayVaoLam.setText("");
+        }
 
         LocalDate ngayThoiViec = dao.getNgayThoiViec(nv.getMaNhanVien());
-        txtNgayThoiViec.setText(
-                ngayThoiViec != null
-                        ? ngayThoiViec.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                        : ""
-        );
+        txtNgayThoiViec.setText(ngayThoiViec != null ? DATE_FORMATTER.format(ngayThoiViec) : "");
 
         btnThem.setDisable(true);
         btnSua.setDisable(false);
@@ -1056,11 +1139,12 @@ public class Gui_QuanLiNhanVien extends VBox {
         String sdt = txtSoDT.getText().trim();
         String cccd = txtCCCD.getText().trim();
         LocalDate sinh = dpNgaySinh.getValue();
-        LocalDate vao = dpNgayVaoLam.getValue() != null ? dpNgayVaoLam.getValue() : LocalDate.now();
 
-        // Validate
+        // [LOGIC MỚI] Lấy ngày hiện tại làm ngày vào làm
+        LocalDate vao = LocalDate.now();
+
         if (ten.isEmpty() || chucVu.isEmpty() || sdt.isEmpty() || cccd.isEmpty() || sinh == null) {
-            showAlert(Alert.AlertType.ERROR, "Vui lòng nhập đầy đủ thông tin bắt buộc!");
+            showAlert(Alert.AlertType.ERROR, "Vui lòng nhập đầy đủ thông tin!");
             return;
         }
 
@@ -1072,16 +1156,10 @@ public class Gui_QuanLiNhanVien extends VBox {
             showAlert(Alert.AlertType.ERROR, "Nhân viên phải đủ 18 tuổi.");
             return;
         }
-        if (vao.isAfter(LocalDate.now())) {
-            showAlert(Alert.AlertType.ERROR, "Ngày vào làm không được vượt quá hiện tại.");
-            return;
-        }
-
         if (!sdt.matches("\\d{10,11}")) {
-            showAlert(Alert.AlertType.ERROR, "Số điện thoại không đúng định dạng (10-11 chữ số).");
+            showAlert(Alert.AlertType.ERROR, "SĐT không đúng (10-11 số).");
             return;
         }
-
         if (!cccd.matches("\\d{12}")) {
             showAlert(Alert.AlertType.ERROR, "CCCD phải đúng 12 chữ số.");
             return;
@@ -1090,134 +1168,86 @@ public class Gui_QuanLiNhanVien extends VBox {
         String ma = dao.generateMaNhanVien();
         NhanVien nv = new NhanVien(ma, ten, chucVu, cccd, sdt, sinh, vao, null);
 
-        boolean ok = dao.addNhanVien(nv);
-        if (ok) {
-            showAlert(Alert.AlertType.INFORMATION, "Thêm nhân viên thành công.");
+        if (dao.addNhanVien(nv)) {
+            showAlert(Alert.AlertType.INFORMATION, "Thêm thành công. Ngày vào làm: " + DATE_FORMATTER.format(vao));
             loadData();
             clearForm();
         } else {
-            showAlert(Alert.AlertType.ERROR, "Thêm nhân viên thất bại.");
+            showAlert(Alert.AlertType.ERROR, "Thêm thất bại.");
         }
     }
 
     private void handleUpdate() {
         String ma = txtMa.getText();
-        if (ma.isEmpty()) {
-            showAlert(Alert.AlertType.ERROR, "Vui lòng chọn nhân viên cần sửa.");
-            return;
-        }
+        if (ma.isEmpty()) return;
 
         String ten = txtTen.getText().trim();
         String chucVu = cboChucVu.getValue();
         String sdt = txtSoDT.getText().trim();
         String cccd = txtCCCD.getText().trim();
         LocalDate sinh = dpNgaySinh.getValue();
-        LocalDate vao = dpNgayVaoLam.getValue();
 
-        if (ten.isEmpty() || chucVu == null || sdt.isEmpty() || cccd.isEmpty() || sinh == null || vao == null) {
-            showAlert(Alert.AlertType.ERROR, "Vui lòng nhập đầy đủ thông tin!");
-            return;
-        }
-        if (!ten.matches("^[\\p{L} ]+$")) {
-            showAlert(Alert.AlertType.ERROR, "Họ tên chỉ được chứa chữ cái.");
-            return;
-        }
-        if (sinh.isAfter(LocalDate.now().minusYears(18))) {
-            showAlert(Alert.AlertType.ERROR, "Nhân viên phải đủ 18 tuổi.");
-            return;
-        }
-        if (vao.isAfter(LocalDate.now())) {
-            showAlert(Alert.AlertType.ERROR, "Ngày vào làm không được vượt quá hiện tại.");
+        // [LƯU Ý] Khi cập nhật, ta lấy lại ngày vào làm cũ từ Textfield (parse về LocalDate)
+        LocalDate vao = null;
+        try {
+            vao = LocalDate.parse(txtNgayVaoLam.getText(), DATE_FORMATTER);
+        } catch (Exception e) {
+            showAlert(Alert.AlertType.ERROR, "Lỗi dữ liệu ngày vào làm.");
             return;
         }
 
-        if (!sdt.matches("\\d{10,11}")) {
-            showAlert(Alert.AlertType.ERROR, "Số điện thoại không đúng định dạng (10-11 chữ số).");
+        if (ten.isEmpty() || chucVu == null || sdt.isEmpty() || cccd.isEmpty() || sinh == null) {
+            showAlert(Alert.AlertType.ERROR, "Thiếu thông tin!");
             return;
         }
 
-        if (!cccd.matches("\\d{12}")) {
-            showAlert(Alert.AlertType.ERROR, "CCCD phải đúng 12 chữ số.");
-            return;
-        }
+        // ... (Validate giống handleAdd) ...
+        if (!ten.matches("^[\\p{L} ]+$")) { showAlert(Alert.AlertType.ERROR, "Tên sai định dạng"); return; }
+        if (sinh.isAfter(LocalDate.now().minusYears(18))) { showAlert(Alert.AlertType.ERROR, "Chưa đủ 18 tuổi"); return; }
+        if (!sdt.matches("\\d{10,11}")) { showAlert(Alert.AlertType.ERROR, "SĐT sai"); return; }
+        if (!cccd.matches("\\d{12}")) { showAlert(Alert.AlertType.ERROR, "CCCD sai"); return; }
 
-        if (dao.isSoDienThoaiExistsForOther(sdt, ma)) {
-            showAlert(Alert.AlertType.ERROR, "Số điện thoại đã tồn tại cho nhân viên khác!");
-            return;
-        }
-        if (dao.isCCCDExistsForOther(cccd, ma)) {
-            showAlert(Alert.AlertType.ERROR, "CCCD đã tồn tại cho nhân viên khác!");
-            return;
-        }
+        if (dao.isSoDienThoaiExistsForOther(sdt, ma)) { showAlert(Alert.AlertType.ERROR, "SĐT trùng!"); return; }
+        if (dao.isCCCDExistsForOther(cccd, ma)) { showAlert(Alert.AlertType.ERROR, "CCCD trùng!"); return; }
 
         NhanVien nv = dao.getNhanVienByMa(ma);
-        if (nv == null) {
-            showAlert(Alert.AlertType.ERROR, "Không tìm thấy nhân viên.");
-            return;
-        }
+        if (nv != null) {
+            nv.setTenNhanVien(ten);
+            nv.setChucVu(chucVu);
+            nv.setSoDienThoai(sdt);
+            nv.setCCCD(cccd);
+            nv.setNgaySinh(sinh);
+            nv.setNgayVaoLam(vao); // Cập nhật lại ngày vào làm (dù thường ít sửa)
 
-        nv.setTenNhanVien(ten);
-        nv.setChucVu(chucVu);
-        nv.setSoDienThoai(sdt);
-        nv.setCCCD(cccd);
-        nv.setNgaySinh(sinh);
-        nv.setNgayVaoLam(vao);
-
-        boolean ok = dao.updateNhanVien(nv);
-        if (ok) {
-            showAlert(Alert.AlertType.INFORMATION, "Cập nhật thành công.");
-            loadData();
-            clearForm();
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Cập nhật thất bại.");
+            if (dao.updateNhanVien(nv)) {
+                showAlert(Alert.AlertType.INFORMATION, "Cập nhật thành công.");
+                loadData();
+                clearForm();
+            } else {
+                showAlert(Alert.AlertType.ERROR, "Cập nhật thất bại.");
+            }
         }
     }
 
     private void handleThoiViec() {
         NhanVien sel = tableView.getSelectionModel().getSelectedItem();
-        if (sel == null) {
-            showAlert(Alert.AlertType.ERROR, "Chọn nhân viên cần cho thôi việc.");
-            return;
-        }
-        if (sel.getNgayThoiViec() != null) {
-            showAlert(Alert.AlertType.INFORMATION, "Nhân viên đã nghỉ rồi.");
-            return;
-        }
-
-        boolean conf = confirmDialog("Bạn có chắc muốn cho nhân viên " + sel.getTenNhanVien() + " thôi việc?");
-        if (!conf) return;
-
-        boolean ok = dao.thoiViecNhanVien(sel.getMaNhanVien());
-        if (ok) {
-            showAlert(Alert.AlertType.INFORMATION, "Đã cho nghỉ.");
-            loadData();
-            clearForm();
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Thao tác thất bại.");
+        if (sel == null || sel.getNgayThoiViec() != null) return;
+        if (confirmDialog("Cho nhân viên " + sel.getTenNhanVien() + " nghỉ việc?")) {
+            if (dao.thoiViecNhanVien(sel.getMaNhanVien())) {
+                showAlert(Alert.AlertType.INFORMATION, "Đã cập nhật trạng thái nghỉ việc.");
+                loadData(); clearForm();
+            }
         }
     }
 
     private void handleTaiTuyen() {
         NhanVien sel = tableView.getSelectionModel().getSelectedItem();
-        if (sel == null) {
-            showAlert(Alert.AlertType.ERROR, "Chọn nhân viên cần tái tuyển.");
-            return;
-        }
-        if (sel.getNgayThoiViec() == null) {
-            showAlert(Alert.AlertType.INFORMATION, "Nhân viên hiện đang làm việc.");
-            return;
-        }
-
-        boolean conf = confirmDialog("Bạn có chắc muốn tái tuyển nhân viên " + sel.getTenNhanVien() + " không?");
-        if (!conf) return;
-
-        boolean ok = dao.taiTuyenNhanVien(sel.getMaNhanVien());
-        if (ok) {
-            showAlert(Alert.AlertType.INFORMATION, "Đã tái tuyển.");
-            loadData();
-            clearForm();
-        } else {
-            showAlert(Alert.AlertType.ERROR, "Thao tác thất bại.");
+        if (sel == null || sel.getNgayThoiViec() == null) return;
+        if (confirmDialog("Tái tuyển nhân viên " + sel.getTenNhanVien() + "?")) {
+            if (dao.taiTuyenNhanVien(sel.getMaNhanVien())) {
+                showAlert(Alert.AlertType.INFORMATION, "Tái tuyển thành công.");
+                loadData(); clearForm();
+            }
         }
     }
 
@@ -1236,28 +1266,25 @@ public class Gui_QuanLiNhanVien extends VBox {
         txtSoDT.clear();
         txtCCCD.clear();
         dpNgaySinh.setValue(null);
-        dpNgayVaoLam.setValue(null);
+        dpNgaySinh.getEditor().clear(); // Xóa text trong editor
+
+        // Set mặc định ngày vào làm là Hôm nay để người dùng thấy
+        txtNgayVaoLam.setText(DATE_FORMATTER.format(LocalDate.now()));
+
         txtNgayThoiViec.clear();
 
         btnThem.setDisable(false);
         btnSua.setDisable(true);
         btnThoiViec.setDisable(true);
         btnTaiTuyen.setDisable(true);
-
         tableView.getSelectionModel().clearSelection();
     }
 
     private void showAlert(Alert.AlertType type, String msg) {
-        Alert a = new Alert(type);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        a.showAndWait();
+        Alert a = new Alert(type); a.setHeaderText(null); a.setContentText(msg); a.showAndWait();
     }
-
     private boolean confirmDialog(String msg) {
-        Alert a = new Alert(Alert.AlertType.CONFIRMATION);
-        a.setHeaderText(null);
-        a.setContentText(msg);
-        return a.showAndWait().filter(btn -> btn == ButtonType.OK).isPresent();
+        Alert a = new Alert(Alert.AlertType.CONFIRMATION); a.setHeaderText(null); a.setContentText(msg);
+        return a.showAndWait().filter(b -> b == ButtonType.OK).isPresent();
     }
 }

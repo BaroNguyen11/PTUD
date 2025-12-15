@@ -33,20 +33,20 @@ public class ThanhToan_Ctrl {
         dao = new ThanhToan_DAO();
     }
 
-    public List<BanAn> layDanhSachBanThanhToan(LocalDate ngay){
+    public List<BanAn> layDanhSachBanThanhToan(LocalDate ngay) {
         return dao.getDanhSachBanDangSuDungTheoNgay(ngay);
     }
 
-    public List<BanAn> chiaTang(List<BanAn> dsThongTinBan, String tang){
+    public List<BanAn> chiaTang(List<BanAn> dsThongTinBan, String tang) {
         ViTri viTri;
-        if(tang.equals("Tầng 1")) {
+        if (tang.equals("Tầng 1")) {
             viTri = ViTri.LAU_1;
-        }else {
+        } else {
             viTri = ViTri.LAU_2;
         }
         List<BanAn> dsThongTinTheoTang = new ArrayList<BanAn>();
-        for(int i = 0; i < dsThongTinBan.size(); i++) {
-            if(dsThongTinBan.get(i).getViTri().equals(viTri)) {
+        for (int i = 0; i < dsThongTinBan.size(); i++) {
+            if (dsThongTinBan.get(i).getViTri().equals(viTri)) {
                 dsThongTinTheoTang.add(dsThongTinBan.get(i));
             }
         }
@@ -54,7 +54,7 @@ public class ThanhToan_Ctrl {
         return dsThongTinTheoTang;
     }
 
-    public List<String> layDanhSachCTHD(String maHoaDon){
+    public List<String> layDanhSachCTHD(String maHoaDon) {
         return dao.getChiTietHoaDonTheoMa(maHoaDon);
     }
 
@@ -70,19 +70,19 @@ public class ThanhToan_Ctrl {
         return dao.getSoTienGiamCaoNhatTheoHoaDon(maHoaDon);
     }
 
-    
+
     public KhachHang timKHBangMa(String maKH) {
         return dao.getKhachHangByMa(maKH);
     }
 
-    public List<KhuyenMai> layDanhSachKhuyenMai(String maHD, double tongTien){
-    	
-        if(maHD == null || maHD.isEmpty()) {
+    public List<KhuyenMai> layDanhSachKhuyenMai(String maHD, double tongTien) {
+
+        if (maHD == null || maHD.isEmpty()) {
             gui.showAlert(AlertType.ERROR, "Lỗi mã phiếu", "Mã phiếu null hoặc rỗng");
             return null;
         }
 
-        if(tongTien < 0) {
+        if (tongTien < 0) {
             gui.showAlert(AlertType.ERROR, "Lỗi tổng tiền", "Tổng tiền phải lớn hơn 0");
             return null;
         }
@@ -90,59 +90,59 @@ public class ThanhToan_Ctrl {
         return dao.getKhuyenMaiApDungChoHoaDon(maHD, tongTien);
     }
 
-    public double tinhThue (double tongTien) {
-        if(tongTien < 0) {
+    public double tinhThue(double tongTien) {
+        if (tongTien < 0) {
             gui.showAlert(AlertType.ERROR, "Lỗi tổng tiền", "Tổng tiền phải lớn hơn 0");
             return 0;
         }
-        return 5/100.0 * tongTien;
+        return 5 / 100.0 * tongTien;
     }
 
     public double tinhCoc(BanAn banAn) {
-        if(banAn == null) {
+        if (banAn == null) {
             gui.showAlert(AlertType.ERROR, "Lỗi", "Bàn ăn không được null");
             return 0;
         }
         double tienCoc = banAn.getLoai().equals(LoaiBan.VIP) ? 450000.0 : 350000;
         return tienCoc;
     }
-    
+
     public double tinhCocBangDanhSachPhieu(List<PhieuDatBan> dsPhieu) {
-    		if(dsPhieu == null || dsPhieu.isEmpty()) {
-    			return 0.0;
-    		}
-    		
-    		double tienCoc = 0.0;
-    		
-    		for(PhieuDatBan phieu : dsPhieu) {
-    			if(!phieu.getGhiChu().equals("Dùng ngay")) {
-    				tienCoc += tinhCoc(BanAn_DAO.getByMaBan(phieu.getBan().getMaBan()));
-    			}
-    		}
-    		
-    		return tienCoc;
-    		
+        if (dsPhieu == null || dsPhieu.isEmpty()) {
+            return 0.0;
+        }
+
+        double tienCoc = 0.0;
+
+        for (PhieuDatBan phieu : dsPhieu) {
+            if (!phieu.getGhiChu().equals("Dùng ngay")) {
+                tienCoc += tinhCoc(BanAn_DAO.getByMaBan(phieu.getBan().getMaBan()));
+            }
+        }
+
+        return tienCoc;
+
     }
 
     public double tinhTienGiamGia(double giaTriGiam, boolean giamGiaPhanTram, double tongTien, double giaTriToiDa) {
-        if(giaTriGiam < 0 || tongTien < 0 || giaTriToiDa < 0) {
+        if (giaTriGiam < 0 || tongTien < 0 || giaTriToiDa < 0) {
             gui.showAlert(AlertType.ERROR, "Lỗi", "Giá trị giảm và tổng tiền và giá trị tối đa phải lớn hơn 0");
             return 0;
         }
 
         double tienGiamGia = 0.0;
 
-        if(giamGiaPhanTram) {
-            tienGiamGia = tongTien * giaTriGiam/100;
+        if (giamGiaPhanTram) {
+            tienGiamGia = tongTien * giaTriGiam / 100;
             return tienGiamGia < giaTriToiDa ? tienGiamGia : giaTriToiDa;
-        }else {
+        } else {
             return giaTriGiam;
         }
 
     }
 
     public double tinhTienThanhToan(double tongTien, double tienCoc, boolean giamGiaPhanTram, double giaTriGiam, double thue, double giaTriToiDa) {
-        if(tongTien < 0 || tienCoc < 0 || giaTriGiam < 0 || thue < 0) {
+        if (tongTien < 0 || tienCoc < 0 || giaTriGiam < 0 || thue < 0) {
             gui.showAlert(AlertType.ERROR, "Lỗi", "Các giá trị tính toán phải lớn hơn 0");
             return 0;
         }
@@ -155,7 +155,7 @@ public class ThanhToan_Ctrl {
 
     public Tooltip taoToolTip(KhuyenMai km) {
 
-        if(km == null) {
+        if (km == null) {
 //			gui.showAlert(AlertType.ERROR, "Lỗi", "Khuyến mãi không được rỗng");
             return new Tooltip("Không có khuyến mãi áp dụng");
         }
@@ -164,7 +164,7 @@ public class ThanhToan_Ctrl {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
         String tooltipText = "";
         // Tạo tooltip chi tiết
-        if(km.getGiamGiaPhanTram()) {
+        if (km.getGiamGiaPhanTram()) {
             tooltipText = String.format(
                     "Tên: %s\nGiảm: %s\nĐiều kiện: %s\nGiá trị giảm tối đa: %s\nNgày hết hạn: %s",
                     km.getTenKhuyenMai(),
@@ -173,7 +173,7 @@ public class ThanhToan_Ctrl {
                     formatTienVND.format(km.getGiaTriToiDa()),
                     km.getNgayKetThuc().format(dtf)
             );
-        }else {
+        } else {
             tooltipText = String.format(
                     "Tên: %s\nGiảm: %s\nĐiều kiện: %s\nNgày hết hạn: %s",
                     km.getTenKhuyenMai(),
@@ -189,7 +189,7 @@ public class ThanhToan_Ctrl {
 
     public List<Integer> suggestCash(int tongTien) {
         // Mệnh giá phổ biến, ưu tiên loại lớn
-        int[] uuTien = {5000,10000,20000,50000, 100000, 200000, 500000};
+        int[] uuTien = {5000, 10000, 20000, 50000, 100000, 200000, 500000};
         Set<Integer> goiY = new LinkedHashSet<>();
 
         // Luôn có gợi ý đầu tiên là đúng tổng tiền
@@ -214,82 +214,92 @@ public class ThanhToan_Ctrl {
         // Trả về danh sách tăng dần, giới hạn 6 gợi ý
         return result.stream().sorted().limit(6).toList();
     }
-    
-    public List<PhieuDatBan> layDanhSachPhieuBangMaHD(String maHD){
-    		if(maHD == null || maHD.trim().isBlank()){
-    			return null;
-    		}
-    		
-    		return PhieuDatBan_DAO.getByMaHoaDon(maHD);
-    		
+
+    public List<PhieuDatBan> layDanhSachPhieuBangMaHD(String maHD) {
+        if (maHD == null || maHD.trim().isBlank()) {
+            return null;
+        }
+
+        return PhieuDatBan_DAO.getByMaHoaDon(maHD);
+
     }
 
     public HoaDon layHoaDonBangMa(String maHD) {
-    		if(maHD.trim().isBlank() || maHD == null) {
-    			return null;
-    		}
-    		
-    		return dao.getByMaHoaDon(maHD);
+        if (maHD.trim().isBlank() || maHD == null) {
+            return null;
+        }
+
+        return dao.getByMaHoaDon(maHD);
     }
-    
-	public boolean xuLyThanhToan(String maPhieu, String maBan) throws SQLException {
 
-		if (!dao.capNhatTrangThaiHoanTat(maPhieu))
-			return false;
+    public boolean xuLyThanhToan(String maPhieu, String maBan) throws SQLException {
 
-		if (!dao.capNhatTrangThaiTrong(maBan))
-			return false;
+        if (!dao.capNhatTrangThaiHoanTat(maPhieu))
+            return false;
 
-		return true;
-	}
+        if (!dao.capNhatTrangThaiTrong(maBan))
+            return false;
 
-    
+        return true;
+    }
+
+
     public boolean xuLiThanhToanTatCa(List<PhieuDatBan> dsPhieu, String maHoaDon, String phuongThuc, double giamGia,
-			KhuyenMai km) {
-    		if(dsPhieu == null || dsPhieu.isEmpty() || maHoaDon == null || maHoaDon.trim().isBlank() || phuongThuc == null || phuongThuc.trim().isBlank()) {
-    			return false;
-    		}
-    		
-    		if(giamGia < 0 || km == null) {
-    			return false;
-    		}
-    	
-    		for(PhieuDatBan phieu : dsPhieu) {
-    			try {
-    				xuLyThanhToan(phieu.getMaPhieu(), phieu.getBan().getMaBan());
-			} catch (Exception e) {
-					return false;
-			}
-    		}
-    		
-    		try {
-    			dao.capNhatTrangThaiThanhToan(maHoaDon, phuongThuc);
-    			dao.taoChiTietKMHD(maHoaDon, km.getMaKhuyenMai(), giamGia);
-    			
-		} catch (Exception e) {
-				return false;
-		}
-    		
-    		return true;
+                                      KhuyenMai km) {
+        if (dsPhieu == null || dsPhieu.isEmpty() || maHoaDon == null || maHoaDon.trim().isBlank() || phuongThuc == null || phuongThuc.trim().isBlank()) {
+            return false;
+        }
+
+        if (giamGia < 0) {
+            return false;
+        }
+
+        for (PhieuDatBan phieu : dsPhieu) {
+            try {
+                xuLyThanhToan(phieu.getMaPhieu(), phieu.getBan().getMaBan());
+            } catch (Exception e) {
+                e.printStackTrace();
+                return false;
+            }
+        }
+
+        try {
+            dao.capNhatTrangThaiThanhToan(maHoaDon, phuongThuc);
+            if (km != null) {
+                dao.taoChiTietKMHD(maHoaDon, km.getMaKhuyenMai(), giamGia);
+            }
+
+        } catch (Exception e) {
+            return false;
+        }
+
+        return true;
     }
-    
+
     public boolean capNhatTichLuy(String maKH, double diemMoi) {
-    		KhachHang kh = KhachHang_DAO.getKhachHangById(maKH);
-    		diemMoi = kh.getDiemTichLuy() + diemMoi;
-    	
-    		return dao.updateDiemTichLuy(maKH, diemMoi);
+        if (maKH == null || maKH.trim().isEmpty() || maKH.equalsIgnoreCase("KH000")) {
+            return true;
+        }
+
+        KhachHang kh = KhachHang_DAO.getKhachHangById(maKH);
+        if (kh == null) {
+            return true;
+        }
+        diemMoi = kh.getDiemTichLuy() + diemMoi;
+
+        return dao.updateDiemTichLuy(maKH, diemMoi);
     }
-    
+
     public double tinhTongTien(List<String> dsChiTiet) {
-    		if(dsChiTiet == null || dsChiTiet.isEmpty()) {
-    			return 0.0;
-    		}
-    		double tongTien = 0.0;
-    		
-    		for(String chuoi : dsChiTiet) {
-    			tongTien += Double.parseDouble(chuoi.split(",")[3]);
-    		}
-    		return tongTien;
+        if (dsChiTiet == null || dsChiTiet.isEmpty()) {
+            return 0.0;
+        }
+        double tongTien = 0.0;
+
+        for (String chuoi : dsChiTiet) {
+            tongTien += Double.parseDouble(chuoi.split(",")[3]);
+        }
+        return tongTien;
     }
 
 }

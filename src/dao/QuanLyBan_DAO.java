@@ -97,9 +97,15 @@ public class QuanLyBan_DAO {
              PreparedStatement ps = con.prepareStatement(sql)) {
 
             ps.setString(1, b.getMaBan());
-            ps.setString(2, b.getLoai() != null ? b.getLoai().name() : null);
-            ps.setString(3, b.getTrangThai() != null ? b.getTrangThai().name() : null);
-            ps.setString(4, b.getViTri() != null ? b.getViTri().name() : null);
+            // Sửa .name() thành .getTenLoai() (nếu LoaiBan có hàm này) hoặc xử lý tương tự
+            ps.setString(2, b.getLoai() != null ? b.getLoai().getTenLoai() : null);
+
+            // --- SỬA Ở ĐÂY ---
+            // Thay .name() bằng .getThongTin()
+            ps.setString(3, b.getTrangThai() != null ? b.getTrangThai().getThongTin() : null);
+
+            // Tương tự với ViTri, nên dùng phương thức lấy chuỗi hiển thị
+            ps.setString(4, b.getViTri() != null ? b.getViTri().getTenViTri() : null); // Giả sử ViTri có hàm getTenViTri
 
             return ps.executeUpdate() > 0;
 
@@ -116,9 +122,13 @@ public class QuanLyBan_DAO {
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, b.getLoai() != null ? b.getLoai().name() : null);
-            ps.setString(2, b.getTrangThai() != null ? b.getTrangThai().name() : null);
-            ps.setString(3, b.getViTri() != null ? b.getViTri().name() : null);
+            // Sửa tương tự như trên
+            ps.setString(1, b.getLoai() != null ? b.getLoai().getTenLoai() : null);
+
+            // --- SỬA Ở ĐÂY ---
+            ps.setString(2, b.getTrangThai() != null ? b.getTrangThai().getThongTin() : null);
+
+            ps.setString(3, b.getViTri() != null ? b.getViTri().getTenViTri() : null);
             ps.setString(4, b.getMaBan());
 
             return ps.executeUpdate() > 0;

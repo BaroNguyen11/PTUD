@@ -316,70 +316,6 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
         btnLogin.setOnMouseEntered(e -> btnLogin.setStyle("-fx-background-color: #123E63; -fx-text-fill: white; " +
                 "-fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; " ));
         btnLogin.setOnMouseExited(e -> btnLogin.setStyle("-fx-background-color: #0A2940; -fx-text-fill: white; -fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px;"));
-//        btnLogin.setOnAction(e -> {
-//            String username = usernameField.getText().trim();
-//            String password = passwordField.getText().trim();
-//
-//            if (username.isEmpty() || password.isEmpty()) {
-//                Alert alert = new Alert(Alert.AlertType.WARNING);
-//                alert.setTitle("Cảnh báo");
-//                alert.setHeaderText(null);
-//                alert.setContentText("Vui lòng nhập đầy đủ tên đăng nhập và mật khẩu!");
-//                alert.showAndWait();
-//                return;
-//            }
-//
-//            try {
-//                DangNhap_DAO dangNhapDAO = new DangNhap_DAO();
-//
-//                if (dangNhapDAO.authenticate(username, password)) {
-//                    currentUsername = username;
-//                    currentIsAdmin = dangNhapDAO.isAdmin(username);
-//                    currentMaNhanVien = dangNhapDAO.getMaNhanVien(username);
-//                    stage.hide();
-//                    // ✅ HIỂN THỊ MODAL VÀO CA
-//                    NhanVien nhanVien = new NhanVien();
-//                    nhanVien.setMaNhanVien(currentMaNhanVien);
-//                    nhanVien.setTenNhanVien(currentUsername); // hoặc lấy tên thật từ DAO
-//
-//                    // ✅ Truyền object NhanVien vào VaoCaModal
-//                    VaoCaModal vaoCaModal = new VaoCaModal(nhanVien);
-//                    vaoCaModal.showAndWait();
-//
-//                    // Kiểm tra xem user đã xác nhận vào ca chưa
-//                    if (vaoCaModal.isConfirmed()) {
-//                        long tienDauCa = vaoCaModal.getTongTienDauCa();
-//
-//                        openMainScreen(stage);
-//                    } else {
-//                        // Nếu chưa xác nhận, không cho vào hệ thống
-//                        Alert alert = new Alert(Alert.AlertType.WARNING);
-//                        alert.setTitle("Chưa vào ca");
-//                        alert.setHeaderText(null);
-//                        alert.setContentText("Bạn cần xác nhận vào ca để sử dụng hệ thống!");
-//                        alert.showAndWait();
-//                    }
-//
-//                } else {
-//                    Alert alert = new Alert(Alert.AlertType.ERROR);
-//                    alert.setTitle("Đăng nhập thất bại");
-//                    alert.setHeaderText(null);
-//                    alert.setContentText("Tên đăng nhập hoặc mật khẩu không đúng!");
-//                    alert.showAndWait();
-//
-//                    passwordField.clear();
-//                    usernameField.requestFocus();
-//                }
-//
-//            } catch (Exception ex) {
-//                ex.printStackTrace();
-//                Alert alert = new Alert(Alert.AlertType.ERROR);
-//                alert.setTitle("Lỗi kết nối");
-//                alert.setHeaderText(null);
-//                alert.setContentText("Không thể kết nối đến cơ sở dữ liệu!\n" + ex.getMessage());
-//                alert.showAndWait();
-//            }
-//        });
         btnLogin.setOnAction(e -> {
             String username = usernameField.getText().trim();
             String password = passwordField.getText().trim();
@@ -397,89 +333,85 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
                 DangNhap_DAO dangNhapDAO = new DangNhap_DAO();
 
                 if (dangNhapDAO.authenticate(username, password)) {
-                    // Lấy thông tin người vừa đăng nhập
+                    // 1. Kiểm tra tài khoản bị khóa
+                    if (!dangNhapDAO.isTaiKhoanHoatDong(username)) {
+                        Alert alert = new Alert(Alert.AlertType.ERROR);
+                        alert.setTitle("Tài khoản bị khóa");
+                        alert.setHeaderText("Đăng nhập bị từ chối");
+                        alert.setContentText("Tài khoản này đã bị vô hiệu hóa.\nVui lòng liên hệ quản lý.");
+                        alert.showAndWait();
+                        return;
+                    }
+
+                    // 2. Lấy thông tin cơ bản
                     String maNvVuaDangNhap = dangNhapDAO.getMaNhanVien(username);
-                    String tenNvVuaDangNhap = username; // TODO: Nên lấy tên đầy đủ từ DAO
+                    String tenNvVuaDangNhap = username; // Nên lấy tên thật nếu có thể
                     boolean laAdmin = dangNhapDAO.isAdmin(username);
-                    
+
                     NhanVien nhanVien = NhanVien_DAO.getNhanVienByMa(maNvVuaDangNhap);
 
-                    // ✅✅✅ LOGIC KIỂM TRA MỚI ✅✅✅
-                    Ca_DAO caDAO = new Ca_DAO();
-                    Ca caBiTreo = caDAO.getCaDangMo(); // Lấy ca bất kỳ đang mở
+                    // Lưu session
+                    currentUsername = tenNvVuaDangNhap;
+                    currentIsAdmin = laAdmin;
+                    currentMaNhanVien = maNvVuaDangNhap;
 
-                    if (caBiTreo != null) {
-                        // --- TÌNH HUỐNG 1: CÓ CA ĐANG MỞ ---
-                        String maNvCuaCaTreo = caBiTreo.getMaNhanVien().getMaNhanVien();
+                    // ✅✅✅ LOGIC PHÂN QUYỀN VÀO CA ✅✅✅
 
-                        if (maNvCuaCaTreo.equals(maNvVuaDangNhap)) {
-                            // A. Đây chính là nhân viên đó đăng nhập lại
-                            // Bỏ qua VaoCaModal, đi thẳng vào màn hình chính
-
-                            // Lưu thông tin session
-                            currentUsername = tenNvVuaDangNhap;
-                            currentIsAdmin = laAdmin;
-                            currentMaNhanVien = maNvVuaDangNhap;
-
-                            stage.hide();
-                            openMainScreen(stage, nhanVien); // Đi thẳng vào
-
-                        } else {
-                            // B. Một nhân viên KHÁC đã để treo ca
-                            // Báo lỗi và không cho vào
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("Lỗi Ca Làm Việc");
-                            alert.setHeaderText("Ca trước chưa được kết thúc!");
-                            alert.setContentText("Nhân viên có mã [" + maNvCuaCaTreo + "] chưa kết ca.\n" +
-                                    "Vui lòng yêu cầu nhân viên đó đăng nhập và KẾT CA trước.");
-                            alert.showAndWait();
-                            // Giữ nguyên ở màn hình đăng nhập
-                        }
-
-                    } else {
-                        // --- TÌNH HUỐNG 2: KHÔNG CÓ CA NÀO BỊ TREO ---
-                        // Quy trình vào ca mới bình thường
-
-                        // Lưu thông tin session
-                        currentUsername = tenNvVuaDangNhap;
-                        currentIsAdmin = laAdmin;
-                        currentMaNhanVien = maNvVuaDangNhap;
-
+                    if (laAdmin) {
                         stage.hide();
-//                        NhanVien nhanVien = new NhanVien();
-//                        nhanVien.setMaNhanVien(currentMaNhanVien);
-//                        nhanVien.setTenNhanVien(currentUsername);
+                        openMainScreen(stage, nhanVien);
+                    } else {
+                        Ca_DAO caDAO = new Ca_DAO();
+                        Ca caBiTreo = caDAO.getCaDangMo();
 
-                        Gui_VaoCa vaoCaModal = new Gui_VaoCa(nhanVien);
-                        vaoCaModal.showAndWait();
+                        if (caBiTreo != null) {
+                            // A. CÓ CA ĐANG MỞ (TREO)
+                            String maNvCuaCaTreo = caBiTreo.getMaNhanVien().getMaNhanVien();
 
-                        if (vaoCaModal.isConfirmed()) {
-                            // User xác nhận vào ca, mở màn hình chính
-                            openMainScreen(stage, nhanVien);
+                            if (maNvCuaCaTreo.equals(maNvVuaDangNhap)) {
+                                // Chính nhân viên này đang làm dở -> Vào lại tiếp tục
+                                stage.hide();
+                                openMainScreen(stage, nhanVien);
+                            } else {
+                                // Nhân viên KHÁC chưa kết ca -> Chặn
+                                Alert alert = new Alert(Alert.AlertType.ERROR);
+                                alert.setTitle("Lỗi Ca Làm Việc");
+                                alert.setHeaderText("Ca trước chưa được kết thúc!");
+                                alert.setContentText("Nhân viên [" + maNvCuaCaTreo + "] chưa kết ca.\n" +
+                                        "Vui lòng yêu cầu nhân viên đó đăng nhập và KẾT CA trước.");
+                                alert.showAndWait();
+                                // Reset session vì bị chặn
+                                currentUsername = null;
+                                currentMaNhanVien = null;
+                                currentIsAdmin = false;
+                            }
+
                         } else {
-                            // User đóng modal (không vào ca), hiển thị lại màn hình đăng nhập
-                            // và xóa session
-                            stage.show();
-                            currentUsername = null;
-                            currentMaNhanVien = null;
-                            currentIsAdmin = false;
+                            // B. KHÔNG CÓ CA NÀO TREO -> VÀO CA MỚI
+                            stage.hide();
+                            Gui_VaoCa vaoCaModal = new Gui_VaoCa(nhanVien);
+                            vaoCaModal.showAndWait();
 
-                            Alert alert = new Alert(Alert.AlertType.WARNING);
-                            alert.setTitle("Chưa vào ca");
-                            alert.setHeaderText(null);
-                            alert.setContentText("Bạn cần xác nhận vào ca để sử dụng hệ thống!");
-                            alert.showAndWait();
+                            if (vaoCaModal.isConfirmed()) {
+                                openMainScreen(stage, nhanVien);
+                            } else {
+                                // Hủy vào ca -> Quay lại đăng nhập
+                                stage.show();
+                                currentUsername = null;
+                                currentMaNhanVien = null;
+                                currentIsAdmin = false;
+                            }
                         }
                     }
                     // ✅✅✅ KẾT THÚC LOGIC MỚI ✅✅✅
 
                 } else {
+                    // Đăng nhập sai pass
                     Alert alert = new Alert(Alert.AlertType.ERROR);
                     alert.setTitle("Đăng nhập thất bại");
                     alert.setHeaderText(null);
                     alert.setContentText("Tên đăng nhập hoặc mật khẩu không đúng!");
                     alert.showAndWait();
-
                     passwordField.clear();
                     usernameField.requestFocus();
                 }
@@ -487,9 +419,8 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi kết nối");
-                alert.setHeaderText(null);
-                alert.setContentText("Không thể kết nối đến cơ sở dữ liệu!\n" + ex.getMessage());
+                alert.setTitle("Lỗi hệ thống");
+                alert.setContentText(ex.getMessage());
                 alert.showAndWait();
             }
         });

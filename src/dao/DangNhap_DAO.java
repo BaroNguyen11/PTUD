@@ -65,7 +65,7 @@ public class DangNhap_DAO {
 
         try {
             con = ConnectDB.getConnection();
-            String sql = "SELECT taiKhoanQuanLi FROM dbo.TaiKhoan WHERE taiKhoan = ?";
+            String sql = "SELECT taiKhoanQuanLi FROM TaiKhoan WHERE taiKhoan = ?";
             pstmt = con.prepareStatement(sql);
             pstmt.setString(1, username);
 
@@ -230,5 +230,25 @@ public class DangNhap_DAO {
                 e.printStackTrace();
             }
         }
+    }
+    public boolean isTaiKhoanHoatDong(String username) {
+        boolean isActive = false;
+        // Giả sử bảng TaiKhoan có cột 'trangThaiHoatDong' (BIT/BOOLEAN)
+        // 1 = Hoạt động, 0 = Khóa
+        String sql = "SELECT trangThaiHoatDong FROM TaiKhoan WHERE taiKhoan = ?";
+
+        try (java.sql.Connection con = ConnectDB.getConnection();
+             java.sql.PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, username);
+            try (java.sql.ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    isActive = rs.getBoolean("trangThaiHoatDong");
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return isActive;
     }
 }

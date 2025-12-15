@@ -19,6 +19,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Thanh SideBar (menu bên trái) - FIXED & OPTIMIZED VERSION
  * - Khắc phục lỗi NullPointerException (scrollbar chưa render)
@@ -58,10 +61,16 @@ public class Gui_Sidebar extends VBox {
             "settlement.png",
             "settings.png"
     };
-
+    private final List<String> adminOnlyItems = Arrays.asList(
+            "Quản lí món ăn",
+            "Quản lí nhân viên",
+            "Quản lí khuyến mãi",
+            "Thống kê"
+    );
     public Gui_Sidebar(Gui_TrangChu trangChu) {
         this.trangChu = trangChu;
-
+        boolean isAdmin = Gui_DangNhap.isCurrentUserAdmin();
+        System.out.println(isAdmin);
         // ✅ Cố định kích thước Sidebar
         this.setPrefWidth(220);
         this.setMinWidth(220);
@@ -83,6 +92,9 @@ public class Gui_Sidebar extends VBox {
         // ===== Các mục menu =====
         for (int i = 0; i < menuItems.length; i++) {
             String text = menuItems[i];
+            if (!isAdmin && adminOnlyItems.contains(text)) {
+                continue;
+            }
             HBox menuItem = createMenuItem(text, iconNames[i]);
             menuContainer.getChildren().add(menuItem);
 

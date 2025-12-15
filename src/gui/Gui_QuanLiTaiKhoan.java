@@ -653,7 +653,7 @@ public class Gui_QuanLiTaiKhoan extends BorderPane {
 
         // Phân Quyền (Badge Style)
         TableColumn<TaiKhoan, String> colQuyen = new TableColumn<>("Phân Quyền");
-        colQuyen.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isTaiKhoanQuanLi() ? "Quản lý" : "Lễ tân"));
+        colQuyen.setCellValueFactory(c -> new ReadOnlyObjectWrapper<>(c.getValue().isTaiKhoanQuanLi() ? "Quản lý" : "Nhân viên"));
         colQuyen.setCellFactory(column -> new TableCell<>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -741,6 +741,15 @@ public class Gui_QuanLiTaiKhoan extends BorderPane {
                 });
                 iconUnlock.setOnMouseClicked(e -> {
                     TaiKhoan tk = getTableView().getItems().get(getIndex());
+
+                    // KIỂM TRA TRẠNG THÁI NHÂN VIÊN
+                    if (tk.getNhanVien().getNgayThoiViec() != null) {
+                        showAlert(Alert.AlertType.WARNING, "Cảnh báo",
+                                "Nhân viên " + tk.getNhanVien().getTenNhanVien() + " đã nghỉ việc.\n" +
+                                        "Vui lòng tái tuyển nhân viên trước khi mở khóa tài khoản.");
+                        return;
+                    }
+
                     showModalXacNhan(tk, false);
                 });
                 iconReset.setOnMouseClicked(e -> {

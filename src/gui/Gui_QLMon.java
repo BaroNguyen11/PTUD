@@ -258,9 +258,15 @@ public class Gui_QLMon extends BorderPane {
             if (imagePath != null) {
                 try {
                     imgMonAn.setImage(new Image(imagePath));
-                } catch (Exception e) { loadDefaultImage(imgMonAn); }
-            } else { loadDefaultImage(imgMonAn); }
-        } else { loadDefaultImage(imgMonAn); }
+                } catch (Exception e) {
+                    loadDefaultImage(imgMonAn);
+                }
+            } else {
+                loadDefaultImage(imgMonAn);
+            }
+        } else {
+            loadDefaultImage(imgMonAn);
+        }
 
         HBox imgContainer = new HBox(imgMonAn);
         imgContainer.setAlignment(Pos.CENTER);
@@ -310,14 +316,16 @@ public class Gui_QLMon extends BorderPane {
         card.setOnMouseExited(e -> {
             if (selectedMon != card) {
                 card.setStyle(defaultStyle);
-                card.setScaleX(1.0); card.setScaleY(1.0);
+                card.setScaleX(1.0);
+                card.setScaleY(1.0);
             }
         });
 
         card.setOnMouseClicked(e -> {
             if (selectedMon != null) {
                 selectedMon.setStyle(defaultStyle);
-                selectedMon.setScaleX(1.0); selectedMon.setScaleY(1.0);
+                selectedMon.setScaleX(1.0);
+                selectedMon.setScaleY(1.0);
             }
             selectedMon = card;
             // Highlight
@@ -386,7 +394,8 @@ public class Gui_QLMon extends BorderPane {
         imgMonAn.setFitHeight(230);
         imgMonAn.setPreserveRatio(true);
         Rectangle clip = new Rectangle(230, 230);
-        clip.setArcWidth(25); clip.setArcHeight(25);
+        clip.setArcWidth(25);
+        clip.setArcHeight(25);
         imgMonAn.setClip(clip);
 
         // Load ảnh chi tiết
@@ -394,9 +403,17 @@ public class Gui_QLMon extends BorderPane {
             String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
             String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
             if (imagePath != null) {
-                try { imgMonAn.setImage(new Image(imagePath)); } catch (Exception e) { loadDefaultImage(imgMonAn); }
-            } else { loadDefaultImage(imgMonAn); }
-        } else { loadDefaultImage(imgMonAn); }
+                try {
+                    imgMonAn.setImage(new Image(imagePath));
+                } catch (Exception e) {
+                    loadDefaultImage(imgMonAn);
+                }
+            } else {
+                loadDefaultImage(imgMonAn);
+            }
+        } else {
+            loadDefaultImage(imgMonAn);
+        }
 
         boxHinhAnh.getChildren().add(imgMonAn);
 
@@ -404,7 +421,8 @@ public class Gui_QLMon extends BorderPane {
         StackPane overlay = new StackPane();
         Rectangle overlayRect = new Rectangle(240, 240);
         overlayRect.setFill(Color.rgb(255, 255, 255, 0.5));
-        overlayRect.setArcWidth(10); overlayRect.setArcHeight(10);
+        overlayRect.setArcWidth(10);
+        overlayRect.setArcHeight(10);
         SVGPath overlayPlus = createSvgIcon(60, 24, "gray", "M12 3.75a.75.75 0 0 1 .75.75v6.75h6.75a.75.75 0 0 1 0 1.5h-6.75v6.75a.75.75 0 0 1-1.5 0v-6.75H4.5a.75.75 0 0 1 0-1.5h6.75V4.5a.75.75 0 0 1 .75-.75Z");
         overlay.getChildren().addAll(overlayRect, overlayPlus);
         overlay.setVisible(false);
@@ -450,9 +468,9 @@ public class Gui_QLMon extends BorderPane {
                 createInputField("Giá", txtGia, true),
                 new HBox(15, createLabel("Mô tả"), textArea)
         );
-        ((HBox)vboxPhai.getChildren().get(3)).setAlignment(Pos.CENTER_LEFT); // Align HBox Loai
-        ((Label)((HBox)vboxPhai.getChildren().get(3)).getChildren().get(0)).setMinWidth(110);
-        ((Label)((HBox)vboxPhai.getChildren().get(5)).getChildren().get(0)).setMinWidth(110);
+        ((HBox) vboxPhai.getChildren().get(3)).setAlignment(Pos.CENTER_LEFT); // Align HBox Loai
+        ((Label) ((HBox) vboxPhai.getChildren().get(3)).getChildren().get(0)).setMinWidth(110);
+        ((Label) ((HBox) vboxPhai.getChildren().get(5)).getChildren().get(0)).setMinWidth(110);
 
         // Buttons
         Button btnQuayVe = new Button("Quay về");
@@ -472,7 +490,7 @@ public class Gui_QLMon extends BorderPane {
         });
 
         btnSua.setOnAction(e -> {
-            if(btnSua.getText().equals("Sửa")) {
+            if (btnSua.getText().equals("Sửa")) {
                 // Chuyển sang chế độ Edit
                 xuLiSuaMon(txtTen, cboLoaiModal, textArea);
                 txtGia.setEditable(true);
@@ -496,7 +514,7 @@ public class Gui_QLMon extends BorderPane {
                 styleButton(btnSua, "#082744", "white");
             } else {
                 // Lưu
-                if(xuLiLuuSauKhiSua(txtTen, cboLoaiModal, textArea, txtGia, txtMa.getText())) {
+                if (xuLiLuuSauKhiSua(txtTen, cboLoaiModal, textArea, txtGia, txtMa.getText())) {
                     modal.close();
                 }
             }
@@ -510,7 +528,10 @@ public class Gui_QLMon extends BorderPane {
         Scene scene = new Scene(layout);
         modal.setScene(scene);
 
-        modal.setOnHiding(ev -> { selectedImageFile = null; rootPane.setEffect(null); });
+        modal.setOnHiding(ev -> {
+            selectedImageFile = null;
+            rootPane.setEffect(null);
+        });
         modal.showAndWait();
     }
 
@@ -541,9 +562,12 @@ public class Gui_QLMon extends BorderPane {
         boxHinhAnh.setAlignment(Pos.CENTER);
 
         ImageView imgPreview = new ImageView();
-        imgPreview.setFitWidth(230); imgPreview.setFitHeight(230);
+        imgPreview.setFitWidth(230);
+        imgPreview.setFitHeight(230);
         imgPreview.setVisible(false);
-        Rectangle clip = new Rectangle(230, 230); clip.setArcWidth(25); clip.setArcHeight(25);
+        Rectangle clip = new Rectangle(230, 230);
+        clip.setArcWidth(25);
+        clip.setArcHeight(25);
         imgPreview.setClip(clip);
         boxHinhAnh.getChildren().add(imgPreview);
 
@@ -575,7 +599,8 @@ public class Gui_QLMon extends BorderPane {
         vboxPhai.setPrefWidth(400);
 
         Label lblTieuDe = createModernSectionTitle("Thông tin món mới", "#667EEA");
-        TextField txtMa = new TextField(control.taoMaMonMoi()); txtMa.setEditable(false);
+        TextField txtMa = new TextField(control.taoMaMonMoi());
+        txtMa.setEditable(false);
         TextField txtTen = new TextField();
         TextField txtGia = new TextField();
 
@@ -596,9 +621,9 @@ public class Gui_QLMon extends BorderPane {
                 createInputField("Giá", txtGia, false),
                 new HBox(15, createLabel("Mô tả"), txtMoTa)
         );
-        ((HBox)vboxPhai.getChildren().get(3)).setAlignment(Pos.CENTER_LEFT);
-        ((Label)((HBox)vboxPhai.getChildren().get(3)).getChildren().get(0)).setMinWidth(110);
-        ((Label)((HBox)vboxPhai.getChildren().get(5)).getChildren().get(0)).setMinWidth(110);
+        ((HBox) vboxPhai.getChildren().get(3)).setAlignment(Pos.CENTER_LEFT);
+        ((Label) ((HBox) vboxPhai.getChildren().get(3)).getChildren().get(0)).setMinWidth(110);
+        ((Label) ((HBox) vboxPhai.getChildren().get(5)).getChildren().get(0)).setMinWidth(110);
 
         Button btnHuy = new Button("Hủy");
         styleButton(btnHuy, "gray", "white");
@@ -614,11 +639,25 @@ public class Gui_QLMon extends BorderPane {
         btnHuy.setOnAction(e -> modal.close());
         btnLuu.setOnAction(e -> {
             String ten = txtTen.getText().trim();
-            if (ten.isEmpty()) { showAlert(AlertType.WARNING, "Lỗi", "Nhập tên món!"); return; }
-            if (cboLoaiAdd.getValue() == null) { showAlert(AlertType.WARNING, "Lỗi", "Chọn loại món!"); return; }
+            if (ten.isEmpty()) {
+                showAlert(AlertType.WARNING, "Lỗi", "Nhập tên món!");
+                return;
+            }
+            if (cboLoaiAdd.getValue() == null) {
+                showAlert(AlertType.WARNING, "Lỗi", "Chọn loại món!");
+                return;
+            }
             double gia = 0;
-            try { gia = Double.parseDouble(txtGia.getText().trim()); } catch (Exception ex) { showAlert(AlertType.WARNING, "Lỗi", "Giá không hợp lệ!"); return; }
-            if (selectedImageFile == null) { showAlert(AlertType.WARNING, "Lỗi", "Chọn ảnh món ăn!"); return; }
+            try {
+                gia = Double.parseDouble(txtGia.getText().trim());
+            } catch (Exception ex) {
+                showAlert(AlertType.WARNING, "Lỗi", "Giá không hợp lệ!");
+                return;
+            }
+            if (selectedImageFile == null) {
+                showAlert(AlertType.WARNING, "Lỗi", "Chọn ảnh món ăn!");
+                return;
+            }
 
             SupabaseImageUploader uploader = new SupabaseImageUploader();
             String slug = mapLoaiToSlug(cboLoaiAdd.getValue());
@@ -644,7 +683,10 @@ public class Gui_QLMon extends BorderPane {
 
         Scene scene = new Scene(layout);
         modal.setScene(scene);
-        modal.setOnHiding(ev -> { selectedImageFile = null; rootPane.setEffect(null); });
+        modal.setOnHiding(ev -> {
+            selectedImageFile = null;
+            rootPane.setEffect(null);
+        });
         modal.showAndWait();
     }
 
@@ -660,11 +702,18 @@ public class Gui_QLMon extends BorderPane {
 
     public boolean xuLiLuuSauKhiSua(TextField txtTen, ComboBox<String> cboLoai, TextArea textArea, TextField txtGia, String ma) {
         String ten = txtTen.getText().trim();
-        if (ten.isEmpty()) { showAlert(AlertType.WARNING, "Lỗi", "Tên không được trống"); return false; }
+        if (ten.isEmpty()) {
+            showAlert(AlertType.WARNING, "Lỗi", "Tên không được trống");
+            return false;
+        }
 
         double gia = 0;
-        try { gia = Double.parseDouble(txtGia.getText().trim()); }
-        catch (Exception e) { showAlert(AlertType.WARNING, "Lỗi", "Giá sai định dạng"); return false; }
+        try {
+            gia = Double.parseDouble(txtGia.getText().trim());
+        } catch (Exception e) {
+            showAlert(AlertType.WARNING, "Lỗi", "Giá sai định dạng");
+            return false;
+        }
 
         if (selectedImageFile == null) {
             showAlert(AlertType.WARNING, "Cảnh báo", "Vui lòng chọn ảnh (có thể chọn lại ảnh cũ nếu muốn giữ nguyên, hoặc code thêm logic giữ ảnh cũ)");
@@ -728,7 +777,10 @@ public class Gui_QLMon extends BorderPane {
     }
 
     private void loadDefaultImage(ImageView imgView) {
-        try { imgView.setImage(new Image(getClass().getResourceAsStream("/img/default-food.png"))); } catch (Exception e) {}
+        try {
+            imgView.setImage(new Image(getClass().getResourceAsStream("/img/default-food.png")));
+        } catch (Exception e) {
+        }
     }
 
     private String mapLoaiToSlug(String loaiTen) {

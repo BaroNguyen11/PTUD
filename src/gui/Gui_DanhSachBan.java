@@ -40,6 +40,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.effect.BoxBlur;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
@@ -92,7 +93,7 @@ public class Gui_DanhSachBan extends BorderPane {
         ScrollPane scrollPane = createScrollableGrid();
 
         // --- FOOTER ---
-         footer = createFooter();
+        footer = createFooter();
 
         // --- LAYOUT ---
         this.setTop(topContainer);
@@ -153,19 +154,104 @@ public class Gui_DanhSachBan extends BorderPane {
         HBox.setHgrow(spacer1, Priority.ALWAYS);
         Label lblNgay = new Label("📅 Ngày xem:");
         lblNgay.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        lblNgay.setTextFill(Color.web("#2D3748")); // Dark gray text
+
         datePicker = new DatePicker(ngayChon);
-        datePicker.setPrefWidth(150);
-        datePicker.setStyle("-fx-font-size: 14px;");
+        datePicker.setPrefWidth(160);
+        datePicker.setEditable(false);
+
+        datePicker.setConverter(new javafx.util.StringConverter<LocalDate>() {
+            // Format ngày hiển thị thành dd/MM/yyyy cho quen thuộc với người Việt
+            java.time.format.DateTimeFormatter dateFormatter = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+
+            @Override
+            public String toString(LocalDate date) {
+                return (date != null) ? dateFormatter.format(date) : "";
+            }
+
+            @Override
+            public LocalDate fromString(String string) {
+                return (string != null && !string.isEmpty()) ? LocalDate.parse(string, dateFormatter) : null;
+            }
+        });
+
+// 1. STYLE CHO Ô NHẬP LIỆU (Input Box)
+// Bo góc, viền xám nhạt, bỏ màu nền của nút lịch để nó hòa vào ô nhập
+        datePicker.setStyle(
+                "-fx-background-color: white; " +
+                        "-fx-border-color: #E2E8F0; " +
+                        "-fx-border-radius: 8; " +
+                        "-fx-background-radius: 8; " +
+                        "-fx-font-size: 14px; " +
+                        "-fx-font-family: 'Segoe UI';"
+        );
+
+// 2. STYLE CAO CẤP CHO POPUP LỊCH (Inject CSS trực tiếp)
+// Đoạn này sẽ đổi màu xanh mặc định thành màu #082744 của app bạn
+        String customDatePickerCss = "data:text/css," +
+                // 1. Chỉnh nút icon lịch bên phải ô input
+                ".date-picker .arrow-button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+                ".date-picker .arrow-button .arrow { -fx-background-color: #082744; }" +
+
+                // 2. Chỉnh bảng popup
+                ".date-picker-popup { -fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5); }" +
+                ".date-picker-popup .month-year-pane { -fx-background-color: #082744; -fx-padding: 10; }" +
+                ".date-picker-popup .month-year-pane .label { -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; }" +
+
+                // 3. CHỈNH NÚT NEXT / PREV (QUAN TRỌNG)
+                ".date-picker-popup .spinner .button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+                ".date-picker-popup .spinner .button:hover { -fx-background-color: rgba(255, 255, 255, 0.2); -fx-background-radius: 50%25; }" + // Hiệu ứng hover tròn
+                ".date-picker-popup .spinner .button .left-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" + // Mũi tên trái màu trắng, nhỏ lại chút cho tinh tế
+                ".date-picker-popup .spinner .button .right-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" + // Mũi tên phải màu trắng
+
+                // 4. Chỉnh các ô ngày
+                ".date-picker-popup .day-cell { -fx-background-color: white; -fx-text-fill: #2D3748; -fx-font-size: 13px; -fx-border-color: transparent; }" +
+                ".date-picker-popup .day-cell:hover { -fx-background-color: #EBF8FF; -fx-text-fill: #082744; -fx-background-radius: 5; }" +
+                ".date-picker-popup .day-cell:selected { -fx-background-color: #082744; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; }" +
+                ".date-picker-popup .today { -fx-border-color: #E53E3E; -fx-border-radius: 5; -fx-border-width: 1; }";
+
+// Thêm CSS này vào Scene (hoặc Parent hiện tại)
+        this.getStylesheets().add(customDatePickerCss);
+
+
+// 3. LOGIC CHẶN NGÀY & TÔ MÀU NGÀY QUÁ KHỨ (DayCellFactory)
+        datePicker.setDayCellFactory(picker -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate date, boolean empty) {
+                super.updateItem(date, empty);
+
+                if (date.isBefore(LocalDate.now())) {
+                    // Ngày quá khứ: Vô hiệu hóa + Màu xám + Gạch ngang (tùy chọn)
+                    setDisable(true);
+                    setStyle("-fx-background-color: #f7fafc; -fx-text-fill: #cbd5e0;");
+                }
+            }
+        });
+
+// 4. XỬ LÝ SỰ KIỆN CHỌN
         datePicker.setOnAction(e -> {
-            LocalDate ngayMoi = datePicker.getValue();
-            if (ngayMoi.isBefore(LocalDate.now())) {
-                showAlert(AlertType.ERROR, "Ngày không hợp lệ", "Không thể chọn ngày trong quá khứ.");
-                datePicker.setValue(ngayChon);
-            } else {
-                ngayChon = ngayMoi;
+            LocalDate selectedDate = datePicker.getValue();
+            if (selectedDate != null) {
+                if (selectedDate.isBefore(LocalDate.now())) {
+                    // Tự động nhảy về hôm nay nếu cố tình chọn sai (qua phím tắt)
+                    datePicker.setValue(LocalDate.now());
+                    ngayChon = LocalDate.now();
+                } else {
+                    ngayChon = selectedDate;
+                }
                 loadDataToGrid();
             }
         });
+//        datePicker.setOnAction(e -> {
+//            LocalDate ngayMoi = datePicker.getValue();
+//            if (ngayMoi.isBefore(LocalDate.now())) {
+//                showAlert(AlertType.ERROR, "Ngày không hợp lệ", "Không thể chọn ngày trong quá khứ.");
+//                datePicker.setValue(ngayChon);
+//            } else {
+//                ngayChon = ngayMoi;
+//                loadDataToGrid();
+//            }
+//        });
         HBox boxNgay = new HBox(10, lblNgay, datePicker);
         boxNgay.setAlignment(Pos.CENTER_LEFT);
         row1.getChildren().addAll(boxKhuVuc, spacer1, boxNgay);
@@ -472,106 +558,227 @@ public class Gui_DanhSachBan extends BorderPane {
 
     private void showTableInfoDialog(BanAn ban) {
         Dialog<Void> dialog = new Dialog<>();
-        dialog.initOwner(this.getScene().getWindow());
+
+        // Lấy window cha để làm hiệu ứng mờ
+        Window owner = this.getScene().getWindow();
+        dialog.initOwner(owner);
         dialog.initStyle(StageStyle.TRANSPARENT);
         dialog.getDialogPane().getScene().setFill(Color.TRANSPARENT);
-        Label title = new Label("ℹ️ THÔNG TIN BÀN " + ban.getMaBan());
-        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
-        title.setTextFill(Color.web("#2d3436"));
+
+        // --- 1. HIỆU ỨNG OVERLAY ---
+        dialog.setOnShowing(e -> {
+            if (owner.getScene() != null) {
+                BoxBlur blur = new BoxBlur(10, 10, 3);
+                owner.getScene().getRoot().setEffect(blur);
+            }
+        });
+        dialog.setOnHidden(e -> {
+            if (owner.getScene() != null) {
+                owner.getScene().getRoot().setEffect(null);
+            }
+        });
+
+        // --- 2. HEADER ---
+        Label title = new Label("Thông tin bàn " + ban.getMaBan());
+        title.setFont(Font.font("Segoe UI", FontWeight.BOLD, 20));
+        title.setTextFill(Color.web("#1A202C"));
+
         Button closeButton = new Button("✕");
-        closeButton.setStyle("-fx-background-color: transparent; -fx-font-size: 16px; -fx-cursor: hand; -fx-text-fill: #636e72;");
+        closeButton.setStyle("-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand; -fx-text-fill: #A0AEC0;");
+        closeButton.setOnMouseEntered(e -> closeButton.setStyle("-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand; -fx-text-fill: #E53E3E;"));
+        closeButton.setOnMouseExited(e -> closeButton.setStyle("-fx-background-color: transparent; -fx-font-size: 18px; -fx-cursor: hand; -fx-text-fill: #A0AEC0;"));
         closeButton.setOnAction(e -> dialog.close());
+
         HBox headerPane = new HBox(title, new Region(), closeButton);
         HBox.setHgrow(headerPane.getChildren().get(1), Priority.ALWAYS);
         headerPane.setAlignment(Pos.CENTER_LEFT);
-        headerPane.setPadding(new Insets(15));
-        headerPane.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 8 8 0 0;");
+        headerPane.setPadding(new Insets(20, 25, 20, 25));
+        headerPane.setStyle("-fx-background-color: white; -fx-background-radius: 15 15 0 0; -fx-border-color: #F1F5F9; -fx-border-width: 0 0 1 0;");
+
+        // --- 3. CONTENT ---
         VBox contentBox = new VBox(15);
-        contentBox.setPadding(new Insets(20));
+        contentBox.setPadding(new Insets(25));
         contentBox.setStyle("-fx-background-color: white;");
-        String statusText, subText, bgColor, textColor;
+
+        String statusText, subText, bgColor, textColor, borderColor;
         switch (ban.getTrangThai()) {
             case DANG_SU_DUNG:
                 statusText = "Đang phục vụ";
                 subText = "Có khách đang sử dụng";
                 bgColor = "#F0FFF4";
                 textColor = "#22543D";
+                borderColor = "#C6F6D5";
                 break;
             case DA_DAT:
                 statusText = "Đã đặt trước";
                 subText = "Khách sắp đến";
                 bgColor = "#FFF5F5";
                 textColor = "#9B2C2C";
+                borderColor = "#FED7D7";
                 break;
             default:
                 statusText = "Bàn trống";
                 subText = "Sẵn sàng đón khách";
-                bgColor = "#F0F4FF";
-                textColor = "#004085";
+                bgColor = "#EBF8FF";
+                textColor = "#2C5282";
+                borderColor = "#BEE3F8";
                 break;
         }
-        VBox statusBox = new VBox(5, createLabel(statusText, textColor, 16, true), createLabel(subText, textColor, 14, false));
+
+        VBox statusBox = new VBox(5,
+                createLabel(statusText, textColor, 16, true),
+                createLabel(subText, textColor, 13, false)
+        );
         statusBox.setPadding(new Insets(15));
-        statusBox.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 8;");
-        contentBox.getChildren().addAll(statusBox, createDetailRow("Loại bàn:", ban.getLoai().name()), createDetailRow("Vị trí:", ban.getViTri().name().replace("_", " ")));
+        statusBox.setStyle("-fx-background-color: " + bgColor + "; -fx-background-radius: 10; -fx-border-color: " + borderColor + "; -fx-border-radius: 10;");
+
+        contentBox.getChildren().addAll(
+                statusBox,
+                createDetailRow("Loại bàn:", ban.getLoai().name().equals("VIP") ? "⭐ VIP" : "Thường"),
+                createDetailRow("Vị trí:", ban.getViTri().name().replace("_", " "))
+        );
+
         boolean isBookedOrInUse = (ban.getTrangThai() == TrangThai.DA_DAT || ban.getTrangThai() == TrangThai.DANG_SU_DUNG);
         if (isBookedOrInUse) {
             PhieuDatBan pdbInfo = phieuDatBan_DAO.getPhieuDatBanByMaBanVaNgay(ban.getMaBan(), datePicker.getValue());
             if (pdbInfo != null) {
-                contentBox.getChildren().addAll(new Separator(), createLabel("Thông tin khách hàng:", "#2d3436", 14, true), createDetailRow("Tên khách:", pdbInfo.getKhachHang().getTenKhachHang()), createDetailRow("SĐT:", pdbInfo.getKhachHang().getSoDienThoai()), createDetailRow("Ghi chú:", (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) ? pdbInfo.getGhiChu() : "---"));
+                contentBox.getChildren().add(new Separator());
+                contentBox.getChildren().add(createLabel("Thông tin khách hàng:", "#4A5568", 14, true));
+                contentBox.getChildren().addAll(
+                        createDetailRow("Tên khách:", pdbInfo.getKhachHang().getTenKhachHang()),
+                        createDetailRow("SĐT:", pdbInfo.getKhachHang().getSoDienThoai()),
+                        createDetailRow("Ghi chú:", (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) ? pdbInfo.getGhiChu() : "---")
+                );
             }
+
             String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
             if (maHDGop != null) {
                 List<String> dsBanGhep = banAn_DAO.getDanhSachBanCungHoaDon(maHDGop);
                 if (dsBanGhep.size() > 1) {
-                    contentBox.getChildren().addAll(new Separator(), createLabel("Bàn ghép cùng:", "#007BFF", 14, true), createLabel(String.join(", ", dsBanGhep), "#2d3436", 14, false));
+                    HBox boxGhep = new HBox(10);
+                    boxGhep.setAlignment(Pos.CENTER_LEFT);
+                    boxGhep.setStyle("-fx-background-color: #EDF2F7; -fx-padding: 10; -fx-background-radius: 8;");
+                    try {
+                        ImageView linkIcon = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
+                        linkIcon.setFitWidth(16);
+                        linkIcon.setFitHeight(16);
+                        boxGhep.getChildren().add(linkIcon);
+                    } catch (Exception e) {
+                    }
+                    VBox infoGhep = new VBox(2,
+                            createLabel("Đang ghép cùng:", "#2D3748", 13, true),
+                            createLabel(String.join(", ", dsBanGhep), "#3182CE", 13, true)
+                    );
+                    boxGhep.getChildren().add(infoGhep);
+                    contentBox.getChildren().addAll(new Separator(), boxGhep);
                 }
             }
         }
+
+        // --- 4. ACTION BUTTONS ---
         HBox actionBox = new HBox(10);
         actionBox.setAlignment(Pos.CENTER_RIGHT);
-        actionBox.setPadding(new Insets(15));
-        actionBox.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 0 0 8 8;");
+        actionBox.setPadding(new Insets(20, 25, 20, 25));
+        actionBox.setStyle("-fx-background-color: #F7FAFC; -fx-background-radius: 0 0 15 15; -fx-border-color: #F1F5F9; -fx-border-width: 1 0 0 0;");
+
         switch (ban.getTrangThai()) {
             case DANG_SU_DUNG:
                 actionBox.getChildren().addAll(
-                        createActionButton("Đổi bàn", "#FFC107", e -> xuLyDoiBan(ban)),
-                        createActionButton("Thanh toán", "#38A169", e -> {
+                        createStyledButton("Đổi bàn", "#D97706", "#FEF3C7", e -> {
+                            xuLyDoiBan(ban);
+                            dialog.close();
+                        }),
+                        createStyledButton("Thanh toán", "#059669", "#D1FAE5", e -> {
                             xuLyThanhToan(banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon));
                             dialog.close();
                         }),
-                        createActionButton("Gọi món", "#6B49C7", e -> {
+                        createStyledButton("Gọi món", "#7C3AED", "#EDE9FE", e -> {
                             xuLyGoiMon(ban);
                             dialog.close();
                         }));
                 break;
             case DA_DAT:
                 actionBox.getChildren().addAll(
-                        createActionButton("Đổi bàn", "#FFC107", e -> {
+                        createStyledButton("Đổi bàn", "#D97706", "#FEF3C7", e -> {
                             xuLyDoiBan(ban);
                             dialog.close();
                         }),
-                        createActionButton("Hủy bàn", "#DC3545", e -> {
+                        createStyledButton("Hủy bàn", "#DC2626", "#FEE2E2", e -> {
                             xuLyHuyBan(ban);
                             dialog.close();
                         }),
-                        createActionButton("Check-in", "#007BFF", e -> {
+                        createStyledButton("Check-in", "#2563EB", "#DBEAFE", e -> {
                             xuLyCheckIn(ban, dialog);
                             dialog.close();
                         })
                 );
                 break;
             case TRONG:
+                // --- THÊM NÚT ĐẶT BÀN TẠI ĐÂY ---
+                actionBox.getChildren().add(
+                        createStyledButton("➕ Đặt bàn ngay", "#2563EB", "#DBEAFE", e -> {
+                            dialog.close(); // Đóng dialog thông tin trước
+
+                            // Tạo danh sách chứa bàn hiện tại để gửi sang màn hình đặt bàn
+                            List<BanAn> listBanChon = new ArrayList<>();
+                            listBanChon.add(ban);
+
+                            // Chuyển sang màn hình đặt bàn
+                            try {
+                                Gui_DatBan guiDatBan = new Gui_DatBan(trangChu, listBanChon, datePicker.getValue());
+                                trangChu.setMainContent(guiDatBan);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                new Gui_DatBan(trangChu, listBanChon, datePicker.getValue());
+                            }
+                        })
+                );
                 break;
         }
+
         VBox mainLayout = new VBox(headerPane, contentBox);
         if (!actionBox.getChildren().isEmpty()) mainLayout.getChildren().add(actionBox);
+
+        mainLayout.setStyle("-fx-background-color: #F8FAFC; -fx-background-radius: 15; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.3), 30, 0, 0, 10);");
+
         dialog.getDialogPane().setContent(mainLayout);
-        dialog.getDialogPane().setStyle("-fx-background-color: transparent; -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.2), 10, 0, 0, 5);");
-        mainLayout.setStyle("-fx-background-color: white; -fx-background-radius: 8;");
+        dialog.getDialogPane().setStyle("-fx-background-color: transparent;");
+
         dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
         dialog.getDialogPane().lookupButton(ButtonType.CLOSE).setVisible(false);
+
         dialog.showAndWait();
+    }
+
+    // Helper: Tạo hàng thông tin đẹp
+    private HBox createDetailRow(String label, String value) {
+        Label l = new Label(label);
+        l.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        l.setTextFill(Color.web("#718096")); // Xám trung tính
+        l.setMinWidth(100); // Căn lề thẳng hàng
+
+        Label v = new Label(value);
+        v.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+        v.setTextFill(Color.web("#2D3748")); // Đen xám đậm
+
+        return new HBox(10, l, v);
+    }
+
+    // Helper: Tạo nút bấm đẹp (Flat style)
+    private Button createStyledButton(String text, String textColor, String bgColor, javafx.event.EventHandler<javafx.event.ActionEvent> handler) {
+        Button btn = new Button(text);
+        // Style mặc định
+        String defaultStyle = "-fx-background-color: " + bgColor + "; -fx-text-fill: " + textColor + "; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 8 16; -fx-border-color: transparent;";
+        // Style hover (đậm hơn chút)
+        String hoverStyle = "-fx-background-color: " + textColor + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 8; -fx-cursor: hand; -fx-padding: 8 16; -fx-border-color: transparent;";
+
+        btn.setStyle(defaultStyle);
+
+        btn.setOnMouseEntered(e -> btn.setStyle(hoverStyle));
+        btn.setOnMouseExited(e -> btn.setStyle(defaultStyle));
+
+        btn.setOnAction(handler);
+        return btn;
     }
 
     private Label createLabel(String text, String color, int size, boolean bold) {
@@ -581,23 +788,6 @@ public class Gui_DanhSachBan extends BorderPane {
         return l;
     }
 
-    private HBox createDetailRow(String label, String value) {
-        Label l = new Label(label);
-        l.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
-        l.setTextFill(Color.web("#636e72"));
-        l.setMinWidth(80);
-        Label v = new Label(value);
-        v.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 14));
-        v.setTextFill(Color.web("#2d3436"));
-        return new HBox(10, l, v);
-    }
-
-    private Button createActionButton(String text, String color, javafx.event.EventHandler<javafx.event.ActionEvent> handler) {
-        Button btn = new Button(text);
-        btn.setStyle("-fx-background-color: " + color + "; -fx-text-fill: white; -fx-font-weight: bold; -fx-background-radius: 5; -fx-cursor: hand; -fx-padding: 8 15;");
-        btn.setOnAction(handler);
-        return btn;
-    }
 
     private void xuLyDatBan() {
         if (danhSachBanDaChon.isEmpty()) {
