@@ -34,6 +34,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
@@ -367,14 +368,26 @@ public class Gui_DanhSachBan extends BorderPane {
             theBan.setOnMouseClicked(e -> {
                 if (danhSachBanDaChon.contains(ban)) {
                     danhSachBanDaChon.remove(ban);
-                    theBan.setStyle(defaultStyle);
-                } else {
                     if (ban.getTrangThai() == TrangThai.TRONG) {
-                        danhSachBanDaChon.add(ban);
-                        theBan.setStyle(selectedStyle);
+                        theBan.setStyle(defaultStyle);
                     } else {
-                        showAlert(AlertType.WARNING, "Không thể chọn", "Chỉ có thể chọn bàn đang 'Trống'.");
+                        // Giữ style màu của bàn có khách nhưng bỏ viền xanh chọn
+                        // Bạn có thể tùy chỉnh lại style này cho đẹp
+                        theBan.setStyle(theBan.getStyle().replace("-fx-border-color: #3182ce;", "-fx-border-color: transparent;"));
                     }
+                } else {
+//                    if (ban.getTrangThai() == TrangThai.TRONG) {
+//                        danhSachBanDaChon.add(ban);
+//                        theBan.setStyle(selectedStyle);
+//                    } else {
+//                        showAlert(AlertType.WARNING, "Không thể chọn", "Chỉ có thể chọn bàn đang 'Trống'.");
+//                    }
+                    danhSachBanDaChon.add(ban);
+
+                    // Style khi được chọn (Viền xanh đậm)
+                    String currentStyle = theBan.getStyle();
+                    // Đè viền xanh lên style hiện tại
+                    theBan.setStyle(currentStyle + "-fx-border-color: #3182ce; -fx-border-width: 3;");
                 }
             });
 
@@ -472,7 +485,7 @@ public class Gui_DanhSachBan extends BorderPane {
         HBox iconBox = new HBox();
         iconBox.setAlignment(Pos.CENTER);
         if (ban.getTrangThai() == TrangThai.DANG_SU_DUNG || ban.getTrangThai() == TrangThai.DA_DAT) {
-            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
             boolean isMerged = (maHDGop != null && banAn_DAO.getDanhSachBanCungHoaDon(maHDGop).size() > 1);
             if (isMerged) {
                 try {
@@ -525,8 +538,113 @@ public class Gui_DanhSachBan extends BorderPane {
         btnDatBan.setOnMouseEntered(e -> btnDatBan.setStyle("-fx-background-color: #0a3d6a; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"));
         btnDatBan.setOnMouseExited(e -> btnDatBan.setStyle("-fx-background-color: #082744; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"));
         btnDatBan.setOnAction(e -> xuLyDatBan());
-        footer.getChildren().addAll(legend, spacer, btnDatBan);
+
+        Button btnGopBan = new Button("🔗 Gộp Bàn");
+        btnGopBan.setStyle("-fx-background-color: #D97706; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;");
+        btnGopBan.setOnMouseEntered(e -> btnGopBan.setStyle("-fx-background-color: #B45309; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"));
+        btnGopBan.setOnMouseExited(e -> btnGopBan.setStyle("-fx-background-color: #D97706; -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; -fx-padding: 10 20; -fx-background-radius: 8; -fx-cursor: hand;"));
+
+        btnGopBan.setOnAction(e -> xuLyGopBanNhanh());
+        footer.getChildren().addAll(legend, spacer, btnGopBan, btnDatBan);
         return footer;
+    }
+
+    private void xuLyGopBanNhanh() {
+        if (danhSachBanDaChon.size() < 2) {
+            showAlert(AlertType.WARNING, "Chưa đủ thông tin", "Vui lòng chọn 1 bàn ĐANG DÙNG (Gốc) và các bàn TRỐNG muốn gộp thêm.");
+            return;
+        }
+
+        List<BanAn> banGocList = new ArrayList<>();
+        List<BanAn> banTrongList = new ArrayList<>();
+
+        // Phân loại bàn đã chọn
+        for (BanAn b : danhSachBanDaChon) {
+            if (b.getTrangThai() == TrangThai.DANG_SU_DUNG || b.getTrangThai() == TrangThai.DA_DAT) {
+                banGocList.add(b);
+            } else if (b.getTrangThai() == TrangThai.TRONG) {
+                banTrongList.add(b);
+            }
+        }
+
+        // Validate logic
+        if (banGocList.isEmpty()) {
+            showAlert(AlertType.WARNING, "Sai quy trình", "Bạn chưa chọn bàn nào đang có khách để gộp vào.");
+            return;
+        }
+
+        if (banGocList.size() > 1) {
+            // Kiểm tra xem các bàn gốc này có cùng mã hóa đơn không (trường hợp chọn 2 bàn đã gộp từ trước + 1 bàn mới)
+            String maHDChuan = banAn_DAO.getMaHoaDonTuBan(banGocList.get(0).getMaBan());
+            for (BanAn b : banGocList) {
+                String maCurrent = banAn_DAO.getMaHoaDonTuBan(b.getMaBan());
+                if (!maCurrent.equals(maHDChuan)) {
+                    showAlert(AlertType.ERROR, "Xung đột", "Bạn đang chọn 2 bàn thuộc 2 hóa đơn khác nhau. Không thể gộp tự động.");
+                    return;
+                }
+            }
+        }
+
+        if (banTrongList.isEmpty()) {
+            showAlert(AlertType.WARNING, "Sai quy trình", "Bạn chưa chọn bàn trống nào để thêm vào.");
+            return;
+        }
+
+        // Lấy thông tin từ bàn gốc (Bàn đầu tiên trong list gốc)
+        BanAn banGoc = banGocList.get(0);
+        String maHD = banAn_DAO.getMaHoaDonTuBan(banGoc.getMaBan());
+
+        if (maHD == null) {
+            showAlert(AlertType.ERROR, "Lỗi dữ liệu", "Không tìm thấy hóa đơn của bàn gốc.");
+            return;
+        }
+
+        // Xác nhận người dùng
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setTitle("Xác nhận gộp bàn");
+        confirm.setHeaderText("Gộp các bàn trống vào hóa đơn: " + maHD);
+        String msg = "Bàn gốc: " + banGoc.getMaBan() + "\n" +
+                "Thêm các bàn: ";
+        for (BanAn b : banTrongList) msg += b.getMaBan() + " ";
+        confirm.setContentText(msg);
+
+        confirm.showAndWait().ifPresent(type -> {
+            if (type == ButtonType.OK) {
+                boolean allSuccess = true;
+
+                // Lấy thông tin phiếu đặt bàn cũ để copy thông tin khách hàng/nhân viên
+                PhieuDatBan phieuGoc = phieuDatBan_DAO.getPhieuDatBanMoiNhat(banGoc.getMaBan());
+                // (Bạn cần đảm bảo DAO có hàm lấy phiếu mới nhất hoặc lấy theo MaHD)
+
+                for (BanAn banMoi : banTrongList) {
+                    // 1. Cập nhật trạng thái bàn thành ĐANG DÙNG
+                    boolean upBan = banAn_DAO.updateTrangThaiBan(banMoi, TrangThai.DANG_SU_DUNG);
+
+                    // 2. Tạo phiếu đặt bàn mới trỏ về MaHD cũ
+                    PhieuDatBan pMoi = new PhieuDatBan();
+                    pMoi.setBan(banMoi);
+                    pMoi.setHoaDon(phieuGoc.getHoaDon()); // QUAN TRỌNG: Dùng chung Hóa Đơn
+                    pMoi.setKhachHang(phieuGoc.getKhachHang());
+                    pMoi.setNhanVien(phieuGoc.getNhanVien()); // Hoặc nhân viên đang login
+                    pMoi.setThoiGianBatDau(java.time.LocalDateTime.now());
+                    pMoi.setTrangThai("Đang dùng");
+                    pMoi.setSoNguoi(0); // Số người có thể để 0 hoặc nhập thêm logic hỏi user
+                    pMoi.setGhiChu("Gộp theo bàn " + banGoc.getMaBan());
+
+                    boolean upPhieu = phieuDatBan_DAO.themPhieuDatBan(pMoi, "Đang dùng");
+
+                    if (!upBan || !upPhieu) allSuccess = false;
+                }
+
+                if (allSuccess) {
+                    showAlert(AlertType.INFORMATION, "Thành công", "Đã gộp bàn thành công!");
+                    loadDataToGrid(); // Load lại giao diện
+                } else {
+                    showAlert(AlertType.ERROR, "Có lỗi", "Một số bàn không thể gộp. Vui lòng kiểm tra lại.");
+                    loadDataToGrid();
+                }
+            }
+        });
     }
 
     private HBox createLegendItem(String colorHex, String text) {
@@ -651,7 +769,7 @@ public class Gui_DanhSachBan extends BorderPane {
                 );
             }
 
-            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
             if (maHDGop != null) {
                 List<String> dsBanGhep = banAn_DAO.getDanhSachBanCungHoaDon(maHDGop);
                 if (dsBanGhep.size() > 1) {
@@ -689,7 +807,7 @@ public class Gui_DanhSachBan extends BorderPane {
                             dialog.close();
                         }),
                         createStyledButton("Thanh toán", "#059669", "#D1FAE5", e -> {
-                            xuLyThanhToan(banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon));
+                            xuLyThanhToan(banAn_DAO.getMaHoaDonTuBan(ban.getMaBan()));
                             dialog.close();
                         }),
                         createStyledButton("Gọi món", "#7C3AED", "#EDE9FE", e -> {
@@ -811,7 +929,7 @@ public class Gui_DanhSachBan extends BorderPane {
     }
 
     private void xuLyDoiBan(BanAn banCu) {
-        String maHDGop = banAn_DAO.getMaHoaDonTuBan(banCu.getMaBan(), ngayChon);
+        String maHDGop = banAn_DAO.getMaHoaDonTuBan(banCu.getMaBan());
         List<String> dsBanGhep = (maHDGop != null) ? banAn_DAO.getDanhSachBanCungHoaDon(maHDGop) : new ArrayList<>();
         Window owner = this.getScene().getWindow();
         Gui_DoiBan dialog = new Gui_DoiBan(owner, banCu, ngayChon, banAn_DAO, phieuDatBan_DAO, dsBanGhep);
@@ -821,7 +939,7 @@ public class Gui_DanhSachBan extends BorderPane {
     }
 
     private void xuLyHuyBan(BanAn ban) {
-        String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+        String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
         List<String> dsBanGhep = (maHDGop != null) ? banAn_DAO.getDanhSachBanCungHoaDon(maHDGop) : new ArrayList<>();
         if (dsBanGhep.size() > 1) showDialogHuyBanGhep(ban, maHDGop, dsBanGhep);
         else thucHienHuyBanDon(ban);
@@ -874,7 +992,7 @@ public class Gui_DanhSachBan extends BorderPane {
     }
 
     private void xuLyCheckIn(BanAn ban, Dialog<Void> dialog) {
-        String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
+        String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
         List<PhieuDatBan> dsPhieuDatBan = CheckIn_DAO.getPhieuDatBanTheoHoaDonVaNgay(maHDGop, ngayChon);
         KhachHang kh = KhachHang_DAO.getKhachHangById(dsPhieuDatBan.get(0).getKhachHang().getMaKhachHang());
         Alert alert = new Alert(AlertType.CONFIRMATION, "Check-in cho " + kh.getTenKhachHang() + "?", ButtonType.YES, ButtonType.NO);
@@ -916,21 +1034,16 @@ public class Gui_DanhSachBan extends BorderPane {
         alert.showAndWait();
     }
 
-
     private void xuLyGoiMon(BanAn ban) {
         // ============================================================
-        // 1. LẤY MÃ HÓA ĐƠN HIỆN TẠI
+        // 1. LẤY MÃ HÓA ĐƠN & LOAD GIỎ HÀNG (GIỮ NGUYÊN)
         // ============================================================
-        String maHD = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan(), ngayChon);
-
+        String maHD = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
         if (maHD == null) {
             showAlert(AlertType.ERROR, "Lỗi", "Không tìm thấy hóa đơn của bàn: " + ban.getMaBan());
             return;
         }
 
-        // ============================================================
-        // 2. LOAD GIỎ HÀNG HIỆN TẠI
-        // ============================================================
         List<ChiTietHoaDon> dsCTHD = ChiTietHoaDon_DAO.getChiTietHoaDonByMaHD(maHD);
         DecimalFormat df = new DecimalFormat("#,##0 VND");
 
@@ -939,33 +1052,19 @@ public class Gui_DanhSachBan extends BorderPane {
             MonAn mon = ct.getMonAn();
             int slCu = ct.getSoLuong();
             double gia = mon.getGiaTien();
-
-            gioHang.add(new Object[]{
-                    mon.getTenMonAn(),  // 0
-                    slCu,               // 1 - SL cũ
-                    0,                  // 2 - SL thêm
-                    slCu,               // 3 - Tổng SL
-                    df.format(slCu * gia), // 4 - Thành tiền hiển thị
-                    gia                 // 5 - Giá gốc
-            });
+            gioHang.add(new Object[]{mon.getTenMonAn(), slCu, 0, slCu, df.format(slCu * gia), gia});
         }
 
         // ============================================================
-        // 3. TẠO LAYER MỜ
+        // 3. TẠO POPUP & OVERLAY (GIỮ NGUYÊN)
         // ============================================================
         Pane root = (Pane) this.getScene().getRoot();
-
         Rectangle overlay = new Rectangle();
         overlay.setFill(Color.rgb(0, 0, 0, 0.4));
-
         overlay.widthProperty().bind(root.widthProperty());
         overlay.heightProperty().bind(root.heightProperty());
-
         root.getChildren().add(overlay);
 
-        // ============================================================
-        // 4. TẠO POPUP
-        // ============================================================
         Stage popup = new Stage();
         popup.initOwner(this.getScene().getWindow());
         popup.initModality(Modality.APPLICATION_MODAL);
@@ -973,22 +1072,17 @@ public class Gui_DanhSachBan extends BorderPane {
         popup.setResizable(false);
 
         // ============================================================
-        // PANEL GIỎ HÀNG (PHẢI)
+        // PANEL GIỎ HÀNG - PHẢI (GIỮ NGUYÊN)
         // ============================================================
         VBox panelGioHang = new VBox(15);
         panelGioHang.setPadding(new Insets(15));
         panelGioHang.setPrefWidth(520);
-        panelGioHang.setStyle("""
-                    -fx-background-color: white; 
-                    -fx-background-radius: 12;
-                    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 3);
-                """);
+        panelGioHang.setStyle("-fx-background-color: white; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 3);");
 
         Label lblGioHang = new Label("Gọi món ăn");
         lblGioHang.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
 
-        TilePane tileMenu = new TilePane(10, 12);
-
+        TilePane tileMenu = new TilePane(10, 12); // TilePane hiển thị menu
         TableView<Object[]> tbl = taoBangGioHang(gioHang, tileMenu);
 
         lblTongTien = new Label();
@@ -1001,88 +1095,152 @@ public class Gui_DanhSachBan extends BorderPane {
         panelGioHang.getChildren().addAll(lblGioHang, tbl, lblTongTien);
 
         // ============================================================
-        // PANEL MENU MÓN (TRÁI)
+        // PANEL MENU MÓN - TRÁI (CÓ SỬA ĐỔI HEADER & NAVBAR)
         // ============================================================
         VBox panelMenu = new VBox(10);
         panelMenu.setPrefWidth(560);
         panelMenu.setPadding(new Insets(15));
-        panelMenu.setStyle("""
-                    -fx-background-color: #f8f9fa;
-                    -fx-background-radius: 12;
-                    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3);
-                """);
+        panelMenu.setStyle("-fx-background-color: #f8f9fa; -fx-background-radius: 12; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.12), 8, 0, 0, 3);");
 
+        // --- SỬA 1: Header ngang (Tiêu đề + Tìm kiếm) ---
         Label lblMenu = new Label("Chọn món ăn");
         lblMenu.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
 
-        ComboBox<String> cbLoai = new ComboBox<>();
-        cbLoai.getItems().addAll("Tất cả", "Món ăn kèm", "Món khai vị",
-                "Món chính", "Nước sốt", "Đồ uống", "Tráng miệng");
-        cbLoai.setValue("Tất cả");
+        TextField txtTim = new TextField();
+        txtTim.setPromptText("🔍 Tìm món ăn...");
+        txtTim.setPrefHeight(38);
+        txtTim.setPrefWidth(250);
+        txtTim.setStyle("-fx-background-color: white; -fx-background-radius: 8; -fx-border-radius: 8; -fx-border-color: #ced6e0; -fx-padding: 0 12; -fx-font-size: 13px;");
 
+        // Layout Header
+        HBox headerRow = new HBox(10, lblMenu, txtTim);
+        headerRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(txtTim, Priority.ALWAYS); // Đẩy tìm kiếm giãn ra nếu cần hoặc dùng Spacer
 
-        tileMenu.setPrefColumns(3);
+        // Sự kiện lọc text cũ của bạn
+        txtTim.textProperty().addListener((obs, oldVal, newVal) -> {
+            String tuKhoa = newVal.trim();
+            List<MonAn> ketQua;
 
-        cbLoai.setOnAction(e -> {
-            String loai = cbLoai.getValue();
-            locTheoLoai(tileMenu, gioHang, df, tbl, loai);
+            if (tuKhoa.isEmpty()) {
+                // Nếu rỗng thì load lại tất cả (hoặc theo loại đang chọn nếu muốn logic phức tạp hơn)
+                ketQua = monAn_DAO.getAllMonAn();
+            } else {
+                // GỌI HÀM SEARCH TỪ DAO (Bạn cần đảm bảo DAO có hàm này)
+                ketQua = monAn_DAO.timKiemMonAn(tuKhoa);
+            }
+
+            hienThiDanhSachMon(ketQua, tileMenu, gioHang, df, tbl);
         });
 
+        // --- SỬA 2: Navbar với Active & Hover ---
+        FlowPane navLoai = new FlowPane();
+        navLoai.setHgap(8);
+        navLoai.setVgap(8);
 
-        taiDanhSachMonAn(tileMenu, gioHang, df, tbl);
+        String[] dsLoai = {"Tất cả", "Món ăn kèm", "Món khai vị", "Món chính", "Nước sốt", "Đồ uống", "Tráng miệng"};
+        List<Button> listBtnNavbar = new ArrayList<>(); // List lưu nút để xử lý active
+
+        // Style mặc định
+        String styleNormal = "-fx-background-color: white; -fx-border-color: #dcdde1; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 16; -fx-font-size: 13px; -fx-text-fill: #2f3640; -fx-cursor: hand;";
+        // Style khi chọn (Active) hoặc Hover
+        String styleActive = "-fx-background-color: #082744; -fx-border-color: #082744; -fx-border-radius: 20; -fx-background-radius: 20; -fx-padding: 6 16; -fx-font-size: 13px; -fx-text-fill: white; -fx-cursor: hand; -fx-font-weight: bold;";
+
+        for (String loai : dsLoai) {
+            Button btnLoai = new Button(loai);
+            btnLoai.setWrapText(false);
+            btnLoai.setStyle(styleNormal);
+            listBtnNavbar.add(btnLoai);
+
+            // Hover Logic
+            btnLoai.setOnMouseEntered(e -> {
+                // Chỉ đổi màu nếu nút này KHÔNG phải là nút đang chọn
+                if (!btnLoai.getStyle().contains("-fx-font-weight: bold")) {
+                    btnLoai.setStyle(styleActive.replace("-fx-font-weight: bold;", "")); // Hover thì ko cần bold cũng được
+                }
+            });
+            btnLoai.setOnMouseExited(e -> {
+                // Chuột rời đi: nếu không phải Active thì về Normal
+                if (!btnLoai.getStyle().contains("-fx-font-weight: bold")) {
+                    btnLoai.setStyle(styleNormal);
+                }
+            });
+
+            // Click Logic (Active)
+            btnLoai.setOnAction(e -> {
+                // Reset style nút (giữ nguyên logic style cũ của bạn)
+                for (Button b : listBtnNavbar) b.setStyle(styleNormal);
+                btnLoai.setStyle(styleActive);
+
+                // GỌI DATA TỪ DAO
+                List<MonAn> dsTheoLoai;
+                if (loai.equals("Tất cả")) {
+                    dsTheoLoai = monAn_DAO.getAllMonAn();
+                } else {
+                    dsTheoLoai = monAn_DAO.getMonAnByLoai(loai);
+                }
+
+                hienThiDanhSachMon(dsTheoLoai, tileMenu, gioHang, df, tbl);
+            });
+
+            navLoai.getChildren().add(btnLoai);
+        }
+        // Set mặc định nút đầu tiên là Active
+        if (!listBtnNavbar.isEmpty()) listBtnNavbar.get(0).setStyle(styleActive);
+
+        // --- Load dữ liệu món ---
+        hienThiDanhSachMon(monAn_DAO.getAllMonAn(), tileMenu, gioHang, df, tbl);
+
+        // --- SỬA 3: Tích hợp Gợi ý tìm kiếm ---
+        // Lấy dữ liệu từ TilePane vừa load để làm nguồn gợi ý
+        ObservableList<String> dataGoiY = FXCollections.observableArrayList();
+        for (Node n : tileMenu.getChildren()) {
+            Object userData = n.getUserData();
+
+            // Kiểm tra xem userData có phải là MonAn không để tránh lỗi
+            if (userData instanceof MonAn) {
+                MonAn mon = (MonAn) userData;
+                // Chỉ lấy TÊN MÓN ĂN đưa vào danh sách gợi ý
+                dataGoiY.add(mon.getTenMonAn());
+            }
+        }
+        caiDatGoiYTimKiem(txtTim, dataGoiY);
+        // ------------------------------------
 
         ScrollPane scMenu = new ScrollPane(tileMenu);
         scMenu.setFitToWidth(true);
         scMenu.setStyle("-fx-background-color: transparent;");
 
-        HBox header = new HBox(lblMenu, new Region(), cbLoai);
-        HBox.setHgrow(header.getChildren().get(1), Priority.ALWAYS);
-
-        panelMenu.getChildren().addAll(header, scMenu);
+        // Gom Header và Navbar vào layout
+        VBox topSection = new VBox(15, headerRow, navLoai);
+        panelMenu.getChildren().addAll(topSection, scMenu);
 
         // ============================================================
-        // BUTTONS
+        // BUTTONS & SCENE (GIỮ NGUYÊN)
         // ============================================================
         Button btnXN = new Button("Xác nhận");
-        btnXN.setStyle("""
-                    -fx-background-color:#082744; 
-                    -fx-text-fill:white; 
-                    -fx-background-radius:8;
-                    -fx-padding:10 25;
-                """);
+        btnXN.setStyle("-fx-background-color:#082744; -fx-text-fill:white; -fx-background-radius:8; -fx-padding:10 25;");
 
         Button btnHuy = new Button("Hủy");
-        btnHuy.setStyle("""
-                    -fx-background-color:#dfe4ea; 
-                    -fx-background-radius:8;
-                    -fx-padding:10 25;
-                """);
-
+        btnHuy.setStyle("-fx-background-color:#dfe4ea; -fx-background-radius:8; -fx-padding:10 25;");
         btnHuy.setOnAction(e -> popup.close());
 
         btnXN.setOnAction(e -> {
             boolean coLoi = false;
-
             for (Object[] row : gioHang) {
                 int slThem = (Integer) row[2];
                 if (slThem <= 0) continue;
-
                 String ten = (String) row[0];
                 double gia = (Double) row[5];
                 String maMon = MonAn_DAO.getMaMonByTen(ten);
-
-                boolean ok = chiTietHoaDon_DAO.themHoacUpdate(maHD, maMon, slThem, gia);
-
-                if (!ok) {
+                if (!chiTietHoaDon_DAO.themHoacUpdate(maHD, maMon, slThem, gia)) {
                     coLoi = true;
                     showAlert(AlertType.ERROR, "Lỗi", "Không thể thêm món: " + ten);
                     break;
                 }
             }
-
             if (!coLoi) {
-                showAlert(AlertType.INFORMATION, "Thành công",
-                        "Đã gọi món cho bàn: " + ban.getMaBan());
+                showAlert(AlertType.INFORMATION, "Thành công", "Đã gọi món cho bàn: " + ban.getMaBan());
                 loadDataToGrid();
                 popup.close();
             }
@@ -1090,24 +1248,89 @@ public class Gui_DanhSachBan extends BorderPane {
 
         panelGioHang.getChildren().add(new HBox(10, btnHuy, btnXN));
 
-        // ============================================================
-        // TẠO GIAO DIỆN CHÍNH TRONG POPUP
-        // ============================================================
         HBox main = new HBox(15, panelMenu, panelGioHang);
         main.setPadding(new Insets(10));
-
         Scene sc = new Scene(main, 1100, 520);
-        sc.getStylesheets().add(getClass().getResource("/css/danhsachban.css").toExternalForm());
-
+        // sc.getStylesheets().add(...) // Add css nếu cần
         popup.setScene(sc);
-
-        // ============================================================
-        // GỠ LỚP MỜ KHI ĐÓNG POPUP
-        // ============================================================
         popup.setOnHidden(ev -> root.getChildren().remove(overlay));
-
         popup.show();
     }
+
+    private void caiDatGoiYTimKiem(TextField txtInput, ObservableList<String> dataNguon) {
+        ContextMenu suggestionsPopup = new ContextMenu();
+        suggestionsPopup.getStyleClass().add("goi-y-menu");
+        suggestionsPopup.setPrefWidth(txtInput.getPrefWidth());
+
+        Runnable hienThiGoiY = () -> {
+            String tuKhoa = txtInput.getText().toLowerCase();
+
+            // Nếu ô tìm kiếm trống, ẩn gợi ý
+            if (tuKhoa.isEmpty()) {
+                suggestionsPopup.hide();
+                return;
+            }
+
+            List<MenuItem> suggestions = new ArrayList<>();
+
+            for (String tenMon : dataNguon) {
+                // Logic mới: So sánh trực tiếp tên món với từ khóa
+                if (tenMon.toLowerCase().contains(tuKhoa)) {
+                    MenuItem item = new MenuItem(tenMon);
+                    item.getStyleClass().add("goi-y-item");
+
+                    item.setOnAction(e -> {
+                        txtInput.setText(tenMon);
+                        txtInput.positionCaret(tenMon.length());
+                        suggestionsPopup.hide();
+                        // Gọi luôn logic tìm kiếm sau khi chọn gợi ý (nếu cần)
+                        // hienThiDanhSachMon(monAn_DAO.timKiemMonAn(tenMon), tileMenu, gioHang, df, tbl);
+                    });
+                    suggestions.add(item);
+                }
+                if (suggestions.size() >= 10) break; // Giới hạn 10 gợi ý
+            }
+
+            if (!suggestions.isEmpty()) {
+                suggestionsPopup.getItems().setAll(suggestions);
+                if (!suggestionsPopup.isShowing()) {
+                    suggestionsPopup.show(txtInput, Side.BOTTOM, 0, 0);
+                }
+            } else {
+                suggestionsPopup.hide();
+            }
+        };
+
+        txtInput.textProperty().addListener((observable, oldValue, newValue) -> hienThiGoiY.run());
+        txtInput.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) suggestionsPopup.hide();
+        });
+    }
+
+
+//    private void locTheoTen(TilePane tileMenu,
+//                            ObservableList<Object[]> gioHang,
+//                            DecimalFormat df,
+//                            TableView<Object[]> tbl,
+//                            String keyword) {
+//
+//        String kw = keyword == null ? "" : keyword.toLowerCase();
+//
+//        for (Node node : tileMenu.getChildren()) {
+//            // --- SỬA LỖI: Kiểm tra null trước ---
+//            Object userData = node.getUserData();
+//            if (userData == null) {
+//                continue; // Nếu không có dữ liệu thì bỏ qua, không xử lý node này
+//            }
+//            // ------------------------------------
+//
+//            String tenMon = userData.toString().toLowerCase();
+//            boolean match = tenMon.contains(kw);
+//
+//            node.setVisible(match);
+//            node.setManaged(match);
+//        }
+//    }
 
 
     public void tinhTongTien(ObservableList<Object[]> gioHang, Label lblTongTien) {
@@ -1128,73 +1351,151 @@ public class Gui_DanhSachBan extends BorderPane {
 
         lblTongTien.setText("Tổng thành tiền: " + df.format(tong));
     }
+    private void hienThiDanhSachMon(List<MonAn> dsMon, TilePane tileMenu, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> tbl) {
+        tileMenu.getChildren().clear();
 
-    private void taiDanhSachMonAn(TilePane pane, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
-        pane.getChildren().clear();
-        List<String> ds = monAn_DAO.layDanhSachMonAnGiaKMString();
-        for (String mon : ds) {
-            pane.getChildren().add(taoTheMonAn(mon, gioHang, df, table));
+        if (dsMon == null || dsMon.isEmpty()) {
+            Label lblTrong = new Label("Không tìm thấy món nào!");
+            lblTrong.setStyle("-fx-font-style: italic; -fx-text-fill: grey; -fx-padding: 20;");
+            tileMenu.getChildren().add(lblTrong);
+            return;
+        }
+
+        for (MonAn mon : dsMon) {
+            tileMenu.getChildren().add(taoTheMonAn(mon, gioHang, df, tbl));
         }
     }
+//    private void taiDanhSachMonAn(TilePane pane, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
+//        pane.getChildren().clear();
+//        List<String> ds = monAn_DAO.layDanhSachMonAnGiaKMString();
+//        for (String mon : ds) {
+//            pane.getChildren().add(taoTheMonAn(mon, gioHang, df, table));
+//        }
+//    }
 
-    private VBox taoTheMonAn(String monStr, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
-        String[] arr = monStr.split("-");
-        String ma = arr.length > 0 ? arr[0] : "";
-        String ten = arr.length > 1 ? arr[1] : "Món không xác định";
-        double gia = arr.length > 6 ? Double.parseDouble(arr[6]) : 0.0;
-        String anh = arr.length > 8 ? arr[8] : "";
-        // Lấy SL hiện tại từ giỏ hàng để hiển thị trên lblSL
-        int slHienTai = getSLThemHienTai(ten, gioHang);
-        VBox card = new VBox(8);
-        card.setAlignment(Pos.TOP_CENTER);
-        card.setPadding(new Insets(10));
-        card.setPrefWidth(160);
-        card.setStyle("""
-                -fx-background-color:white;
-                -fx-background-radius:12;
-                -fx-effect:dropshadow(gaussian, rgba(0,0,0,0.12),4,0,0,1);
-                """);
-        // Ảnh
-        ImageView img = new ImageView();
-        img.setFitWidth(130);
-        img.setFitHeight(90);
-        img.setPreserveRatio(false);
-        Rectangle clip = new Rectangle(130, 90);
-        clip.setArcWidth(12);
-        clip.setArcHeight(12);
-        img.setClip(clip);
-        loadImgTo(img, anh);
-        Label lblTen = new Label(ten);
-        lblTen.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-        lblTen.setWrapText(true);
-        lblTen.setAlignment(Pos.CENTER);
-        Label lblGia = new Label(df.format(gia));
-        lblGia.setTextFill(Color.web("#e53e3e"));
-        lblGia.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-        // Controls +/-
-        Label lblSL = new Label(String.valueOf(slHienTai));
-        lblSL.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
-        lblSL.setPrefWidth(26);
-        lblSL.setAlignment(Pos.CENTER);
-        Button btnTru = createRoundButton("-");
-        Button btnCong = createRoundButton("+");
-        // Sự kiện +/-btn
-        btnCong.setOnAction(e -> {
-            tangSL(ten, gia, lblSL, gioHang, df, table);
-            table.refresh();
-        });
-        btnTru.setOnAction(e -> {
-            giamSL(ten, gia, lblSL, gioHang, df, table);
-            table.refresh();
-        });
-        HBox controls = new HBox(10, btnTru, lblSL, btnCong);
-        controls.setAlignment(Pos.CENTER);
-        Region spacer = new Region();
-        VBox.setVgrow(spacer, Priority.ALWAYS);
-        card.getChildren().addAll(img, lblTen, lblGia, spacer, controls);
-        return card;
-    }
+//    private VBox taoTheMonAn(String monStr, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
+//        String[] arr = monStr.split("-");
+//        String ma = arr.length > 0 ? arr[0] : "";
+//        String ten = arr.length > 1 ? arr[1] : "Món không xác định";
+//        double gia = arr.length > 6 ? Double.parseDouble(arr[6]) : 0.0;
+//        String anh = arr.length > 8 ? arr[8] : "";
+//        // Lấy SL hiện tại từ giỏ hàng để hiển thị trên lblSL
+//        int slHienTai = getSLThemHienTai(ten, gioHang);
+//        VBox card = new VBox(8);
+//        card.setAlignment(Pos.TOP_CENTER);
+//        card.setPadding(new Insets(10));
+//        card.setPrefWidth(160);
+//        card.setStyle("""
+//                -fx-background-color:white;
+//                -fx-background-radius:12;
+//                -fx-effect:dropshadow(gaussian, rgba(0,0,0,0.12),4,0,0,1);
+//                """);
+//        // Ảnh
+//        ImageView img = new ImageView();
+//        img.setFitWidth(130);
+//        img.setFitHeight(90);
+//        img.setPreserveRatio(false);
+//        Rectangle clip = new Rectangle(130, 90);
+//        clip.setArcWidth(12);
+//        clip.setArcHeight(12);
+//        img.setClip(clip);
+//        loadImgTo(img, anh);
+//        Label lblTen = new Label(ten);
+//        lblTen.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+//        lblTen.setWrapText(true);
+//        lblTen.setAlignment(Pos.CENTER);
+//        Label lblGia = new Label(df.format(gia));
+//        lblGia.setTextFill(Color.web("#e53e3e"));
+//        lblGia.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+//        // Controls +/-
+//        Label lblSL = new Label(String.valueOf(slHienTai));
+//        lblSL.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+//        lblSL.setPrefWidth(26);
+//        lblSL.setAlignment(Pos.CENTER);
+//        Button btnTru = createRoundButton("-");
+//        Button btnCong = createRoundButton("+");
+//        // Sự kiện +/-btn
+//        btnCong.setOnAction(e -> {
+//            tangSL(ten, gia, lblSL, gioHang, df, table);
+//            table.refresh();
+//        });
+//        btnTru.setOnAction(e -> {
+//            giamSL(ten, gia, lblSL, gioHang, df, table);
+//            table.refresh();
+//        });
+//        HBox controls = new HBox(10, btnTru, lblSL, btnCong);
+//        controls.setAlignment(Pos.CENTER);
+//        Region spacer = new Region();
+//        VBox.setVgrow(spacer, Priority.ALWAYS);
+//        card.getChildren().addAll(img, lblTen, lblGia, spacer, controls);
+//        return card;
+//    }
+// Hàm này chỉ lo việc tạo giao diện cho 1 món ăn từ Object MonAn
+private VBox taoTheMonAn(MonAn mon, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
+    // Lấy thông tin từ Object MonAn
+    String ten = mon.getTenMonAn();
+    double gia = mon.getGiaTien();
+    String anh = mon.getHinhAnh();
 
+    // Lấy SL hiện tại từ giỏ hàng
+    int slHienTai = getSLThemHienTai(ten, gioHang);
+
+    VBox card = new VBox(8);
+    card.setAlignment(Pos.TOP_CENTER);
+    card.setPadding(new Insets(10));
+    card.setPrefWidth(160);
+    card.setStyle("-fx-background-color:white; -fx-background-radius:12; -fx-effect:dropshadow(gaussian, rgba(0,0,0,0.12),4,0,0,1);");
+
+    // Xử lý ảnh
+    ImageView img = new ImageView();
+    img.setFitWidth(130);
+    img.setFitHeight(90);
+    img.setPreserveRatio(false);
+    Rectangle clip = new Rectangle(130, 90);
+    clip.setArcWidth(12); clip.setArcHeight(12);
+    img.setClip(clip);
+    loadImgTo(img, anh); // Hàm load ảnh giữ nguyên
+
+    // Tên và Giá
+    Label lblTen = new Label(ten);
+    lblTen.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+    lblTen.setWrapText(true);
+    lblTen.setAlignment(Pos.CENTER);
+
+    Label lblGia = new Label(df.format(gia));
+    lblGia.setTextFill(Color.web("#e53e3e"));
+    lblGia.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
+
+    // Nút Tăng/Giảm
+    Label lblSL = new Label(String.valueOf(slHienTai));
+    lblSL.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+    lblSL.setPrefWidth(26);
+    lblSL.setAlignment(Pos.CENTER);
+
+    Button btnTru = createRoundButton("-");
+    Button btnCong = createRoundButton("+");
+
+    btnCong.setOnAction(e -> {
+        tangSL(ten, gia, lblSL, gioHang, df, table);
+        table.refresh();
+    });
+    btnTru.setOnAction(e -> {
+        giamSL(ten, gia, lblSL, gioHang, df, table);
+        table.refresh();
+    });
+
+    HBox controls = new HBox(10, btnTru, lblSL, btnCong);
+    controls.setAlignment(Pos.CENTER);
+    Region spacer = new Region();
+    VBox.setVgrow(spacer, Priority.ALWAYS);
+
+    card.getChildren().addAll(img, lblTen, lblGia, spacer, controls);
+
+    // Gắn UserData để sau này cần dùng lại object đỡ phải query
+    card.setUserData(mon);
+
+    return card;
+}
     private int getSLThemHienTai(String ten, ObservableList<Object[]> gioHang) {
         for (Object[] row : gioHang) {
             if (row[0].equals(ten)) {
@@ -1394,22 +1695,22 @@ public class Gui_DanhSachBan extends BorderPane {
         return table;
     }
 
-    private void locTheoLoai(TilePane tileMenu, ObservableList<Object[]> gioHang, DecimalFormat df,
-                             TableView<Object[]> table, String loaiChon) {
-
-        tileMenu.getChildren().clear();
-        List<String> ds = monAn_DAO.layDanhSachMonAnGiaKMString();
-
-        for (String mon : ds) {
-
-            String[] arr = mon.split("-");
-            String loai = arr.length > 2 ? arr[2] : ""; // arr[2] phải là cột loại món (để ý)
-
-            // Nếu chọn "Tất cả" → load tất
-            if (loaiChon.equals("Tất cả") || loai.equalsIgnoreCase(loaiChon)) {
-                tileMenu.getChildren().add(taoTheMonAn(mon, gioHang, df, table));
-            }
-        }
-    }
+//    private void locTheoLoai(TilePane tileMenu, ObservableList<Object[]> gioHang, DecimalFormat df,
+//                             TableView<Object[]> table, String loaiChon) {
+//
+//        tileMenu.getChildren().clear();
+//        List<String> ds = monAn_DAO.layDanhSachMonAnGiaKMString();
+//
+//        for (String mon : ds) {
+//
+//            String[] arr = mon.split("-");
+//            String loai = arr.length > 2 ? arr[2] : ""; // arr[2] phải là cột loại món (để ý)
+//
+//            // Nếu chọn "Tất cả" → load tất
+//            if (loaiChon.equals("Tất cả") || loai.equalsIgnoreCase(loaiChon)) {
+//                tileMenu.getChildren().add(taoTheMonAn(mon, gioHang, df, table));
+//            }
+//        }
+//    }
 
 }

@@ -70,7 +70,6 @@ public class Gui_Sidebar extends VBox {
     public Gui_Sidebar(Gui_TrangChu trangChu) {
         this.trangChu = trangChu;
         boolean isAdmin = Gui_DangNhap.isCurrentUserAdmin();
-        System.out.println(isAdmin);
         // ✅ Cố định kích thước Sidebar
         this.setPrefWidth(220);
         this.setMinWidth(220);

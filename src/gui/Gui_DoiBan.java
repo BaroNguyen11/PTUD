@@ -1310,7 +1310,7 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
 
         List<String> dsMaBanCu = (dsBanGhep != null && !dsBanGhep.isEmpty()) ? dsBanGhep : List.of(banCu.getMaBan());
         List<String> dsMaBanMoi = dsBanMoiDaChon.stream().map(BanAn::getMaBan).collect(Collectors.toList());
-        String maHD = banAn_DAO.getMaHoaDonTuBan(dsMaBanCu.get(0), ngayDat);
+        String maHD = banAn_DAO.getMaHoaDonTuBan(dsMaBanCu.get(0));
 
         if (maHD == null) {
             new Alert(AlertType.ERROR, "Lỗi: Không tìm thấy hóa đơn bàn cũ.").show();

@@ -1,0 +1,16 @@
+.goi-y-menu {
+    -fx-background-color: white;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 5, 0, 0, 2);
+    -fx-padding: 0;
+}
+.goi-y-item {
+    -fx-padding: 10 15;
+    -fx-font-size: 13px;
+    -fx-cursor: hand;
+}
+.goi-y-item:hover {
+    -fx-background-color: #f1f2f6;
+}
+.goi-y-item .label {
+    -fx-text-fill: #2f3640;
+}

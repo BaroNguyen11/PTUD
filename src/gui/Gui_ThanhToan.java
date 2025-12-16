@@ -191,17 +191,16 @@ public class Gui_ThanhToan extends BorderPane {
         String maHD = "";
         if (dsPhieu == null || dsPhieu.isEmpty()) {
             showAlert(AlertType.ERROR, "Lỗi thanh toán", "Không tìm thấy danh sách phiếu");
-        } else {
+            vboxAll.getChildren().add(new Label("Không có dữ liệu hóa đơn"));
+            return vboxAll;
+        }
             maHD = dsPhieu.get(0).getHoaDon().getMaHoaDon();
-        }
 
-        dsBan = "";
-        for (PhieuDatBan phieu : dsPhieu) {
-            dsBan += phieu.getBan().getMaBan();
-            if (!(phieu == dsPhieu.get(dsPhieu.size() - 1))) {
-                dsBan += ", ";
-            }
-        }
+
+        dsBan = dsPhieu.stream()
+                .map(p -> p.getBan().getMaBan())
+                .distinct()
+                .collect(java.util.stream.Collectors.joining(", "));
 
         Label lblMaBan = new Label("Bàn: " + dsBan);
         lblMaBan.setFont(Font.font("Segoe UI", FontWeight.BOLD, 28));

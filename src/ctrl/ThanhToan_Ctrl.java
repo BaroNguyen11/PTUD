@@ -33,9 +33,6 @@ public class ThanhToan_Ctrl {
         dao = new ThanhToan_DAO();
     }
 
-    public List<BanAn> layDanhSachBanThanhToan(LocalDate ngay) {
-        return dao.getDanhSachBanDangSuDungTheoNgay(ngay);
-    }
 
     public List<BanAn> chiaTang(List<BanAn> dsThongTinBan, String tang) {
         ViTri viTri;
@@ -58,22 +55,6 @@ public class ThanhToan_Ctrl {
         return dao.getChiTietHoaDonTheoMa(maHoaDon);
     }
 
-    public HoaDon layHoaDonTheoMaBan(String maBan) {
-        return dao.getHoaDonTheoMaBan(maBan);
-    }
-
-    public PhieuDatBan timPhieuTheoMaBan(String maBan) {
-        return dao.timPhieuDatTheoMaBan(maBan);
-    }
-
-    public double soTienGiamGia(String maHoaDon) {
-        return dao.getSoTienGiamCaoNhatTheoHoaDon(maHoaDon);
-    }
-
-
-    public KhachHang timKHBangMa(String maKH) {
-        return dao.getKhachHangByMa(maKH);
-    }
 
     public List<KhuyenMai> layDanhSachKhuyenMai(String maHD, double tongTien) {
 

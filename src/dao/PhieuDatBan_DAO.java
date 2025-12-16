@@ -277,30 +277,7 @@ public class PhieuDatBan_DAO {
             return false;
         }
     }
-    public String getMaPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) {
-        String maPhieuKetQua = null;
 
-        // SQL: Tìm maPhieu có maBan trùng, trùng ngày, và trạng thái đang hoạt động
-        String sql = "SELECT TOP 1 maPhieu FROM PhieuDatBan " +
-                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-                "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setString(1, maBan);
-            stmt.setDate(2, java.sql.Date.valueOf(ngayDat));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    maPhieuKetQua = rs.getString("maPhieu");
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi tra cứu MaPhieu theo bàn và ngày: " + e.getMessage());
-        }
-        return maPhieuKetQua;
-    }
     public boolean doiBanDat(String maPhieu, String maBanMoi) {
         // Lưu ý: Cần đảm bảo chuỗi trạng thái trong CSDL là N'Đã đặt'
         String trangThaiDaDat = "Đã đặt";
@@ -320,65 +297,8 @@ public class PhieuDatBan_DAO {
             return false;
         }
     }
-    public boolean capNhatTrangThaiBan(String maBan, TrangThai trangThaiMoi) {
-        String sql = "UPDATE BanAn SET trangThai = ? WHERE maBan = ?";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
 
-            ps.setString(1, trangThaiMoi.getThongTin());
-            ps.setString(2, maBan);
-
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi cập nhật trạng thái bàn (từ PDB_DAO): " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        }
-    }
-    public boolean doiBanTongHop(BanAn banCu, BanAn banMoi, LocalDate ngayDat, TrangThai trangThaiCu) {
-        boolean doiPhieuThanhCong = false;
-
-        // --- 1. Cập nhật mã bàn trong PhieuDatBan ---
-        if (trangThaiCu == TrangThai.DA_DAT) {
-            String maPhieu = getMaPhieuDatBanByMaBanVaNgay(banCu.getMaBan(), ngayDat);
-            if (maPhieu != null) {
-                doiPhieuThanhCong = doiBanDat(maPhieu, banMoi.getMaBan());
-            } else {
-                System.err.println("Lỗi nghiệp vụ: Không tìm thấy Phiếu Đặt Bàn đang 'Đã đặt' cho bàn " + banCu.getMaBan());
-                return false;
-            }
-        } else if (trangThaiCu == TrangThai.DANG_SU_DUNG) {
-            doiPhieuThanhCong = capNhatMaBanSuDung(banCu.getMaBan(), banMoi.getMaBan(), ngayDat);
-            if (!doiPhieuThanhCong) {
-                System.err.println("Lỗi nghiệp vụ: Cập nhật maBan trong PDB 'Đang dùng' cho bàn " + banCu.getMaBan() + " thất bại.");
-                return false;
-            }
-        } else {
-            return false;
-        }
-
-        // --- 2. Cập nhật trạng thái bàn (Sử dụng phương thức vừa thêm vào PDB_DAO) ---
-        if (doiPhieuThanhCong) {
-            try {
-                // Bàn mới nhận trạng thái của bàn cũ
-                // Gọi phương thức mới capNhatTrangThaiBan trong PhieuDatBan_DAO
-                boolean newBanSuccess = capNhatTrangThaiBan(banMoi.getMaBan(), trangThaiCu);
-
-                // Bàn cũ về TRỐNG
-                boolean oldBanSuccess = capNhatTrangThaiBan(banCu.getMaBan(), TrangThai.TRONG);
-
-                // Trả về kết quả tổng hợp
-                return newBanSuccess && oldBanSuccess;
-            } catch (Exception e) {
-                System.err.println("Lỗi ngoại lệ khi cập nhật trạng thái bàn trong PDB_DAO: " + e.getMessage());
-                e.printStackTrace();
-                return false;
-            }
-        }
-
-        return false;
-    }
 
     public static List<PhieuDatBan> getByMaHoaDon(String maHoaDon) {
         List<PhieuDatBan> list = new ArrayList<>();
@@ -605,5 +525,68 @@ public class PhieuDatBan_DAO {
                 }
             } catch (SQLException ex) { ex.printStackTrace(); }
         }
+    }
+    public PhieuDatBan getPhieuDatBanMoiNhat(String maBan) {
+        PhieuDatBan phieu = null;
+
+        // Câu lệnh SQL: Lấy phiếu mới nhất có trạng thái chưa kết thúc
+        // Kết nối bảng để lấy luôn thông tin Khách Hàng và Hóa Đơn
+        String sql = "SELECT TOP 1 p.maPhieu, p.thoiGianBatDau, p.ghiChu, p.soNguoi, p.trangThai, " +
+                "k.maKhachHang, k.tenKhachHang, k.soDienThoai, " +
+                "nv.maNhanVien, nv.tenNhanVien, " +
+                "hd.maHoaDon " +
+                "FROM PhieuDatBan p " +
+                "JOIN KhachHang k ON p.maKhachHang = k.maKhachHang " +
+                "JOIN NhanVien nv ON p.maNhanVien = nv.maNhanVien " +
+                "LEFT JOIN HoaDon hd ON p.maHoaDon = hd.maHoaDon " + // Dùng LEFT JOIN phòng trường hợp chưa có HĐ (dù hiếm)
+                "WHERE p.maBan = ? " +
+                "AND p.trangThai IN (N'Đang dùng', N'Đã đặt') " + // Chỉ lấy phiếu đang active
+                "ORDER BY p.thoiGianBatDau DESC";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            ps.setString(1, maBan);
+
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    phieu = new PhieuDatBan();
+                    phieu.setMaPhieu(rs.getString("maPhieu"));
+                    phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
+                    phieu.setGhiChu(rs.getString("ghiChu"));
+                    phieu.setSoNguoi(rs.getInt("soNguoi"));
+                    phieu.setTrangThai(rs.getString("trangThai"));
+
+                    // Map thông tin Bàn
+                    BanAn ban = new BanAn();
+                    ban.setMaBan(maBan);
+                    phieu.setBan(ban);
+
+                    // Map thông tin Khách Hàng
+                    KhachHang kh = new KhachHang();
+                    kh.setMaKhachHang(rs.getString("maKhachHang"));
+                    kh.setTenKhachHang(rs.getString("tenKhachHang"));
+                    kh.setSoDienThoai(rs.getString("soDienThoai"));
+                    phieu.setKhachHang(kh);
+
+                    // Map thông tin Nhân Viên
+                    NhanVien nv = new NhanVien();
+                    nv.setMaNhanVien(rs.getString("maNhanVien"));
+                    nv.setTenNhanVien(rs.getString("tenNhanVien"));
+                    phieu.setNhanVien(nv);
+
+                    // Map thông tin Hóa Đơn
+                    String maHD = rs.getString("maHoaDon");
+                    if (maHD != null) {
+                        HoaDon hd = new HoaDon();
+                        hd.setMaHoaDon(maHD);
+                        phieu.setHoaDon(hd);
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return phieu;
     }
 }

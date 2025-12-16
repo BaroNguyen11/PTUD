@@ -207,4 +207,33 @@ public class MonAn_DAO {
 
         return ds;
     }
+    // Trong class MonAn_DAO
+    public List<MonAn> timKiemMonAn(String tuKhoa) {
+        List<MonAn> dsMon = new ArrayList<>();
+        String sql = "SELECT * FROM MonAn WHERE TenMonAn LIKE N'%' + ? + '%'";
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+
+            stmt.setString(1, tuKhoa);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                // Map dữ liệu từ ResultSet vào Object MonAn
+                // (Bạn tự điều chỉnh các cột cho khớp với DB của bạn)
+                String maMon = rs.getString("maMonAn");
+                String tenMon = rs.getString("tenMonAn");
+                String loai = rs.getString("loaiMon");
+                double gia = rs.getDouble("giaTien");
+                String moTa = rs.getString("moTa");
+                String hinhAnh = rs.getString("hinhAnh");
+
+
+                dsMon.add(new MonAn(maMon, tenMon,loai, gia, moTa, hinhAnh));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return dsMon;
+    }
 }

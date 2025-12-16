@@ -307,13 +307,23 @@ public class Gui_DatBan extends BorderPane {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(15);
-        cmbGioDen = new ComboBox<>();
-        for (int h = 0; h < 24; h++) {
-            cmbGioDen.getItems().add(String.format("%02d:00", h));
-            cmbGioDen.getItems().add(String.format("%02d:30", h));
-        }
-        cmbGioDen.setValue("18:00");
-        cmbGioDen.setPrefWidth(90);
+        Spinner<Integer> spGio = new Spinner<>();
+        SpinnerValueFactory<Integer> gioFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 18);
+        spGio.setValueFactory(gioFactory);
+        spGio.setEditable(true);
+        spGio.setPrefWidth(70);
+
+
+        Spinner<Integer> spPhut = new Spinner<>();
+        SpinnerValueFactory<Integer> phutFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
+        spPhut.setValueFactory(phutFactory);
+        spPhut.setEditable(true);
+        spPhut.setPrefWidth(70);
+        Label lblColon = new Label(":");
+        lblColon.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
         dpNgayDen = new DatePicker(ngayDatBan);
         dpNgayDen.setPrefWidth(140);
         dpNgayDen.setDayCellFactory(picker -> new DateCell() {
@@ -323,7 +333,8 @@ public class Gui_DatBan extends BorderPane {
                 setDisable(empty || date.isBefore(LocalDate.now()));
             }
         });
-        HBox boxTime = new HBox(10, cmbGioDen, dpNgayDen);
+        HBox boxTime = new HBox(8, spGio, lblColon, spPhut, dpNgayDen);
+        boxTime.setAlignment(Pos.CENTER_LEFT);
         txtSoNguoi = new TextField("0");
         styleTextField(txtSoNguoi);
         txtSoNguoi.setPromptText("Số khách");
