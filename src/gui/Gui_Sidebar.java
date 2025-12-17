@@ -16,9 +16,12 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.SVGPath;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-
+import javafx.scene.paint.Color;
+import java.awt.*;
+import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 
@@ -117,6 +120,8 @@ public class Gui_Sidebar extends VBox {
         VBox.setVgrow(spacer, Priority.ALWAYS);
         menuContainer.getChildren().add(spacer);
 
+        HBox helpButton = createHelpButton();
+        menuContainer.getChildren().add(helpButton);
         // Nút logout
         HBox logoutButton = createLogoutButton();
         menuContainer.getChildren().add(logoutButton);
@@ -191,7 +196,82 @@ public class Gui_Sidebar extends VBox {
 
         return item;
     }
+    // --- Nút Trợ giúp ---
+    private HBox createHelpButton() {
+        // 1. Tạo đối tượng SVGPath từ chuỗi dữ liệu bạn cung cấp
+        SVGPath icon = new SVGPath();
+        icon.setContent("M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z");
 
+        // 2. Style cho icon (Quan trọng: Vì đây là icon nét mảnh nên dùng setStroke)
+        icon.setStroke(Color.WHITE);       // Màu viền trắng
+        icon.setFill(Color.TRANSPARENT);   // Không tô màu nền (trong suốt)
+        icon.setStrokeWidth(1.5);          // Độ dày nét (giống trong thẻ svg stroke-width="1.5")
+
+        // (Mẹo: Icon này có kích thước thực tế khoảng 18x18px nên không cần resize, rất vừa vặn)
+
+        Label label = new Label("Trợ giúp");
+        label.setStyle("-fx-font-size: 13px; -fx-text-fill: white;");
+
+        // 3. Đưa vào HBox (Chỉnh spacing là 12 để icon không dính sát chữ)
+        HBox item = new HBox(12, icon, label);
+        item.setAlignment(Pos.CENTER_LEFT);
+        item.setPadding(new Insets(10, 0, 10, 15));
+        item.setPrefWidth(Double.MAX_VALUE);
+        item.setStyle("-fx-background-color: transparent; -fx-cursor: hand;");
+
+        // Hiệu ứng hover
+        item.setOnMouseEntered(e -> item.setStyle("-fx-background-color: rgba(255,255,255,0.1);"));
+        item.setOnMouseExited(e -> item.setStyle("-fx-background-color: transparent;"));
+
+        // Sự kiện click
+        item.setOnMouseClicked(e -> handleHelp());
+
+        return item;
+    }
+
+
+
+
+    private void handleHelp() {
+        try {
+            // 1. Xác định vị trí file index.html
+            // Dựa vào ảnh của bạn, file này nằm trong thư mục src
+            File file = new File("src/index.html");
+
+            // Kiểm tra nếu không thấy trong src (trường hợp chạy build khác) thì thử tìm ở root
+            if (!file.exists()) {
+                file = new File("index.html");
+            }
+
+            // 2. Kiểm tra file có thực sự tồn tại không
+            if (file.exists()) {
+                // 3. Mở file bằng trình duyệt mặc định
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().browse(file.toURI());
+                } else {
+                    Alert alert = new Alert(AlertType.WARNING);
+                    alert.setTitle("Thông báo");
+                    alert.setContentText("Hệ điều hành không hỗ trợ mở file tự động.");
+                    alert.showAndWait();
+                }
+            } else {
+                // Báo lỗi nếu không tìm thấy file
+                Alert alert = new Alert(AlertType.ERROR);
+                alert.setTitle("Lỗi");
+                alert.setHeaderText("Không tìm thấy file hướng dẫn");
+                alert.setContentText("Vui lòng kiểm tra lại file 'index.html' trong thư mục dự án.\n" +
+                        "Đường dẫn tìm kiếm: " + file.getAbsolutePath());
+                alert.showAndWait();
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Lỗi");
+            alert.setContentText("Có lỗi xảy ra: " + e.getMessage());
+            alert.showAndWait();
+        }
+    }
     // --- Submenu cho "Quản lí đặt bàn" ---
     private VBox createBookingSubmenu() {
         VBox submenu = new VBox(0);

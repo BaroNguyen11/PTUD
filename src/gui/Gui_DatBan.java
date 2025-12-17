@@ -73,7 +73,8 @@ public class Gui_DatBan extends BorderPane {
     private TextField txtSdt;
     private TextField txtDiem;
     private DatePicker dpNgayDen;
-    private ComboBox<String> cmbGioDen;
+    private Spinner<Integer> spGio;
+    private Spinner<Integer> spPhut;
     private LocalDate ngayDatBan;
     private TextField txtSoNguoi;
     private RadioButton radioDungNgay;
@@ -82,6 +83,7 @@ public class Gui_DatBan extends BorderPane {
     private TextField txtTimMonAn; // Ô tìm kiếm món
     private TableView<ChiTietHoaDon> tblGioHang;
     private Map<String, Double> cacheGiaKhuyenMai = new HashMap<>();
+
     public Gui_DatBan(Gui_TrangChu trangChu, List<BanAn> cacBanDaChon, LocalDate ngayDatBan) {
         this.trangChu = trangChu;
         this.cacBanDuocChon = cacBanDaChon;
@@ -307,7 +309,7 @@ public class Gui_DatBan extends BorderPane {
         GridPane grid = new GridPane();
         grid.setHgap(10);
         grid.setVgap(15);
-        Spinner<Integer> spGio = new Spinner<>();
+        spGio = new Spinner<>();
         SpinnerValueFactory<Integer> gioFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 18);
         spGio.setValueFactory(gioFactory);
@@ -315,7 +317,7 @@ public class Gui_DatBan extends BorderPane {
         spGio.setPrefWidth(70);
 
 
-        Spinner<Integer> spPhut = new Spinner<>();
+        spPhut = new Spinner<>();
         SpinnerValueFactory<Integer> phutFactory =
                 new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
         spPhut.setValueFactory(phutFactory);
@@ -331,8 +333,43 @@ public class Gui_DatBan extends BorderPane {
             public void updateItem(LocalDate date, boolean empty) {
                 super.updateItem(date, empty);
                 setDisable(empty || date.isBefore(LocalDate.now()));
+                if (date.isBefore(LocalDate.now())) {
+                    setStyle("-fx-background-color: #f7fafc; -fx-text-fill: #a0aec0;");
+                }
             }
         });
+        dpNgayDen.setStyle(
+                "-fx-background-color: white; " +
+                        "-fx-border-color: #CBD5E0; " +
+                        "-fx-border-radius: 5; " +
+                        "-fx-background-radius: 5; " +
+                        "-fx-padding: 4; " +
+                        "-fx-font-size: 14px;"
+        );
+
+        String customDatePickerCss = "data:text/css," +
+                // 1. Chỉnh nút icon lịch bên phải ô input
+                ".date-picker .arrow-button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+                ".date-picker .arrow-button .arrow { -fx-background-color: #082744; }" +
+
+                // 2. Chỉnh bảng popup
+                ".date-picker-popup { -fx-background-color: white; -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.15), 10, 0, 0, 5); }" +
+                ".date-picker-popup .month-year-pane { -fx-background-color: #082744; -fx-padding: 10; }" +
+                ".date-picker-popup .month-year-pane .label { -fx-text-fill: white; -fx-font-weight: bold; -fx-font-size: 14px; }" +
+
+                // 3. CHỈNH NÚT NEXT / PREV
+                ".date-picker-popup .spinner .button { -fx-background-color: transparent; -fx-cursor: hand; }" +
+                ".date-picker-popup .spinner .button:hover { -fx-background-color: rgba(255, 255, 255, 0.2); -fx-background-radius: 50%25; }" +
+                ".date-picker-popup .spinner .button .left-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" +
+                ".date-picker-popup .spinner .button .right-arrow { -fx-background-color: white; -fx-scale-x: 0.8; -fx-scale-y: 0.8; }" +
+
+                // 4. Chỉnh các ô ngày
+                ".date-picker-popup .day-cell { -fx-background-color: white; -fx-text-fill: #2D3748; -fx-font-size: 13px; -fx-border-color: transparent; }" +
+                ".date-picker-popup .day-cell:hover { -fx-background-color: #EBF8FF; -fx-text-fill: #082744; -fx-background-radius: 5; }" +
+                ".date-picker-popup .day-cell:selected { -fx-background-color: #082744; -fx-text-fill: white; -fx-background-radius: 5; -fx-font-weight: bold; }" +
+                ".date-picker-popup .today { -fx-border-color: #E53E3E; -fx-border-radius: 5; -fx-border-width: 1; }";
+
+        this.getStylesheets().add(customDatePickerCss);
         HBox boxTime = new HBox(8, spGio, lblColon, spPhut, dpNgayDen);
         boxTime.setAlignment(Pos.CENTER_LEFT);
         txtSoNguoi = new TextField("0");
@@ -434,7 +471,6 @@ public class Gui_DatBan extends BorderPane {
         header.getChildren().addAll(lblMenu, spacer, searchBox);
 
 
-
         menuTilePane = new TilePane();
         menuTilePane.setPadding(new Insets(5));
         menuTilePane.setHgap(15);
@@ -451,7 +487,7 @@ public class Gui_DatBan extends BorderPane {
         Label lblGioHang = new Label("🛒 Món đã chọn");
         lblGioHang.setFont(Font.font("Segoe UI", FontWeight.BOLD, 15));
         lblGioHang.setTextFill(Color.web("#2d3436"));
-         tblGioHang = taoBangGioHang();
+        tblGioHang = taoBangGioHang();
         tblGioHang.setPrefHeight(150);
         tblGioHang.setMinHeight(100);
 
@@ -776,7 +812,10 @@ public class Gui_DatBan extends BorderPane {
 
             NhanVien nv = new NhanVien();
             nv.setMaNhanVien(maNVHT);
-            LocalDateTime time = dpNgayDen.getValue().atStartOfDay().withHour(Integer.parseInt(cmbGioDen.getValue().substring(0, 2))).withMinute(Integer.parseInt(cmbGioDen.getValue().substring(3, 5)));
+
+            LocalDateTime time = dpNgayDen.getValue().atStartOfDay()
+                    .withHour(spGio.getValue())
+                    .withMinute(spPhut.getValue());
             if (time.isBefore(LocalDateTime.now())) {
                 showAlert(AlertType.ERROR, "Lỗi", "Thời gian không hợp lệ.");
                 return;

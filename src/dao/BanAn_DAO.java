@@ -584,7 +584,7 @@ public class BanAn_DAO {
         // Ưu tiên lấy hóa đơn của phiếu Đang Dùng gần nhất
         String sql = "SELECT TOP 1 maHoaDon FROM PhieuDatBan " +
                 "WHERE maBan = ? " +
-                "AND trangThai = N'Đang dùng' " +  // Chỉ lấy đang dùng
+                "AND (trangThai = N'Đang dùng' OR trangThai = N'Đã đặt')" +
                 "AND maHoaDon IS NOT NULL " +
                 "ORDER BY thoiGianBatDau DESC";
 

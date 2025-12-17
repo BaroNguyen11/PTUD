@@ -6,6 +6,7 @@ import dao.NhanVien_DAO;
 import entity.Ca;
 import entity.NhanVien;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -17,6 +18,9 @@ import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.text.*;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.Pair;
+import lib.SecurityUtils;
 
 public class Gui_DangNhap extends Application {
 
@@ -30,254 +34,207 @@ public class Gui_DangNhap extends Application {
     private static String currentMaNhanVien;
     private static boolean currentIsAdmin;
 
-//    private HBox createInputControl(String iconPath, boolean isPassword, String promptText) {
-//        StackPane inputStack = new StackPane();
-//        Control inputControl;
-//
-//        if (isPassword) {
-//            PasswordField passwordField = new PasswordField();
-//            passwordField.setPromptText(promptText);
-//            inputControl = passwordField;
-//        } else {
-//            TextField textField = new TextField();
-//            textField.setPromptText(promptText);
-//            inputControl = textField;
-//        }
-//
-//        inputControl.setPrefWidth(300);
-//        inputControl.setPrefHeight(45);
-//        inputControl.setMaxWidth(300);
-//
-//        inputControl.setStyle(
-//                "-fx-background-radius: 20;" +
-//                        "-fx-background-color: white;" +
-//                        "-fx-border-color: #A9A9A9;" +
-//                        "-fx-border-width: 0.5;" +
-//                        "-fx-border-radius: 20;" +
-//                        "-fx-padding: 10 20 10 40;" +
-//                        "-fx-font-family: 'Arial';" +
-//                        "-fx-font-size: 16px;" +
-//                        "-fx-font-weight: normal;"
-//        );
-//
-//        ImageView iconView = new ImageView();
-//        try {
-//            iconView.setImage(new Image(getClass().getResource(iconPath).toExternalForm()));
-//            iconView.setFitWidth(18);
-//            iconView.setFitHeight(18);
-//
-//            StackPane.setAlignment(iconView, Pos.CENTER_LEFT);
-//            StackPane.setMargin(iconView, new Insets(0, 0, 0, 15));
-//
-//            inputStack.getChildren().addAll(inputControl, iconView);
-//        } catch (Exception e) {
-//            inputStack.getChildren().add(inputControl);
-//        }
-//
-//        HBox container = new HBox(inputStack);
-//        container.setAlignment(Pos.CENTER);
-//        return container;
-//    }
 
-private HBox createInputControl(String iconPath, boolean isPassword, String promptText) {
-    StackPane inputStack = new StackPane();
-    Control inputControl;
+    private HBox createInputControl(String iconPath, boolean isPassword, String promptText) {
+        StackPane inputStack = new StackPane();
+        Control inputControl;
 
-    // ⭐️ Biến lưu padding, sẽ thay đổi nếu là password
-    String paddingStyle;
+        // ⭐️ Biến lưu padding, sẽ thay đổi nếu là password
+        String paddingStyle;
 
-    // ⭐️ Cần một TextField để hiển thị mật khẩu khi nhấn vào mắt
-    TextField visiblePasswordField = null;
+        // ⭐️ Cần một TextField để hiển thị mật khẩu khi nhấn vào mắt
+        TextField visiblePasswordField = null;
 
-    if (isPassword) {
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText(promptText);
-        inputControl = passwordField; // ⭐️ Đây là control chính (ẩn)
+        if (isPassword) {
+            PasswordField passwordField = new PasswordField();
+            passwordField.setPromptText(promptText);
+            inputControl = passwordField; // ⭐️ Đây là control chính (ẩn)
 
-        // ⭐️ Tạo một TextField "song sinh" để hiển thị mật khẩu
-        visiblePasswordField = new TextField();
-        visiblePasswordField.setPromptText(promptText);
-        visiblePasswordField.setVisible(false); // Ẩn nó đi lúc đầu
+            // ⭐️ Tạo một TextField "song sinh" để hiển thị mật khẩu
+            visiblePasswordField = new TextField();
+            visiblePasswordField.setPromptText(promptText);
+            visiblePasswordField.setVisible(false); // Ẩn nó đi lúc đầu
 
-        // ⭐️ Liên kết nội dung của 2 trường: gõ ở 1 bên, bên kia tự cập nhật
-        visiblePasswordField.textProperty().bindBidirectional(passwordField.textProperty());
+            // ⭐️ Liên kết nội dung của 2 trường: gõ ở 1 bên, bên kia tự cập nhật
+            visiblePasswordField.textProperty().bindBidirectional(passwordField.textProperty());
 
-        // ⭐️ Cần chừa 40px ở cả 2 bên (trái cho khóa, phải cho mắt)
-        paddingStyle = "-fx-padding: 10 40 10 40;";
+            // ⭐️ Cần chừa 40px ở cả 2 bên (trái cho khóa, phải cho mắt)
+            paddingStyle = "-fx-padding: 10 40 10 40;";
 
-    } else {
-        TextField textField = new TextField();
-        textField.setPromptText(promptText);
-        inputControl = textField;
+        } else {
+            TextField textField = new TextField();
+            textField.setPromptText(promptText);
+            inputControl = textField;
 
-        // ⭐️ Chỉ cần chừa 40px bên trái cho icon user
-        paddingStyle = "-fx-padding: 10 20 10 40;";
-    }
-
-    inputControl.setPrefWidth(300);
-    inputControl.setPrefHeight(45);
-    inputControl.setMaxWidth(300);
-
-    // ⭐️ Tách style ra để dùng chung
-    String baseStyle = "-fx-background-radius: 20;" +
-            "-fx-background-color: white;" +
-            "-fx-border-color: #A9A9A9;" +
-            "-fx-border-width: 0.5;" +
-            "-fx-border-radius: 20;" +
-            "-fx-font-family: 'Arial';" +
-            "-fx-font-size: 16px;" +
-            "-fx-font-weight: normal;";
-
-    // ⭐️ Áp dụng style với padding tương ứng
-    inputControl.setStyle(baseStyle + paddingStyle);
-
-    // ⭐️ Thêm control chính vào stack (nó sẽ là child 0)
-    inputStack.getChildren().add(inputControl);
-
-    if (visiblePasswordField != null) {
-        // ⭐️ Áp dụng style cho cả trường "song sinh"
-        visiblePasswordField.setStyle(baseStyle + paddingStyle);
-        visiblePasswordField.setPrefSize(300, 45);
-        visiblePasswordField.setMaxWidth(300);
-
-        // ⭐️ Thêm trường "song sinh" vào stack
-        inputStack.getChildren().add(visiblePasswordField);
-    }
-
-    // ⭐️ Xử lý icon bên trái (User/Lock)
-    try {
-        ImageView leftIconView = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
-        leftIconView.setFitWidth(18);
-        leftIconView.setFitHeight(18);
-
-        StackPane.setAlignment(leftIconView, Pos.CENTER_LEFT);
-        StackPane.setMargin(leftIconView, new Insets(0, 0, 0, 15));
-
-        inputStack.getChildren().add(leftIconView); // Thêm icon trái
-
-    } catch (Exception e) {
-        System.err.println("Không tải được icon trái: " + iconPath);
-    }
-
-    // ⭐️ Xử lý thêm icon mắt (bên phải) NẾU là password
-    if (isPassword) {
-        try {
-            Image eyeClosedImg = new Image(getClass().getResource(EYE_CLOSED_PATH).toExternalForm());
-            Image eyeOpenImg = new Image(getClass().getResource(EYE_OPEN_PATH).toExternalForm());
-            ImageView eyeIconView = new ImageView(eyeClosedImg); // Ban đầu là nhắm mắt
-            eyeIconView.setFitWidth(18);
-            eyeIconView.setFitHeight(18);
-            eyeIconView.setCursor(Cursor.HAND);
-
-            // ⭐️ Căn lề phải
-            StackPane.setAlignment(eyeIconView, Pos.CENTER_RIGHT);
-            StackPane.setMargin(eyeIconView, new Insets(0, 15, 0, 0));
-
-            // ⭐️ Logic bấm vào mắt
-            // Cần khai báo final để dùng trong lambda
-            final Control finalInputControl = inputControl;
-            final TextField finalVisiblePasswordField = visiblePasswordField;
-
-            eyeIconView.setOnMouseClicked(e -> {
-                if (finalVisiblePasswordField.isVisible()) {
-                    // Đang hiện -> Giấu đi
-                    finalVisiblePasswordField.setVisible(false);
-                    finalInputControl.setVisible(true); // Hiện PasswordField
-                    eyeIconView.setImage(eyeClosedImg);
-                } else {
-                    // Đang giấu -> Hiện lên
-                    finalVisiblePasswordField.setVisible(true);
-                    finalInputControl.setVisible(false); // Giấu PasswordField
-                    eyeIconView.setImage(eyeOpenImg);
-                }
-            });
-
-            // ⭐️ Thêm icon mắt vào stack
-            inputStack.getChildren().add(eyeIconView);
-
-        } catch (Exception e) {
-            System.err.println("Không thể tải icon mắt: " + e.getMessage());
-        }
-    }
-
-    HBox container = new HBox(inputStack);
-    container.setAlignment(Pos.CENTER);
-    return container;
-}
-
-private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
-    try {
-        currentStage.close();
-
-        Stage mainStage = new Stage();
-        Gui_TrangChu root = new Gui_TrangChu(nhanVien);
-        Scene scene = new Scene(root);
-
-        try {
-            scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
-        } catch (Exception e) {
-            System.out.println("Không tìm thấy file CSS");
+            // ⭐️ Chỉ cần chừa 40px bên trái cho icon user
+            paddingStyle = "-fx-padding: 10 20 10 40;";
         }
 
-        mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
-        mainStage.setMaximized(true);
-        mainStage.setScene(scene);
+        inputControl.setPrefWidth(300);
+        inputControl.setPrefHeight(45);
+        inputControl.setMaxWidth(300);
 
-        // ⭐️⭐️⭐️ ĐOẠN CODE QUAN TRỌNG ĐÂY ⭐️⭐️⭐️
-        // Bắt sự kiện khi người dùng bấm nút X để đóng cửa sổ
-        mainStage.setOnCloseRequest(event -> {
+        // ⭐️ Tách style ra để dùng chung
+        String baseStyle = "-fx-background-radius: 20;" +
+                "-fx-background-color: white;" +
+                "-fx-border-color: #A9A9A9;" +
+                "-fx-border-width: 0.5;" +
+                "-fx-border-radius: 20;" +
+                "-fx-font-family: 'Arial';" +
+                "-fx-font-size: 16px;" +
+                "-fx-font-weight: normal;";
+
+        // ⭐️ Áp dụng style với padding tương ứng
+        inputControl.setStyle(baseStyle + paddingStyle);
+
+        // ⭐️ Thêm control chính vào stack (nó sẽ là child 0)
+        inputStack.getChildren().add(inputControl);
+
+        if (visiblePasswordField != null) {
+            // ⭐️ Áp dụng style cho cả trường "song sinh"
+            visiblePasswordField.setStyle(baseStyle + paddingStyle);
+            visiblePasswordField.setPrefSize(300, 45);
+            visiblePasswordField.setMaxWidth(300);
+
+            // ⭐️ Thêm trường "song sinh" vào stack
+            inputStack.getChildren().add(visiblePasswordField);
+        }
+
+        // ⭐️ Xử lý icon bên trái (User/Lock)
+        try {
+            ImageView leftIconView = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
+            leftIconView.setFitWidth(18);
+            leftIconView.setFitHeight(18);
+
+            StackPane.setAlignment(leftIconView, Pos.CENTER_LEFT);
+            StackPane.setMargin(leftIconView, new Insets(0, 0, 0, 15));
+
+            inputStack.getChildren().add(leftIconView); // Thêm icon trái
+
+        } catch (Exception e) {
+            System.err.println("Không tải được icon trái: " + iconPath);
+        }
+
+        // ⭐️ Xử lý thêm icon mắt (bên phải) NẾU là password
+        if (isPassword) {
             try {
-                // 1. Lấy mã nhân viên hiện tại
-                String maNhanVienHienTai = getCurrentMaNhanVien();
-                if (maNhanVienHienTai == null || maNhanVienHienTai.isEmpty()) {
-                    // Nếu không có thông tin đăng nhập (lạ), cứ cho đóng
-                    return;
-                }
+                Image eyeClosedImg = new Image(getClass().getResource(EYE_CLOSED_PATH).toExternalForm());
+                Image eyeOpenImg = new Image(getClass().getResource(EYE_OPEN_PATH).toExternalForm());
+                ImageView eyeIconView = new ImageView(eyeClosedImg); // Ban đầu là nhắm mắt
+                eyeIconView.setFitWidth(18);
+                eyeIconView.setFitHeight(18);
+                eyeIconView.setCursor(Cursor.HAND);
 
-                // 2. Kiểm tra xem nhân viên này còn ca đang làm không
-                Ca_DAO caDAO = new Ca_DAO();
-                Ca caDangLam = caDAO.getCaDangLam(maNhanVienHienTai);
+                // ⭐️ Căn lề phải
+                StackPane.setAlignment(eyeIconView, Pos.CENTER_RIGHT);
+                StackPane.setMargin(eyeIconView, new Insets(0, 15, 0, 0));
 
-                if (caDangLam != null) {
-                    // 3. NẾU CÒN CA -> KHÔNG CHO ĐÓNG
-                    Alert alert = new Alert(Alert.AlertType.WARNING);
-                    alert.setTitle("Chưa kết ca");
-                    alert.setHeaderText("Bạn chưa kết ca làm việc!");
-                    alert.setContentText("Vui lòng vào mục 'Kết Ca' để hoàn tất ca của bạn trước khi tắt ứng dụng.");
-                    alert.showAndWait();
+                // ⭐️ Logic bấm vào mắt
+                // Cần khai báo final để dùng trong lambda
+                final Control finalInputControl = inputControl;
+                final TextField finalVisiblePasswordField = visiblePasswordField;
 
-                    // 4. Hủy sự kiện đóng cửa sổ (quan trọng nhất)
-                    event.consume();
+                eyeIconView.setOnMouseClicked(e -> {
+                    if (finalVisiblePasswordField.isVisible()) {
+                        // Đang hiện -> Giấu đi
+                        finalVisiblePasswordField.setVisible(false);
+                        finalInputControl.setVisible(true); // Hiện PasswordField
+                        eyeIconView.setImage(eyeClosedImg);
+                    } else {
+                        // Đang giấu -> Hiện lên
+                        finalVisiblePasswordField.setVisible(true);
+                        finalInputControl.setVisible(false); // Giấu PasswordField
+                        eyeIconView.setImage(eyeOpenImg);
+                    }
+                });
 
-                } else {
-                    // 5. NẾU ĐÃ KẾT CA -> CHO ĐÓNG BÌNH THƯỜNG
-                    // Không làm gì cả, cửa sổ sẽ tự đóng
-                }
+                // ⭐️ Thêm icon mắt vào stack
+                inputStack.getChildren().add(eyeIconView);
 
             } catch (Exception e) {
-                e.printStackTrace();
-                Alert alert = new Alert(Alert.AlertType.ERROR);
-                alert.setTitle("Lỗi");
-                alert.setHeaderText("Lỗi khi kiểm tra ca làm việc");
-                alert.setContentText("Không thể xác minh trạng thái ca: " + e.getMessage());
-                alert.showAndWait();
-                // Hủy sự kiện để an toàn, phòng lỗi
-                event.consume();
+                System.err.println("Không thể tải icon mắt: " + e.getMessage());
             }
-        });
-        // ⭐️⭐️⭐️ HẾT ĐOẠN CODE MỚI ⭐️⭐️⭐️
+        }
 
-        mainStage.show();
-
-    } catch (Exception e) {
-        e.printStackTrace();
-        Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("Lỗi");
-        alert.setHeaderText(null);
-        alert.setContentText("Không thể mở màn hình chính!\n" + e.getMessage());
-        alert.showAndWait();
+        HBox container = new HBox(inputStack);
+        container.setAlignment(Pos.CENTER);
+        return container;
     }
-}
+
+    private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
+        try {
+            currentStage.close();
+
+            Stage mainStage = new Stage();
+            Gui_TrangChu root = new Gui_TrangChu(nhanVien);
+            Scene scene = new Scene(root);
+
+            try {
+                scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
+            } catch (Exception e) {
+                System.out.println("Không tìm thấy file CSS");
+            }
+
+            mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
+            mainStage.setMaximized(true);
+            mainStage.setScene(scene);
+
+            // ⭐️⭐️⭐️ ĐOẠN CODE QUAN TRỌNG ĐÂY ⭐️⭐️⭐️
+            // Bắt sự kiện khi người dùng bấm nút X để đóng cửa sổ
+            mainStage.setOnCloseRequest(event -> {
+                try {
+                    // 1. Lấy mã nhân viên hiện tại
+                    String maNhanVienHienTai = getCurrentMaNhanVien();
+                    if (maNhanVienHienTai == null || maNhanVienHienTai.isEmpty()) {
+                        // Nếu không có thông tin đăng nhập (lạ), cứ cho đóng
+                        return;
+                    }
+
+                    // 2. Kiểm tra xem nhân viên này còn ca đang làm không
+                    Ca_DAO caDAO = new Ca_DAO();
+                    Ca caDangLam = caDAO.getCaDangLam(maNhanVienHienTai);
+
+                    if (caDangLam != null) {
+                        // 3. NẾU CÒN CA -> KHÔNG CHO ĐÓNG
+                        Alert alert = new Alert(Alert.AlertType.WARNING);
+                        alert.setTitle("Chưa kết ca");
+                        alert.setHeaderText("Bạn chưa kết ca làm việc!");
+                        alert.setContentText("Vui lòng vào mục 'Kết Ca' để hoàn tất ca của bạn trước khi tắt ứng dụng.");
+                        alert.showAndWait();
+
+                        // 4. Hủy sự kiện đóng cửa sổ (quan trọng nhất)
+                        event.consume();
+
+                    } else {
+                        // 5. NẾU ĐÃ KẾT CA -> CHO ĐÓNG BÌNH THƯỜNG
+                        // Không làm gì cả, cửa sổ sẽ tự đóng
+                    }
+
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    Alert alert = new Alert(Alert.AlertType.ERROR);
+                    alert.setTitle("Lỗi");
+                    alert.setHeaderText("Lỗi khi kiểm tra ca làm việc");
+                    alert.setContentText("Không thể xác minh trạng thái ca: " + e.getMessage());
+                    alert.showAndWait();
+                    // Hủy sự kiện để an toàn, phòng lỗi
+                    event.consume();
+                }
+            });
+            // ⭐️⭐️⭐️ HẾT ĐOẠN CODE MỚI ⭐️⭐️⭐️
+
+            mainStage.show();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Lỗi");
+            alert.setHeaderText(null);
+            alert.setContentText("Không thể mở màn hình chính!\n" + e.getMessage());
+            alert.showAndWait();
+        }
+    }
+
     @Override
     public void start(Stage stage) {
         double IMAGE_WIDTH = 380;
@@ -302,7 +259,224 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
         HBox forgotPassContainer = new HBox(forgotPassword);
         forgotPassContainer.setPrefWidth(300);
         forgotPassContainer.setAlignment(Pos.CENTER_RIGHT);
+//        forgotPassword.setOnAction(e -> {
+//            Dialog<Pair<String, String>> dialog = new Dialog<>();
+//            dialog.setTitle("Quên mật khẩu");
+//            dialog.setHeaderText("Nhập thông tin để cấp lại mật khẩu");
+//
+//            ButtonType loginButtonType = new ButtonType("Gửi mật khẩu", ButtonBar.ButtonData.OK_DONE);
+//            dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+//
+//            GridPane grid = new GridPane();
+//            grid.setHgap(10);
+//            grid.setVgap(10);
+//            grid.setPadding(new Insets(20, 150, 10, 10));
+//
+//            TextField usernameFieldForgot = new TextField();
+//            usernameFieldForgot.setPromptText("Tên đăng nhập");
+//            TextField emailField = new TextField();
+//            emailField.setPromptText("Email nhận mật khẩu");
+//
+//            grid.add(new Label("Tên đăng nhập:"), 0, 0);
+//            grid.add(usernameFieldForgot, 1, 0);
+//            grid.add(new Label("Email nhận:"), 0, 1);
+//            grid.add(emailField, 1, 1);
+//
+//            dialog.getDialogPane().setContent(grid);
+//
+//            // Convert kết quả khi bấm nút
+//            dialog.setResultConverter(dialogButton -> {
+//                if (dialogButton == loginButtonType) {
+//                    return new Pair<>(usernameFieldForgot.getText(), emailField.getText());
+//                }
+//                return null;
+//            });
+//
+//            dialog.showAndWait().ifPresent(result -> {
+//                String username = result.getKey();
+//                String emailTo = result.getValue();
+//
+//                if (username.isEmpty() || emailTo.isEmpty()) {
+//                    showAlert(Alert.AlertType.WARNING, "Thiếu thông tin", "Vui lòng nhập đủ thông tin!");
+//                    return;
+//                }
+//
+//                dao.TaiKhoan_DAO tkDAO = new dao.TaiKhoan_DAO();
+//                dao.DangNhap_DAO dnDAO = new dao.DangNhap_DAO();
+//
+//                // 1. Kiểm tra username có tồn tại không
+//                // (Lưu ý: Dùng hàm có sẵn của bạn để lấy mã NV từ username)
+//                String maNV = null;
+//                try {
+//                    maNV = dnDAO.getMaNhanVien(username);
+//                } catch (Exception ex) { ex.printStackTrace(); }
+//
+//                if (maNV == null) {
+//                    showAlert(Alert.AlertType.ERROR, "Lỗi", "Tên đăng nhập không tồn tại!");
+//                    return;
+//                }
+//
+//                // 2. Sinh mật khẩu mới và mã hóa
+//                String passMoi = lib.EmailService.generateRandomPass(); // Ví dụ 123456
+//                String passMoiHash = lib.SecurityUtils.encrypt(passMoi);
+//
+//                // 3. Hiển thị Loading
+//                Alert loading = new Alert(Alert.AlertType.INFORMATION);
+//                loading.setTitle("Xin chờ");
+//                loading.setHeaderText("Đang gửi email...");
+//                loading.getDialogPane().lookupButton(ButtonType.OK).setDisable(true);
+//                loading.show();
+//
+//                String finalMaNV = maNV;
+//                new Thread(() -> {
+//                    // Cập nhật mật khẩu mới vào DB
+//                    // (Bạn dùng hàm updateMatKhau đã viết ở câu trước)
+//                    boolean updateOK = tkDAO.updateMatKhau(finalMaNV, passMoiHash);
+//
+//                    if (updateOK) {
+//                        // Gửi mail vào địa chỉ người dùng vừa nhập (Bất chấp đúng sai)
+//                        boolean sendOK = lib.EmailService.sendEmail(emailTo, passMoi);
+//
+//                        Platform.runLater(() -> {
+//                            loading.close();
+//                            if (sendOK) {
+//                                showAlert(Alert.AlertType.INFORMATION, "Thành công",
+//                                        "Mật khẩu mới cho tài khoản '" + username + "' đã gửi tới: " + emailTo);
+//                            } else {
+//                                showAlert(Alert.AlertType.ERROR, "Lỗi mạng", "Không thể gửi email.");
+//                            }
+//                        });
+//                    }
+//                }).start();
+//            });
+//        });
+        forgotPassword.setOnAction(e -> {
+            // 1. Tạo Dialog nhập liệu
+            Dialog<Pair<String, String>> dialog = new Dialog<>();
+            dialog.setTitle("Quên mật khẩu");
+            dialog.setHeaderText("Nhập thông tin để cấp lại mật khẩu");
 
+            ButtonType loginButtonType = new ButtonType("Gửi mật khẩu", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(loginButtonType, ButtonType.CANCEL);
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10);
+            grid.setVgap(10);
+            grid.setPadding(new Insets(20, 150, 10, 10));
+
+            TextField usernameFieldForgot = new TextField();
+            usernameFieldForgot.setPromptText("Tên đăng nhập");
+            TextField emailField = new TextField();
+            emailField.setPromptText("Email nhận mật khẩu");
+
+            grid.add(new Label("Tên đăng nhập:"), 0, 0);
+            grid.add(usernameFieldForgot, 1, 0);
+            grid.add(new Label("Email nhận:"), 0, 1);
+            grid.add(emailField, 1, 1);
+
+            dialog.getDialogPane().setContent(grid);
+
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == loginButtonType) {
+                    return new Pair<>(usernameFieldForgot.getText(), emailField.getText());
+                }
+                return null;
+            });
+
+            dialog.showAndWait().ifPresent(result -> {
+                String username = result.getKey();
+                String emailTo = result.getValue();
+
+                if (username.isEmpty() || emailTo.isEmpty()) {
+                    Alert alert = new Alert(Alert.AlertType.WARNING, "Vui lòng nhập đủ thông tin!");
+                    alert.showAndWait();
+                    return;
+                }
+
+                dao.TaiKhoan_DAO tkDAO = new dao.TaiKhoan_DAO();
+                dao.DangNhap_DAO dnDAO = new dao.DangNhap_DAO();
+
+                String maNV = null;
+                try {
+                    maNV = dnDAO.getMaNhanVien(username);
+                } catch (Exception ex) { ex.printStackTrace(); }
+
+                if (maNV == null) {
+                    Alert alert = new Alert(Alert.AlertType.ERROR, "Tên đăng nhập không tồn tại!");
+                    alert.showAndWait();
+                    return;
+                }
+                Dialog<Void> loading = new Dialog<>();
+                loading.initStyle(StageStyle.UNDECORATED);
+
+                // SỬA LỖI NULL POINTER: Lấy window từ nút forgotPassword thay vì dialog đã đóng
+                loading.initOwner(forgotPassword.getScene().getWindow());
+
+                ProgressIndicator pi = new ProgressIndicator();
+                Label lblLoad = new Label("Đang gửi đến email...");
+                lblLoad.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
+
+                HBox boxLoad = new HBox(15, pi, lblLoad);
+                boxLoad.setPadding(new Insets(25));
+                boxLoad.setAlignment(Pos.CENTER);
+                // Style đẹp y chang bạn gửi
+                boxLoad.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 1;");
+
+                loading.getDialogPane().setContent(boxLoad);
+
+                // Ẩn nút mặc định của Dialog loading
+                loading.getDialogPane().getButtonTypes().add(ButtonType.CANCEL);
+                loading.getDialogPane().lookupButton(ButtonType.CANCEL).setVisible(false);
+
+                String finalMaNV = maNV;
+
+                new Thread(() -> {
+                    boolean ok = false;
+                    try {
+                        // Giả vờ ngủ 0.5s cho giống hiệu ứng xoay (tùy chọn)
+                        Thread.sleep(500);
+
+                        // --- LOGIC GỬI EMAIL ---
+                        // 1. Sinh mật khẩu
+                        String passMoi = lib.EmailService.generateRandomPass();
+                        String passMoiHash = lib.SecurityUtils.encrypt(passMoi);
+
+                        // 2. Cập nhật SQL
+                        boolean updateOK = tkDAO.updateMatKhau(finalMaNV, passMoiHash);
+
+                        // 3. Gửi Mail
+                        if (updateOK) {
+                            ok = lib.EmailService.sendEmail(emailTo, passMoi);
+                        }
+
+                    } catch (Exception ex) {
+                        ex.printStackTrace();
+                        ok = false;
+                    } finally {
+                        boolean finalOk = ok;
+                        Platform.runLater(() -> {
+                            // Tắt xoay xoay
+                            loading.setResult(null);
+                            loading.close();
+
+                            if (finalOk) {
+                                Alert success = new Alert(Alert.AlertType.INFORMATION,
+                                        "Mật khẩu mới đã được gửi tới: " + emailTo);
+                                // Sửa lỗi Owner cho Alert thành công luôn
+                                success.initOwner(forgotPassword.getScene().getWindow());
+                                success.showAndWait();
+                            } else {
+                                Alert error = new Alert(Alert.AlertType.ERROR, "Lỗi hệ thống. Không thể gửi email.");
+                                error.initOwner(forgotPassword.getScene().getWindow());
+                                error.show();
+                            }
+                        });
+                    }
+                }).start();
+
+                loading.show();
+            });
+        });
         Button btnLogin = new Button("Đăng nhập");
         btnLogin.setPrefWidth(300);
         btnLogin.setPrefHeight(45);
@@ -314,7 +488,7 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
         );
         btnLogin.setCursor(Cursor.HAND);
         btnLogin.setOnMouseEntered(e -> btnLogin.setStyle("-fx-background-color: #123E63; -fx-text-fill: white; " +
-                "-fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; " ));
+                "-fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px; "));
         btnLogin.setOnMouseExited(e -> btnLogin.setStyle("-fx-background-color: #0A2940; -fx-text-fill: white; -fx-background-radius: 20; -fx-font-weight: bold; -fx-font-size: 16px;"));
         btnLogin.setOnAction(e -> {
             String username = usernameField.getText().trim();
@@ -331,8 +505,8 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
 
             try {
                 DangNhap_DAO dangNhapDAO = new DangNhap_DAO();
-
-                if (dangNhapDAO.authenticate(username, password)) {
+                String hassPassword = SecurityUtils.encrypt(password);
+                if (dangNhapDAO.authenticate(username, hassPassword)) {
                     // 1. Kiểm tra tài khoản bị khóa
                     if (!dangNhapDAO.isTaiKhoanHoatDong(username)) {
                         Alert alert = new Alert(Alert.AlertType.ERROR);
@@ -345,7 +519,7 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
 
                     // 2. Lấy thông tin cơ bản
                     String maNvVuaDangNhap = dangNhapDAO.getMaNhanVien(username);
-                    String tenNvVuaDangNhap = username; // Nên lấy tên thật nếu có thể
+                    String tenNvVuaDangNhap = username;
                     boolean laAdmin = dangNhapDAO.isAdmin(username);
 
                     NhanVien nhanVien = NhanVien_DAO.getNhanVienByMa(maNvVuaDangNhap);
@@ -445,8 +619,8 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
                     "-fx-background-image: url('" + getClass().getResource(SPICES_IMAGE_PATH).toExternalForm() + "');" +
                             "-fx-background-repeat: no-repeat;" +
                             "-fx-background-position: right center;" +
-                            "-fx-background-size: 200% 100%;"+
-                            "-fx-background-radius: 0 " + ARC_RADIUS + " " + ARC_RADIUS + " 0;"+
+                            "-fx-background-size: 200% 100%;" +
+                            "-fx-background-radius: 0 " + ARC_RADIUS + " " + ARC_RADIUS + " 0;" +
                             "-fx-background-insets: 0;"
             );
         } catch (Exception e) {
@@ -486,7 +660,15 @@ private void openMainScreen(Stage currentStage, NhanVien nhanVien) {
         return currentIsAdmin;
     }
 
+    private void showAlert(Alert.AlertType type, String title, String message) {
+        Alert alert = new Alert(type);
+        alert.setTitle(title);
+        alert.setHeaderText(null);
+        alert.setContentText(message);
+        alert.showAndWait();
+    }
     public static void main(String[] args) {
         launch();
     }
+
 }

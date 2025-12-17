@@ -324,4 +324,194 @@ public class TaiKhoan_DAO {
         }
         return null;
     }
+
+        public List<NhanVien> getNhanVienChuaCoTaiKhoan() {
+            List<NhanVien> list = new ArrayList<>();
+
+            PreparedStatement stmt = null;
+
+            // Logic: Lấy tất cả nhân viên mà Mã của họ KHÔNG NẰM TRONG bảng TaiKhoan
+            // Lưu ý: Đảm bảo nhân viên đó chưa nghỉ việc (nếu bạn có cột trangThai hoặc ngayThoiViec)
+            String sql = "SELECT * FROM NhanVien " +
+                    "WHERE maNhanVien NOT IN (SELECT maNhanVien FROM TaiKhoan)";
+
+            try {
+                Connection con = ConnectDB.getConnection();
+                stmt = con.prepareStatement(sql);
+                ResultSet rs = stmt.executeQuery();
+                while (rs.next()) {
+                    // Tạo đối tượng nhân viên từ kết quả truy vấn
+                    // Bạn cần kiểm tra lại Constructor của class NhanVien xem có khớp thứ tự không nhé
+                    // Giả sử constructor là: new NhanVien(ma, ten, sdt, ...)
+
+                    NhanVien nv = new NhanVien();
+                    nv.setMaNhanVien(rs.getString("maNhanVien"));
+                    nv.setTenNhanVien(rs.getString("tenNhanVien"));
+                    nv.setSoDienThoai(rs.getString("soDienThoai"));
+                    // Các trường khác nếu cần thiết (chức vụ, ngày sinh...)
+                    // nv.setChucVu(rs.getString("chucVu"));
+
+                    list.add(nv);
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            // Không đóng connection ở đây nếu bạn dùng Singleton ConnectDB dùng chung
+            return list;
+        }
+
+        /**
+         * 2. Kiểm tra tên đăng nhập đã tồn tại chưa
+         * Trả về true nếu đã có, false nếu chưa có
+         */
+        public boolean checkTaiKhoanTonTai(String username) {
+
+            PreparedStatement stmt = null;
+            boolean tonTai = false;
+
+            String sql = "SELECT COUNT(*) FROM TaiKhoan WHERE taiKhoan = ?";
+
+            try {
+                Connection con = ConnectDB.getConnection();
+                stmt = con.prepareStatement(sql);
+                stmt.setString(1, username);
+                ResultSet rs = stmt.executeQuery();
+
+                if (rs.next()) {
+                    // Nếu số lượng tìm thấy > 0 tức là đã tồn tại
+                    tonTai = rs.getInt(1) > 0;
+                }
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+            return tonTai;
+        }
+
+        /**
+         * 3. Thêm mới một tài khoản vào CSDL
+         */
+        public boolean createTaiKhoan(TaiKhoan tk) {
+
+            PreparedStatement stmt = null;
+            int n = 0;
+
+            // Câu lệnh Insert
+            // Thứ tự dấu ? phải khớp với thứ tự cột trong Database của bạn
+            // Giả sử thứ tự: maTaiKhoan, taiKhoan, matKhau, taiKhoanQuanLi, trangThaiHoatDong, maNhanVien
+            String sql = "INSERT INTO TaiKhoan (maTaiKhoan, taiKhoan, matKhau, taiKhoanQuanLi, trangThaiHoatDong, maNhanVien) " +
+                    "VALUES (?, ?, ?, ?, ?, ?)";
+
+            try {
+                Connection con = ConnectDB.getConnection();
+                stmt = con.prepareStatement(sql);
+
+                stmt.setString(1, tk.getMaTaiKhoan());
+                stmt.setString(2, tk.getTaiKhoan());
+                stmt.setString(3, tk.getMatKhau()); // Lưu ý: Mật khẩu này phải được mã hóa trước khi truyền vào đây
+                stmt.setBoolean(4, tk.isTaiKhoanQuanLi()); // SQL Server bit (1/0) tự map với boolean
+                stmt.setBoolean(5, tk.isTrangThaiHoatDong());
+                stmt.setString(6, tk.getNhanVien().getMaNhanVien());
+
+                n = stmt.executeUpdate();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+
+            return n > 0;
+        }
+
+
+    public String tuDongLayMaMoi() {
+        String maMoi = "";
+
+        String sql = "SELECT maTaiKhoan FROM TaiKhoan";
+        try {
+            Connection con = ConnectDB.getConnection();
+            PreparedStatement stmt = con.prepareStatement(sql);
+            ResultSet rs = stmt.executeQuery();
+
+            int max = 0;
+            while(rs.next()){
+                String ma = rs.getString(1);
+                // Kiểm tra xem mã có đúng định dạng TK + số không
+                if(ma.matches("TK\\d+")){
+                    try {
+                        // Cắt bỏ chữ "TK" để lấy số. Ví dụ: "TK010" -> "010" -> 10
+                        String soStr = ma.substring(2);
+
+                        // QUAN TRỌNG: Nếu mã quá dài (do cái timestamp cũ gây ra), bỏ qua nó
+                        // Số thứ tự thường chỉ tối đa 4-5 chữ số thôi
+                        if (soStr.length() > 5) continue;
+
+                        int so = Integer.parseInt(soStr);
+                        if(so > max) max = so;
+                    } catch(NumberFormatException e){
+                        // Bỏ qua nếu không phải số
+                    }
+                }
+            }
+            // Cộng thêm 1 và format thành 3 chữ số (ví dụ: 1 -> 001, 11 -> 011)
+            maMoi = "TK" + String.format("%03d", max + 1);
+
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return maMoi; // Kết quả sẽ là TK011
+    }
+    /**
+     * 4. Lấy mật khẩu hiện tại (đã mã hóa) của nhân viên
+     * Dùng để so sánh khi người dùng đổi mật khẩu
+     */
+    public String getMatKhauByMaNV(String maNV) {
+
+        PreparedStatement stmt = null;
+        String matKhau = null;
+
+        // Truy vấn lấy mật khẩu dựa trên Mã Nhân Viên
+        String sql = "SELECT matKhau FROM TaiKhoan WHERE maNhanVien = ?";
+
+        try {
+            Connection con = ConnectDB.getConnection();
+            stmt = con.prepareStatement(sql);
+            stmt.setString(1, maNV);
+            ResultSet rs = stmt.executeQuery();
+
+            if (rs.next()) {
+                matKhau = rs.getString("matKhau");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return matKhau;
+    }
+
+    /**
+     * 5. Cập nhật mật khẩu mới cho nhân viên
+     * @param maNV Mã nhân viên cần đổi pass
+     * @param newPassHash Mật khẩu MỚI đã được mã hóa SHA-256
+     */
+    public boolean updateMatKhau(String maNV, String newPassHash) {
+
+        PreparedStatement stmt = null;
+        int n = 0;
+
+        String sql = "UPDATE TaiKhoan SET matKhau = ? WHERE maNhanVien = ?";
+
+        try {
+            Connection con = ConnectDB.getConnection();
+            stmt = con.prepareStatement(sql);
+
+            // Tham số 1: Mật khẩu mới (đã hash)
+            stmt.setString(1, newPassHash);
+
+            // Tham số 2: Điều kiện là mã nhân viên
+            stmt.setString(2, maNV);
+
+            n = stmt.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return n > 0; // Trả về true nếu update thành công
+    }
 }

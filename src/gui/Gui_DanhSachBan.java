@@ -1308,30 +1308,6 @@ public class Gui_DanhSachBan extends BorderPane {
     }
 
 
-//    private void locTheoTen(TilePane tileMenu,
-//                            ObservableList<Object[]> gioHang,
-//                            DecimalFormat df,
-//                            TableView<Object[]> tbl,
-//                            String keyword) {
-//
-//        String kw = keyword == null ? "" : keyword.toLowerCase();
-//
-//        for (Node node : tileMenu.getChildren()) {
-//            // --- SỬA LỖI: Kiểm tra null trước ---
-//            Object userData = node.getUserData();
-//            if (userData == null) {
-//                continue; // Nếu không có dữ liệu thì bỏ qua, không xử lý node này
-//            }
-//            // ------------------------------------
-//
-//            String tenMon = userData.toString().toLowerCase();
-//            boolean match = tenMon.contains(kw);
-//
-//            node.setVisible(match);
-//            node.setManaged(match);
-//        }
-//    }
-
 
     public void tinhTongTien(ObservableList<Object[]> gioHang, Label lblTongTien) {
 
@@ -1365,72 +1341,7 @@ public class Gui_DanhSachBan extends BorderPane {
             tileMenu.getChildren().add(taoTheMonAn(mon, gioHang, df, tbl));
         }
     }
-//    private void taiDanhSachMonAn(TilePane pane, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
-//        pane.getChildren().clear();
-//        List<String> ds = monAn_DAO.layDanhSachMonAnGiaKMString();
-//        for (String mon : ds) {
-//            pane.getChildren().add(taoTheMonAn(mon, gioHang, df, table));
-//        }
-//    }
 
-//    private VBox taoTheMonAn(String monStr, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
-//        String[] arr = monStr.split("-");
-//        String ma = arr.length > 0 ? arr[0] : "";
-//        String ten = arr.length > 1 ? arr[1] : "Món không xác định";
-//        double gia = arr.length > 6 ? Double.parseDouble(arr[6]) : 0.0;
-//        String anh = arr.length > 8 ? arr[8] : "";
-//        // Lấy SL hiện tại từ giỏ hàng để hiển thị trên lblSL
-//        int slHienTai = getSLThemHienTai(ten, gioHang);
-//        VBox card = new VBox(8);
-//        card.setAlignment(Pos.TOP_CENTER);
-//        card.setPadding(new Insets(10));
-//        card.setPrefWidth(160);
-//        card.setStyle("""
-//                -fx-background-color:white;
-//                -fx-background-radius:12;
-//                -fx-effect:dropshadow(gaussian, rgba(0,0,0,0.12),4,0,0,1);
-//                """);
-//        // Ảnh
-//        ImageView img = new ImageView();
-//        img.setFitWidth(130);
-//        img.setFitHeight(90);
-//        img.setPreserveRatio(false);
-//        Rectangle clip = new Rectangle(130, 90);
-//        clip.setArcWidth(12);
-//        clip.setArcHeight(12);
-//        img.setClip(clip);
-//        loadImgTo(img, anh);
-//        Label lblTen = new Label(ten);
-//        lblTen.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-//        lblTen.setWrapText(true);
-//        lblTen.setAlignment(Pos.CENTER);
-//        Label lblGia = new Label(df.format(gia));
-//        lblGia.setTextFill(Color.web("#e53e3e"));
-//        lblGia.setFont(Font.font("Segoe UI", FontWeight.BOLD, 13));
-//        // Controls +/-
-//        Label lblSL = new Label(String.valueOf(slHienTai));
-//        lblSL.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
-//        lblSL.setPrefWidth(26);
-//        lblSL.setAlignment(Pos.CENTER);
-//        Button btnTru = createRoundButton("-");
-//        Button btnCong = createRoundButton("+");
-//        // Sự kiện +/-btn
-//        btnCong.setOnAction(e -> {
-//            tangSL(ten, gia, lblSL, gioHang, df, table);
-//            table.refresh();
-//        });
-//        btnTru.setOnAction(e -> {
-//            giamSL(ten, gia, lblSL, gioHang, df, table);
-//            table.refresh();
-//        });
-//        HBox controls = new HBox(10, btnTru, lblSL, btnCong);
-//        controls.setAlignment(Pos.CENTER);
-//        Region spacer = new Region();
-//        VBox.setVgrow(spacer, Priority.ALWAYS);
-//        card.getChildren().addAll(img, lblTen, lblGia, spacer, controls);
-//        return card;
-//    }
-// Hàm này chỉ lo việc tạo giao diện cho 1 món ăn từ Object MonAn
 private VBox taoTheMonAn(MonAn mon, ObservableList<Object[]> gioHang, DecimalFormat df, TableView<Object[]> table) {
     // Lấy thông tin từ Object MonAn
     String ten = mon.getTenMonAn();
@@ -1695,22 +1606,6 @@ private VBox taoTheMonAn(MonAn mon, ObservableList<Object[]> gioHang, DecimalFor
         return table;
     }
 
-//    private void locTheoLoai(TilePane tileMenu, ObservableList<Object[]> gioHang, DecimalFormat df,
-//                             TableView<Object[]> table, String loaiChon) {
-//
-//        tileMenu.getChildren().clear();
-//        List<String> ds = monAn_DAO.layDanhSachMonAnGiaKMString();
-//
-//        for (String mon : ds) {
-//
-//            String[] arr = mon.split("-");
-//            String loai = arr.length > 2 ? arr[2] : ""; // arr[2] phải là cột loại món (để ý)
-//
-//            // Nếu chọn "Tất cả" → load tất
-//            if (loaiChon.equals("Tất cả") || loai.equalsIgnoreCase(loaiChon)) {
-//                tileMenu.getChildren().add(taoTheMonAn(mon, gioHang, df, table));
-//            }
-//        }
-//    }
+
 
 }
