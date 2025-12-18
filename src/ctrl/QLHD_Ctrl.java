@@ -106,7 +106,6 @@ public class QLHD_Ctrl {
 
     public String timHoaDonChuoi(String maHoaDon,ObservableList<String> dsHoaDon) {
         if(dsHoaDon == null || maHoaDon == null || maHoaDon.isBlank() ) {
-            System.out.println("Lỗi khi truyền mã hóa đơn và danh sách hóa đơn tại hàm timHoaDonChuoi");
             return null;
         }
 
@@ -120,7 +119,6 @@ public class QLHD_Ctrl {
 
     public ObservableList<String> locHoaDonTheoNgay(ObservableList<String> dsHoaDon, LocalDate ngayChon){
         if(dsHoaDon == null || ngayChon == null) {
-            System.out.println("Lỗi trong tham số truyền vào trong hàm locHoaDonTheoNgay");
             return null;
         }
 
@@ -128,7 +126,6 @@ public class QLHD_Ctrl {
         DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yyyy");
 
         for(String chuoi : dsHoaDon) {
-            System.out.println(chuoi.split(",")[6]  + "và " + dtf.format(ngayChon));
             if(chuoi.split(",")[6].equals(dtf.format(ngayChon)))
                 dsLoc.add(chuoi);
         }
@@ -138,7 +135,6 @@ public class QLHD_Ctrl {
 
     public ObservableList<String> locHoaDonTheoTrangThai(ObservableList<String> dsHoaDon, String trangThai){
         if(dsHoaDon == null || trangThai == null) {
-            System.out.println("Lỗi trong tham số truyền vào trong hàm locHoaDonTheoTrangThai");
             return null;
         }
 

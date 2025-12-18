@@ -40,8 +40,6 @@ public class SupabaseImageUploader {
         int responseCode = conn.getResponseCode();
 
         if (responseCode == 200 || responseCode == 201) {
-            // ✅ Trả về đường dẫn tương đối để lưu vào database
-            System.out.println("✅ Upload thành công: " + folderPath);
             return folderPath; // vd: "ankem/1732467890123_banhmibotoi.jpg"
 
         } else {

@@ -173,7 +173,7 @@ public class Gui_DangNhap extends Application {
             try {
                 scene.getStylesheets().add(getClass().getResource("/application/application.css").toExternalForm());
             } catch (Exception e) {
-                System.out.println("Không tìm thấy file CSS");
+                throw new Exception(e.getMessage());
             }
 
             mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);

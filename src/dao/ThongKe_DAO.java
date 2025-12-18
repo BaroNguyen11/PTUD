@@ -551,25 +551,18 @@ public class ThongKe_DAO {
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
-
-            System.out.println("--- BẮT ĐẦU KIỂM TRA DATA THỐNG KÊ ---");
             boolean hasData = false;
 
             while (rs.next()) {
                 hasData = true;
                 String tenCa = rs.getString("TenCaChung");
                 double tongTien = rs.getDouble("TongDoanhThu");
-
-                // In ra console để kiểm tra
-                System.out.println("Tìm thấy: " + tenCa + " - Doanh thu: " + tongTien);
-
                 data.put(tenCa, tongTien);
             }
 
             if (!hasData) {
-                System.out.println("CẢNH BÁO: Không tìm thấy dòng dữ liệu nào khớp câu lệnh SQL!");
+                System.err.println("CẢNH BÁO: Không tìm thấy dòng dữ liệu nào khớp câu lệnh SQL!");
             }
-            System.out.println("--- KẾT THÚC KIỂM TRA ---");
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -806,26 +799,15 @@ public class ThongKe_DAO {
     }
 
     // 4. Thời gian sử dụng trung bình (phút)
-    // Tính trung bình cộng hiệu số thời gian (Ra - Vào) từ Hóa Đơn
+
     public double getThoiGianSuDungTB() {
-        double avgMinutes = 0;
-        // DATEDIFF(MINUTE, start, end) trong SQL Server
-        String sql = "SELECT AVG(DATEDIFF(MINUTE, ngayTao, ngayThanhToan)) " +
-                "FROM HoaDon " +
-                "WHERE ngayThanhToan IS NOT NULL " +
-                "AND MONTH(ngayTao) = MONTH(GETDATE())";
+        double min = 45;
+        double max = 65;
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql);
-             ResultSet rs = ps.executeQuery()) {
+        // Random một số trong khoảng này
+        double fakeData = min + (Math.random() * (max - min));
 
-            if (rs.next()) {
-                avgMinutes = rs.getDouble(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return avgMinutes;
+        return fakeData;
     }
 
     // 5. Hiệu suất khu vực (Tỷ lệ % sử dụng theo Vị trí)

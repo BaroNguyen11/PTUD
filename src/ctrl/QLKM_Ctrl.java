@@ -80,7 +80,6 @@ public class QLKM_Ctrl {
 
         if(loaiKM == 1) {
             if(!dao.xoaCTKMMonAn(maKM)) {
-                System.out.println("Lỗi khi xóa chi tiết món ăn của khuyến mãi");
                 return false;
             }
         }
@@ -96,19 +95,15 @@ public class QLKM_Ctrl {
 
         if(loaiKM == 1) {
             if(!dao.xoaCTKMMonAn(km.getMaKhuyenMai())) {
-                System.out.println("Lỗi khi xóa chi tiết món ăn của khuyến mãi");
                 return false;
             }
-
             if(!themDSCTKMMonAn(dsMon, km)) {
-                System.out.println("Lỗi khi update danh sách món ăn mới trong khuyến mãi");
                 return false;
             }
 
         }
 
         if(!dao.updateKhuyenMai(km.getMaKhuyenMai(), km.getTenKhuyenMai(), km.getNgayBatDau(), km.getNgayKetThuc(), km.getDieuKienApDung(), km.getGiaTriToiDa(), km.getGiamGiaPhanTram(), km.getGiaTriGiam())) {
-            System.out.println("Lỗi khi update khuyến mãi");
             return false;
         }
 

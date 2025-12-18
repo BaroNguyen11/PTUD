@@ -31,37 +31,16 @@ public class ImageCacheManager {
         // Chưa có → Download
         try {
             String fullUrl = supabaseUrl + relativePath;
-            System.out.println("⬇️ Đang download: " + fullUrl);
 
             URL url = new URL(fullUrl);
             try (InputStream in = url.openStream()) {
                 Files.copy(in, Paths.get(localPath), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("✅ Đã cache: " + fileName);
                 return localFile.toURI().toString();
             }
         } catch (Exception e) {
             System.err.println("❌ Không download được ảnh: " + relativePath);
-            return null; // Trả về null để dùng ảnh mặc định
+            return null;
         }
     }
 
-    /**
-     * Xóa toàn bộ cache
-     */
-    public static void clearCache() {
-        try {
-            Files.walk(Paths.get(CACHE_DIR))
-                    .filter(Files::isRegularFile)
-                    .forEach(path -> {
-                        try {
-                            Files.delete(path);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                    });
-            System.out.println("🗑️ Đã xóa cache");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
 }
