@@ -42,7 +42,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
-import lib.ImageCacheManager;
+import utils.ImageCacheManager;
 
 public class Gui_DatBan extends BorderPane {
     // DAO
@@ -828,6 +828,7 @@ public class Gui_DatBan extends BorderPane {
                 return;
             }
             HoaDon hd = new HoaDon();
+            hd.setNgayTao(LocalDateTime.now());
             hd.setKhachHang(kh);
             hd.setNhanVien(nv);
             String maHD = hoaDonDAO.themHoaDon(hd);

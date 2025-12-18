@@ -1,4 +1,4 @@
-package lib;
+package utils;
 
 import java.io.*;
 import java.net.URL;

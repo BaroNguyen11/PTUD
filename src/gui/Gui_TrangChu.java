@@ -1,6 +1,5 @@
 package gui;
 
-import dao.DangNhap_DAO;
 import entity.NhanVien;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -8,16 +7,14 @@ import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.image.Image;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
-import javafx.scene.paint.ImagePattern;
-import javafx.scene.shape.Circle;
 import javafx.scene.shape.SVGPath;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
+import utils.SecurityUtils;
 // Đã loại bỏ import Ikonli vì chưa thêm thư viện
 
 // Lớp TrangChu kế thừa từ BorderPane, bố cục chuẩn cho Sidebar và Header
@@ -300,7 +297,7 @@ public class Gui_TrangChu extends BorderPane {
             String currentHashInDB = tkDAO.getMatKhauByMaNV(nhanVienDangDung.getMaNhanVien());
 
             // Hash pass cũ nhập vào
-            String oldPassHashInput = lib.SecurityUtils.encrypt(oldPass);
+            String oldPassHashInput = SecurityUtils.encrypt(oldPass);
 
             if (!currentHashInDB.equals(oldPassHashInput)) {
                 showAlert(Alert.AlertType.ERROR, "Sai mật khẩu", "Mật khẩu hiện tại không đúng!");
@@ -308,7 +305,7 @@ public class Gui_TrangChu extends BorderPane {
             }
 
             // Đổi pass
-            String newPassHash = lib.SecurityUtils.encrypt(newPass);
+            String newPassHash = SecurityUtils.encrypt(newPass);
             if (tkDAO.updateMatKhau(nhanVienDangDung.getMaNhanVien(), newPassHash)) {
                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đổi mật khẩu thành công! Vui lòng đăng nhập lại.");
                 dialog.close();

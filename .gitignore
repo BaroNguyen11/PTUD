@@ -1,9 +1,18 @@
-.settings/
+# --- Bỏ qua file biên dịch và hệ thống ---
+out/
 bin/
+cache/
+.DS_Store
+Thumbs.db
+
+# --- Bỏ qua cấu hình IDE riêng (để tránh xung đột Eclipse/IntelliJ) ---
+.idea/
+.settings/
+*.iml
 .classpath
 .project
 build.fxbuild
-PTUD.iml
-.idea
-out/
-*.class
+
+!lib/*.jar
+!lib/*.css
+!lib/*.html

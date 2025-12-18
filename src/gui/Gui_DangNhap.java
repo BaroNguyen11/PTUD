@@ -20,7 +20,8 @@ import javafx.scene.text.*;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Pair;
-import lib.SecurityUtils;
+import utils.SecurityUtils;
+import utils.EmailService;
 
 public class Gui_DangNhap extends Application {
 
@@ -317,8 +318,8 @@ public class Gui_DangNhap extends Application {
 //                }
 //
 //                // 2. Sinh mật khẩu mới và mã hóa
-//                String passMoi = lib.EmailService.generateRandomPass(); // Ví dụ 123456
-//                String passMoiHash = lib.SecurityUtils.encrypt(passMoi);
+//                String passMoi = utils.EmailService.generateRandomPass(); // Ví dụ 123456
+//                String passMoiHash = utils.SecurityUtils.encrypt(passMoi);
 //
 //                // 3. Hiển thị Loading
 //                Alert loading = new Alert(Alert.AlertType.INFORMATION);
@@ -335,7 +336,7 @@ public class Gui_DangNhap extends Application {
 //
 //                    if (updateOK) {
 //                        // Gửi mail vào địa chỉ người dùng vừa nhập (Bất chấp đúng sai)
-//                        boolean sendOK = lib.EmailService.sendEmail(emailTo, passMoi);
+//                        boolean sendOK = utils.EmailService.sendEmail(emailTo, passMoi);
 //
 //                        Platform.runLater(() -> {
 //                            loading.close();
@@ -438,15 +439,15 @@ public class Gui_DangNhap extends Application {
 
                         // --- LOGIC GỬI EMAIL ---
                         // 1. Sinh mật khẩu
-                        String passMoi = lib.EmailService.generateRandomPass();
-                        String passMoiHash = lib.SecurityUtils.encrypt(passMoi);
+                        String passMoi = EmailService.generateRandomPass();
+                        String passMoiHash = utils.SecurityUtils.encrypt(passMoi);
 
                         // 2. Cập nhật SQL
                         boolean updateOK = tkDAO.updateMatKhau(finalMaNV, passMoiHash);
 
                         // 3. Gửi Mail
                         if (updateOK) {
-                            ok = lib.EmailService.sendEmail(emailTo, passMoi);
+                            ok = EmailService.sendEmail(emailTo, passMoi);
                         }
 
                     } catch (Exception ex) {

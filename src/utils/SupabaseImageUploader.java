@@ -1,4 +1,4 @@
-package lib;
+package utils;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -57,35 +57,4 @@ public class SupabaseImageUploader {
         }
     }
 
-    /**
-     * Lấy URL công khai từ đường dẫn tương đối
-     * @param relativePath Đường dẫn tương đối (vd: "ankem/banhmibotoi.jpg")
-     * @return URL đầy đủ
-     */
-    public static String getPublicUrl(String relativePath) {
-        return SUPABASE_URL + "/storage/v1/object/public/" + BUCKET_NAME + "/" + relativePath;
-    }
-
-    /**
-     * Xóa ảnh trên Supabase
-     * @param relativePath Đường dẫn tương đối (vd: "ankem/banhmibotoi.jpg")
-     * @return true nếu xóa thành công
-     */
-    public boolean deleteImage(String relativePath) throws IOException {
-        String deleteUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET_NAME + "/" + relativePath;
-
-        HttpURLConnection conn = (HttpURLConnection) new URL(deleteUrl).openConnection();
-        conn.setRequestMethod("DELETE");
-        conn.setRequestProperty("Authorization", "Bearer " + SUPABASE_API_KEY);
-
-        int responseCode = conn.getResponseCode();
-
-        if (responseCode == 200) {
-            System.out.println("✅ Đã xóa ảnh: " + relativePath);
-            return true;
-        } else {
-            System.err.println("❌ Xóa ảnh thất bại, mã lỗi: " + responseCode);
-            return false;
-        }
-    }
 }
