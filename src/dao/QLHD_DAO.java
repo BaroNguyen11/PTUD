@@ -424,6 +424,7 @@ public class QLHD_DAO {
 				    FROM (
 				        SELECT DISTINCT maHoaDon, maBan
 				        FROM PhieuDatBan
+				        WHERE trangThai != N'Đã hủy'
 				    ) AS pdb_distinct
 				    GROUP BY maHoaDon
 				)
@@ -532,6 +533,7 @@ public class QLHD_DAO {
 	            FROM (
 	                SELECT DISTINCT maHoaDon, maBan
 	                FROM PhieuDatBan
+	                WHERE trangThai != N'Đã hủy'
 	            ) AS pdb_distinct
 	            GROUP BY maHoaDon
 	        ) AS pdb_gop ON hd.maHoaDon = pdb_gop.maHoaDon

@@ -601,6 +601,33 @@ public class Gui_QLMon extends BorderPane {
         txtMa.setEditable(false);
         TextField txtTen = new TextField();
         TextField txtGia = new TextField();
+        DecimalFormat decimalFormat = new  DecimalFormat("#,###");
+        txtGia.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue.isEmpty()) return;
+
+            // 1. Chỉ giữ lại số (0-9), xóa chữ và ký tự đặc biệt
+            String cleanString = newValue.replaceAll("[^\\d]", "");
+
+            // 2. Nếu xóa xong mà rỗng thì set lại rỗng và thoát
+            if (cleanString.isEmpty()) {
+                txtGia.setText("");
+                return;
+            }
+
+            try {
+                // 3. Format lại có dấu phẩy
+                double value = Double.parseDouble(cleanString);
+                String formattedString = decimalFormat.format(value);
+
+                // 4. Set lại text nếu có thay đổi
+                if (!newValue.equals(formattedString)) {
+                    txtGia.setText(formattedString);
+                    txtGia.positionCaret(formattedString.length()); // Đưa con trỏ về cuối
+                }
+            } catch (NumberFormatException ex) {
+                // Bỏ qua lỗi
+            }
+        });
 
         ComboBox<String> cboLoaiAdd = new ComboBox<>();
         cboLoaiAdd.getItems().addAll("Khai vị", "Món chính", "Ăn kèm", "Nước uống", "Nước sốt", "Tráng miệng");
@@ -646,8 +673,15 @@ public class Gui_QLMon extends BorderPane {
                 return;
             }
             double gia = 0;
+
             try {
-                gia = Double.parseDouble(txtGia.getText().trim());
+
+                String rawGia = txtGia.getText().trim().replace(",", "");
+                if (rawGia.isEmpty()) {
+                    showAlert(AlertType.WARNING, "Lỗi", "Vui lòng nhập giá!");
+                    return;
+                }
+                gia = Double.parseDouble(rawGia);
             } catch (Exception ex) {
                 showAlert(AlertType.WARNING, "Lỗi", "Giá không hợp lệ!");
                 return;

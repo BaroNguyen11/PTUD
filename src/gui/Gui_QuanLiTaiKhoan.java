@@ -22,6 +22,7 @@ import javafx.scene.text.FontWeight;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import utils.SecurityUtils;
 
 import java.util.List;
 
@@ -592,7 +593,7 @@ public class Gui_QuanLiTaiKhoan extends BorderPane {
         lblTitle.setFont(Font.font("Segoe UI", FontWeight.BOLD, 18));
         lblTitle.setStyle("-fx-text-fill: #3498db;");
 
-        Label lblMsg = new Label("Bạn có muốn đặt lại mật khẩu mặc định (123456)\ncho tài khoản " + tk.getTaiKhoan() + "?");
+        Label lblMsg = new Label("Bạn có muốn đặt lại mật khẩu mặc định \ncho tài khoản " + tk.getTaiKhoan() + "?");
         lblMsg.setWrapText(true);
         lblMsg.setAlignment(Pos.CENTER);
         lblMsg.setTextAlignment(javafx.scene.text.TextAlignment.CENTER);
@@ -605,8 +606,10 @@ public class Gui_QuanLiTaiKhoan extends BorderPane {
         styleButton(btnNo, "#ecf0f1", "#2c3e50");
 
         btnYes.setOnAction(e -> {
-            if (taiKhoanDAO.resetMatKhau(tk.getMaTaiKhoan(), "123456")) {
-                tk.setMatKhau("123456");
+            String matKhauMacDinh = "123456";
+            String matKhauMaHoa = SecurityUtils.encrypt(matKhauMacDinh);
+            if (taiKhoanDAO.resetMatKhau(tk.getMaTaiKhoan(), matKhauMaHoa)) {
+                tk.setMatKhau(matKhauMaHoa);
                 tableView.refresh();
                 showAlert(Alert.AlertType.INFORMATION, "Thành công", "Đã đặt lại mật khẩu thành công!");
             } else {

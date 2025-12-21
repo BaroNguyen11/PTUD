@@ -245,8 +245,17 @@ public class Gui_QuanLiHoaDon extends BorderPane {
 
         TableColumn<String, String> colBan = new TableColumn<>("Bàn");
         colBan.setCellValueFactory(d -> {
-            String[] arr = d.getValue().split(",")[9].split("_");
-            return new SimpleStringProperty(String.join(", ", arr));
+//            String[] arr = d.getValue().split(",")[9].split("_");
+//            return new SimpleStringProperty(String.join(", ", arr));
+            String[] rowData = d.getValue().split(",", -1); // Use -1 to preserve empty slots
+
+            // Check if index 9 exists
+            if (rowData.length > 9) {
+                String rawBan = rowData[9]; // This is the 'danhSachBan'
+                return new SimpleStringProperty(rawBan.replace("_", ", "));
+            } else {
+                return new SimpleStringProperty("");
+            }
         });
 
         TableColumn<String, String> colTong = new TableColumn<>("Tổng Tiền");

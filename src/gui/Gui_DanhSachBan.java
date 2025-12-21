@@ -3,6 +3,7 @@ package gui;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,15 +14,7 @@ import dao.ChiTietHoaDon_DAO;
 import dao.KhachHang_DAO;
 import dao.MonAn_DAO;
 import dao.PhieuDatBan_DAO;
-import entity.BanAn;
-import entity.ChiTietHoaDon;
-import entity.KhachHang;
-import entity.LoaiBan;
-import entity.MonAn;
-import entity.NhanVien;
-import entity.PhieuDatBan;
-import entity.TrangThai;
-import entity.ViTri;
+import entity.*;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -480,20 +473,45 @@ public class Gui_DanhSachBan extends BorderPane {
         HBox iconBox = new HBox();
         iconBox.setAlignment(Pos.CENTER);
         if (ban.getTrangThai() == TrangThai.DANG_SU_DUNG || ban.getTrangThai() == TrangThai.DA_DAT) {
-            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
-            boolean isMerged = (maHDGop != null && banAn_DAO.getDanhSachBanCungHoaDon(maHDGop).size() > 1);
-            if (isMerged) {
-                try {
-                    ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
-                    iconLink.setFitWidth(18);
-                    iconLink.setFitHeight(18);
-                    Label lblMerged = new Label(" Bàn ghép");
-                    lblMerged.setTextFill(Color.web("#3182ce"));
-                    lblMerged.setFont(Font.font("Segoe UI", 11));
-                    iconBox.getChildren().addAll(iconLink, lblMerged);
-                } catch (Exception e) {
+            PhieuDatBan pdb = phieuDatBan_DAO.getPhieuDatBanMoiNhat(ban.getMaBan());
+            if (pdb != null && pdb.getHoaDon() != null) {
+                String maHD = pdb.getHoaDon().getMaHoaDon();
+
+                // 2. Đếm xem hóa đơn này thực tế đang "gánh" bao nhiêu bàn (chỉ tính Đang dùng/Đã đặt)
+                // (Hàm này bạn cũng vừa thêm vào DAO)
+                int soLuongBanDangGhep = phieuDatBan_DAO.demSoBanDangSuDungCuaHoaDon(maHD);
+
+                // 3. Chỉ hiện icon nếu hóa đơn này đang dùng cho > 1 bàn
+                if (soLuongBanDangGhep > 1) {
+                    try {
+                        ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
+                        iconLink.setFitWidth(18);
+                        iconLink.setFitHeight(18);
+
+                        Label lblMerged = new Label(" Bàn ghép");
+                        lblMerged.setTextFill(Color.web("#3182ce"));
+                        lblMerged.setFont(Font.font("Segoe UI", 11));
+
+                        iconBox.getChildren().addAll(iconLink, lblMerged);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
             }
+//            String maHDGop = banAn_DAO.getMaHoaDonTuBan(ban.getMaBan());
+//            boolean isMerged = (maHDGop != null && banAn_DAO.getDanhSachBanCungHoaDon(maHDGop).size() > 1);
+//            if (isMerged) {
+//                try {
+//                    ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
+//                    iconLink.setFitWidth(18);
+//                    iconLink.setFitHeight(18);
+//                    Label lblMerged = new Label(" Bàn ghép");
+//                    lblMerged.setTextFill(Color.web("#3182ce"));
+//                    lblMerged.setFont(Font.font("Segoe UI", 11));
+//                    iconBox.getChildren().addAll(iconLink, lblMerged);
+//                } catch (Exception e) {
+//                }
+//            }
         }
 
         Button btnDetail = new Button("Xem chi tiết");
@@ -609,26 +627,46 @@ public class Gui_DanhSachBan extends BorderPane {
 
                 // Lấy thông tin phiếu đặt bàn cũ để copy thông tin khách hàng/nhân viên
                 PhieuDatBan phieuGoc = phieuDatBan_DAO.getPhieuDatBanMoiNhat(banGoc.getMaBan());
-                // (Bạn cần đảm bảo DAO có hàm lấy phiếu mới nhất hoặc lấy theo MaHD)
+                TrangThai trangThaiDich;
+                String trangThaiPhieu;
+
+                if (banGoc.getTrangThai() == TrangThai.DA_DAT) {
+                    trangThaiDich = TrangThai.DA_DAT;
+                    trangThaiPhieu = "Đã đặt";
+                } else {
+                    trangThaiDich = TrangThai.DANG_SU_DUNG;
+                    trangThaiPhieu = "Đang dùng";
+                }
 
                 for (BanAn banMoi : banTrongList) {
                     // 1. Cập nhật trạng thái bàn thành ĐANG DÙNG
-                    boolean upBan = banAn_DAO.updateTrangThaiBan(banMoi, TrangThai.DANG_SU_DUNG);
+                    boolean upBan = banAn_DAO.updateTrangThaiBan(banMoi, trangThaiDich);
 
                     // 2. Tạo phiếu đặt bàn mới trỏ về MaHD cũ
                     PhieuDatBan pMoi = new PhieuDatBan();
                     pMoi.setBan(banMoi);
-                    pMoi.setHoaDon(phieuGoc.getHoaDon()); // QUAN TRỌNG: Dùng chung Hóa Đơn
+
+                    HoaDon hd = phieuGoc.getHoaDon();
+                    if (hd.getNgayTao() == null) hd.setNgayTao(LocalDateTime.now());
+                    pMoi.setHoaDon(hd);
+
                     pMoi.setKhachHang(phieuGoc.getKhachHang());
                     pMoi.setNhanVien(phieuGoc.getNhanVien()); // Hoặc nhân viên đang login
                     pMoi.setThoiGianBatDau(java.time.LocalDateTime.now());
-                    pMoi.setTrangThai("Đang dùng");
+
+                    pMoi.setTrangThai(trangThaiPhieu);
                     pMoi.setSoNguoi(0); // Số người có thể để 0 hoặc nhập thêm logic hỏi user
                     pMoi.setGhiChu("Gộp theo bàn " + banGoc.getMaBan());
 
-                    boolean upPhieu = phieuDatBan_DAO.themPhieuDatBan(pMoi, "Đang dùng");
+                    boolean upPhieu = phieuDatBan_DAO.themPhieuDatBan(pMoi, trangThaiPhieu);
 
                     if (!upBan || !upPhieu) allSuccess = false;
+
+                    try {
+                        Thread.sleep(50); // Nghỉ 50ms (0.05 giây)
+                    } catch (InterruptedException ex) {
+                        ex.printStackTrace();
+                    }
                 }
 
                 if (allSuccess) {
@@ -994,6 +1032,9 @@ public class Gui_DanhSachBan extends BorderPane {
         alert.showAndWait().ifPresent(res -> {
             if (res == ButtonType.YES) {
                 for (PhieuDatBan pdb : dsPhieuDatBan) {
+                    if (pdb.getTrangThai().equalsIgnoreCase("Đã hủy") || pdb.getTrangThai().equalsIgnoreCase("Đã thanh toán")) {
+                        continue;
+                    }
                     if (!controlCheckIn.capNhatTrangThai(pdb.getMaPhieu(), "Đang dùng") || !controlCheckIn.capNhatTrangThaiBan(pdb.getBan().getMaBan(), TrangThai.DANG_SU_DUNG)) {
                         showAlert(AlertType.ERROR, "Lỗi", "Check-in thất bại.");
                         return;

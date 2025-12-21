@@ -41,7 +41,7 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
     // UI
     private TextField txtMaBanMoi;
     private TextField txtSoChoMoi;
-    private Label lblThongBaoNgayGio;
+    private DatePicker pickerNgayChuyen;
     private GridPane luoiBanTrong;
     private ToggleButton tang1, tang2;
     private ViTri viTriHienTai = ViTri.LAU_1;
@@ -171,9 +171,16 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
         txtMaBanMoi = createInfoTextField("Chưa chọn");
         txtSoChoMoi = createInfoTextField("0 chỗ");
 
-        lblThongBaoNgayGio = new Label(ngayDat.toString());
-        lblThongBaoNgayGio.setStyle("-fx-font-weight: bold; -fx-text-fill: #2D3748; -fx-font-size: 14px;");
-
+        pickerNgayChuyen = new DatePicker(ngayDat);
+        pickerNgayChuyen.setPrefWidth(200);
+        pickerNgayChuyen.setStyle("-fx-font-size: 14px;");
+        pickerNgayChuyen.setEditable(false);
+        if (banCu.getTrangThai() == TrangThai.DANG_SU_DUNG) {
+            pickerNgayChuyen.setDisable(true);
+            pickerNgayChuyen.setStyle("-fx-opacity: 1; -fx-background-color: #EDF2F7;"); // Giữ màu cho dễ nhìn dù disable
+        } else {
+            pickerNgayChuyen.setDisable(false);
+        }
         addInfoRow(infoGrid, 0, "BÀN ĐÃ CHỌN:", txtMaBanMoi);
         addInfoRow(infoGrid, 2, "TỔNG SỐ CHỖ:", txtSoChoMoi);
 
@@ -181,7 +188,18 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
         lblTime.setStyle("-fx-text-fill: #718096; -fx-font-size: 11px; -fx-font-weight: bold;");
         infoGrid.add(lblTime, 0, 4);
 
-        HBox timeBox = new HBox(10, new Label("📅"), lblThongBaoNgayGio);
+        pickerNgayChuyen.valueProperty().addListener((obs, oldVal, newVal) -> {
+            if (newVal != null) {
+                this.ngayDat = newVal; // Cập nhật biến toàn cục
+                loadDanhSachBanTrong(); // Load lại lưới bàn bên trái
+
+                // Reset lại các bàn đã chọn vì sang ngày mới bàn đó có thể không trống
+                dsBanMoiDaChon.clear();
+                capNhatThongTinPhai();
+            }
+        });
+
+        HBox timeBox = new HBox(10, new Label("📅"), pickerNgayChuyen);
         timeBox.setAlignment(Pos.CENTER_LEFT);
         timeBox.setStyle("-fx-background-color: white; -fx-padding: 10; -fx-background-radius: 8; -fx-border-color: #E2E8F0; -fx-border-radius: 8;");
         infoGrid.add(timeBox, 0, 5);
@@ -438,7 +456,7 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
                         }
 
                         // FIX 2: GỌI HÀM DAO VỚI ĐỦ 4 THAM SỐ
-                        ok = phieuDatBan_DAO.chuyenBanNhieuSangNhieu(dsMaBanCu, dsMaBanMoi, maHD, trangThaiMoi);
+                        ok = phieuDatBan_DAO.chuyenBanNhieuSangNhieu(dsMaBanCu, dsMaBanMoi, maHD, trangThaiMoi,this.ngayDat);
 
                     } catch (Exception e) {
                         e.printStackTrace();

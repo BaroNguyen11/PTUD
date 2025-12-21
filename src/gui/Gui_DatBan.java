@@ -237,6 +237,23 @@ public class Gui_DatBan extends BorderPane {
         txtSdt = new TextField();
         txtSdt.setPromptText("Nhập SĐT khách hàng...");
         styleTextField(txtSdt);
+        txtSdt.textProperty().addListener((observable, oldValue, newValue) -> {
+            // Chỉ cho phép nhập số (Regex: \d* là chỉ số)
+            if (!newValue.matches("\\d*")) {
+                txtSdt.setText(newValue.replaceAll("[^\\d]", ""));
+            }
+            // Giới hạn độ dài tối đa 10 số
+            if (txtSdt.getText().length() > 10) {
+                txtSdt.setText(txtSdt.getText().substring(0, 10));
+            }
+        });
+
+// 3. Sự kiện khi rời khỏi ô nhập (Focus Lost) -> Kiểm tra tính hợp lệ
+        txtSdt.focusedProperty().addListener((obs, oldVal, newVal) -> {
+            if (!newVal) { // Khi người dùng click ra chỗ khác (mất focus)
+                validateSoDienThoai();
+            }
+        });
         lblTrangThaiKhachHang = new Label("Nhập SĐT để tự động tìm");
         lblTrangThaiKhachHang.setFont(Font.font("Segoe UI", FontWeight.NORMAL, 11));
         lblTrangThaiKhachHang.setTextFill(Color.web("#718096"));
@@ -266,7 +283,41 @@ public class Gui_DatBan extends BorderPane {
         grid.add(txtDiem, 1, 4);
         return grid;
     }
+    private boolean validateSoDienThoai() {
+        String sdt = txtSdt.getText().trim();
 
+        // Regex cho SĐT Việt Nam: Bắt đầu bằng 0, theo sau là 9 chữ số
+        String regexSDT = "^0[35789]\\d{8}$";
+
+        if (sdt.isEmpty()) {
+            showAlert("Lỗi", "Số điện thoại không được để trống!");
+            txtSdt.setStyle("-fx-border-color: red; -fx-border-radius: 5;");
+            return false;
+        }
+        else if (!sdt.matches(regexSDT)) {
+            // Có thể hiện Alert hoặc chỉ hiện viền đỏ
+             showAlert("Lỗi", "Số điện thoại phải bắt đầu bằng 03,05,07,08,09 và có 10 chữ số!");
+            txtSdt.setStyle("-fx-border-color: red; -fx-border-radius: 5;");
+
+            // Thêm tooltip để hướng dẫn người dùng nếu họ rê chuột vào
+            txtSdt.setTooltip(new Tooltip("Sđt phải bắt đầu bằng 03,05,07,08,09 và có 10 chữ số!"));
+            return false;
+        }
+        else {
+            // Trả lại style đúng (ví dụ viền xanh hoặc mặc định)
+            txtSdt.setStyle("-fx-border-color: green; -fx-border-radius: 5;");
+            txtSdt.setTooltip(null);
+            return true;
+        }
+    }
+
+    // Hàm hiển thị thông báo nhỏ (Helper)
+    private void showAlert(String header, String content) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setHeaderText(header);
+        alert.setContentText(content);
+        alert.show();
+    }
     private void themLogicTuDongTimKiemSdt() {
         txtSdt.textProperty().addListener((observable, oldValue, newValue) -> {
             if (!newValue.matches("\\d*")) {
@@ -782,94 +833,240 @@ public class Gui_DatBan extends BorderPane {
         alert.showAndWait();
     }
 
-    private void xuLyXacNhanDatBan() {
-        try {
-            String ten = txtTenKH.getText().trim();
-            String sdt = txtSdt.getText().trim();
-            if (ten.isEmpty() || sdt.isEmpty()) {
-                showAlert(AlertType.ERROR, "Lỗi", "Thiếu tên hoặc SĐT.");
-                return;
-            }
-            KhachHang kh = new KhachHang();
-            if (txtMaKh.getText().equals("000")) {
-                if (khachHangDAO.getKhachHangBySdt(sdt) != null) {
-                    showAlert(AlertType.ERROR, "Lỗi", "SĐT đã tồn tại.");
-                    return;
-                }
-                kh.setTenKhachHang(ten);
-                kh.setSoDienThoai(sdt);
-                kh.setDiemTichLuy(0.0);
-                if (!khachHangDAO.themKhachHangMoi(kh)) {
-                    showAlert(AlertType.ERROR, "Lỗi", "Không thêm được KH.");
-                    return;
-                }
-            } else kh.setMaKhachHang(txtMaKh.getText());
-            String maNVHT = Gui_DangNhap.getCurrentMaNhanVien();
-            if (maNVHT == null || maNVHT.isEmpty()) {
-                showAlert(AlertType.ERROR, "Lỗi xác thực", "Không tìm thấy thông tin đăng nhập!\nVui lòng đăng xuất và đăng nhập lại.");
-                return;
-            }
-
-            NhanVien nv = new NhanVien();
-            nv.setMaNhanVien(maNVHT);
-
-            LocalDateTime time = dpNgayDen.getValue().atStartOfDay()
-                    .withHour(spGio.getValue())
-                    .withMinute(spPhut.getValue());
-            if (time.isBefore(LocalDateTime.now())) {
-                showAlert(AlertType.ERROR, "Lỗi", "Thời gian không hợp lệ.");
-                return;
-            }
-            List<String> trung = new ArrayList<>();
-            for (BanAn b : cacBanDuocChon)
-                if (phieuDatBanDAO.kiemTraBanDaDatTrongNgay(b.getMaBan(), time)) trung.add(b.getMaBan());
-            if (!trung.isEmpty()) {
-                showAlert(AlertType.ERROR, "Trùng lịch", "Bàn đã đặt: " + String.join(", ", trung));
-                return;
-            }
-            HoaDon hd = new HoaDon();
-            hd.setNgayTao(LocalDateTime.now());
-            hd.setKhachHang(kh);
-            hd.setNhanVien(nv);
-            String maHD = hoaDonDAO.themHoaDon(hd);
-            if (maHD == null) return;
-            hd.setMaHoaDon(maHD);
-            boolean ok = true;
-            for (BanAn b : cacBanDuocChon) {
-                if (!banAn_DAO.updateTrangThaiBan(b, TrangThai.DA_DAT)) {
-                    ok = false;
-                    break;
-                }
-                PhieuDatBan p = new PhieuDatBan();
-                p.setThoiGianBatDau(time);
-                p.setTrangThai(radioDatTruoc.isSelected() ? "Đã đặt" : "Đang dùng");
-                p.setSoNguoi(Integer.parseInt(txtSoNguoi.getText()));
-                p.setGhiChu(txtGhiChu.getText());
-                p.setKhachHang(kh);
-                p.setBan(b);
-                p.setNhanVien(nv);
-                p.setHoaDon(hd);
-                if (!phieuDatBanDAO.themPhieuDatBan(p, p.getTrangThai())) {
-                    ok = false;
-                    break;
-                }
-            }
-            if (ok && !dsMonDaChon.isEmpty()) {
-                for (ChiTietHoaDon c : dsMonDaChon) {
-                    c.setHoaDon(hd);
-                    if (!chiTietHoaDonDAO.themChiTietHoaDon(c)) {
-                        ok = false;
-                        break;
-                    }
-                }
-            }
-            if (ok) {
-                showAlert(AlertType.INFORMATION, "Thành công", "Đặt bàn thành công! Mã HĐ: " + maHD);
-                trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
-            } else showAlert(AlertType.ERROR, "Lỗi", "Có lỗi xảy ra.");
-        } catch (Exception e) {
-            e.printStackTrace();
-            showAlert(AlertType.ERROR, "Lỗi", e.getMessage());
+//    private void xuLyXacNhanDatBan() {
+//        try {
+//            String ten = txtTenKH.getText().trim();
+//            String sdt = txtSdt.getText().trim();
+//            if (ten.isEmpty() || sdt.isEmpty()) {
+//                showAlert(AlertType.ERROR, "Lỗi", "Thiếu tên hoặc SĐT.");
+//                return;
+//            }
+//            KhachHang kh = new KhachHang();
+//            if (txtMaKh.getText().equals("000")) {
+//                if (khachHangDAO.getKhachHangBySdt(sdt) != null) {
+//                    showAlert(AlertType.ERROR, "Lỗi", "SĐT đã tồn tại.");
+//                    return;
+//                }
+//                kh.setTenKhachHang(ten);
+//                kh.setSoDienThoai(sdt);
+//                kh.setDiemTichLuy(0.0);
+//                if (!khachHangDAO.themKhachHangMoi(kh)) {
+//                    showAlert(AlertType.ERROR, "Lỗi", "Không thêm được KH.");
+//                    return;
+//                }
+//            } else kh.setMaKhachHang(txtMaKh.getText());
+//            String maNVHT = Gui_DangNhap.getCurrentMaNhanVien();
+//            if (maNVHT == null || maNVHT.isEmpty()) {
+//                showAlert(AlertType.ERROR, "Lỗi xác thực", "Không tìm thấy thông tin đăng nhập!\nVui lòng đăng xuất và đăng nhập lại.");
+//                return;
+//            }
+//
+//            NhanVien nv = new NhanVien();
+//            nv.setMaNhanVien(maNVHT);
+//
+//            LocalDateTime time = dpNgayDen.getValue().atStartOfDay()
+//                    .withHour(spGio.getValue())
+//                    .withMinute(spPhut.getValue());
+//            if (time.isBefore(LocalDateTime.now())) {
+//                showAlert(AlertType.ERROR, "Lỗi", "Thời gian không hợp lệ.");
+//                return;
+//            }
+//            List<String> trung = new ArrayList<>();
+//            for (BanAn b : cacBanDuocChon)
+//                if (phieuDatBanDAO.kiemTraBanDaDatTrongNgay(b.getMaBan(), time)) trung.add(b.getMaBan());
+//            if (!trung.isEmpty()) {
+//                showAlert(AlertType.ERROR, "Trùng lịch", "Bàn đã đặt: " + String.join(", ", trung));
+//                return;
+//            }
+//            HoaDon hd = new HoaDon();
+//            hd.setNgayTao(LocalDateTime.now());
+//            hd.setKhachHang(kh);
+//            hd.setNhanVien(nv);
+//            String maHD = hoaDonDAO.themHoaDon(hd);
+//            if (maHD == null) return;
+//            hd.setMaHoaDon(maHD);
+//            boolean ok = true;
+//            for (BanAn b : cacBanDuocChon) {
+//                if (!banAn_DAO.updateTrangThaiBan(b, TrangThai.DA_DAT)) {
+//                    ok = false;
+//                    break;
+//                }
+//                PhieuDatBan p = new PhieuDatBan();
+//                p.setThoiGianBatDau(time);
+//                p.setTrangThai(radioDatTruoc.isSelected() ? "Đã đặt" : "Đang dùng");
+//                p.setSoNguoi(Integer.parseInt(txtSoNguoi.getText()));
+//                p.setGhiChu(txtGhiChu.getText());
+//                p.setKhachHang(kh);
+//                p.setBan(b);
+//                p.setNhanVien(nv);
+//                p.setHoaDon(hd);
+//                if (!phieuDatBanDAO.themPhieuDatBan(p, p.getTrangThai())) {
+//                    ok = false;
+//                    break;
+//                }
+//            }
+//            if (ok && !dsMonDaChon.isEmpty()) {
+//                for (ChiTietHoaDon c : dsMonDaChon) {
+//                    c.setHoaDon(hd);
+//                    if (!chiTietHoaDonDAO.themChiTietHoaDon(c)) {
+//                        ok = false;
+//                        break;
+//                    }
+//                }
+//            }
+//            if (ok) {
+//                showAlert(AlertType.INFORMATION, "Thành công", "Đặt bàn thành công! Mã HĐ: " + maHD);
+//                trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
+//            } else showAlert(AlertType.ERROR, "Lỗi", "Có lỗi xảy ra.");
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            showAlert(AlertType.ERROR, "Lỗi", e.getMessage());
+//        }
+//    }
+private void xuLyXacNhanDatBan() {
+    try {
+        // 1. Validate dữ liệu nhập
+        String ten = txtTenKH.getText().trim();
+        String sdt = txtSdt.getText().trim();
+        if (ten.isEmpty() || sdt.isEmpty()) {
+            showAlert(AlertType.ERROR, "Lỗi", "Thiếu tên hoặc SĐT.");
+            return;
         }
+
+        // 2. Xử lý Khách Hàng
+        KhachHang kh = new KhachHang();
+        if (txtMaKh.getText().equals("000")) {
+            // Khách vãng lai/Mới -> Kiểm tra xem SĐT đã có chưa
+            if (khachHangDAO.getKhachHangBySdt(sdt) != null) {
+                showAlert(AlertType.ERROR, "Lỗi", "SĐT này đã tồn tại trong hệ thống.");
+                return;
+            }
+            kh.setTenKhachHang(ten);
+            kh.setSoDienThoai(sdt);
+            kh.setDiemTichLuy(0.0);
+            if (!khachHangDAO.themKhachHangMoi(kh)) {
+                showAlert(AlertType.ERROR, "Lỗi", "Không thêm được Khách hàng mới.");
+                return;
+            }
+        } else {
+            // Khách quen
+            kh.setMaKhachHang(txtMaKh.getText());
+        }
+
+        // 3. Xử lý Nhân Viên
+        String maNVHT = Gui_DangNhap.getCurrentMaNhanVien();
+        if (maNVHT == null || maNVHT.isEmpty()) {
+            showAlert(AlertType.ERROR, "Lỗi xác thực", "Không tìm thấy thông tin đăng nhập!\nVui lòng đăng xuất và đăng nhập lại.");
+            return;
+        }
+        NhanVien nv = new NhanVien();
+        nv.setMaNhanVien(maNVHT);
+
+        // 4. Xử lý Thời gian đặt
+        LocalDateTime time = dpNgayDen.getValue().atStartOfDay()
+                .withHour(spGio.getValue())
+                .withMinute(spPhut.getValue());
+
+        if (time.isBefore(LocalDateTime.now().minusMinutes(15))) { // Cho phép trễ 1 chút
+            showAlert(AlertType.ERROR, "Lỗi", "Thời gian đặt không hợp lệ (quá khứ).");
+            return;
+        }
+
+        // 5. Kiểm tra trùng lịch lần cuối (an toàn)
+        List<String> trung = new ArrayList<>();
+        for (BanAn b : cacBanDuocChon) {
+            if (phieuDatBanDAO.kiemTraBanDaDatTrongNgay(b.getMaBan(), time)) {
+                trung.add(b.getMaBan());
+            }
+        }
+        if (!trung.isEmpty()) {
+            showAlert(AlertType.ERROR, "Trùng lịch", "Các bàn sau đã bị đặt trong khung giờ này: " + String.join(", ", trung));
+            return;
+        }
+
+        // 6. TẠO HÓA ĐƠN (Dùng chung cho tất cả các bàn)
+        HoaDon hd = new HoaDon();
+        hd.setNgayTao(LocalDateTime.now()); // Bắt buộc set ngày hiện tại để tránh lỗi Null
+        hd.setKhachHang(kh);
+        hd.setNhanVien(nv);
+
+        String maHD = hoaDonDAO.themHoaDon(hd);
+        if (maHD == null) {
+            showAlert(AlertType.ERROR, "Lỗi CSDL", "Không thể tạo hóa đơn.");
+            return;
+        }
+        hd.setMaHoaDon(maHD);
+
+        // 7. TẠO PHIẾU ĐẶT BÀN (Vòng lặp)
+        boolean ok = true;
+
+        for (BanAn b : cacBanDuocChon) {
+            // A. Cập nhật trạng thái bàn -> Đã đặt (hoặc Đang dùng)
+            if (!banAn_DAO.updateTrangThaiBan(b, TrangThai.DA_DAT)) {
+                ok = false;
+                break;
+            }
+
+            // B. Tạo đối tượng Phiếu
+            PhieuDatBan p = new PhieuDatBan();
+            p.setThoiGianBatDau(time);
+            p.setTrangThai(radioDatTruoc.isSelected() ? "Đã đặt" : "Đang dùng");
+
+            try {
+                p.setSoNguoi(Integer.parseInt(txtSoNguoi.getText()));
+            } catch (NumberFormatException e) {
+                p.setSoNguoi(1); // Mặc định nếu nhập sai
+            }
+
+            p.setGhiChu(txtGhiChu.getText());
+            p.setKhachHang(kh);
+            p.setBan(b);
+            p.setNhanVien(nv);
+            p.setHoaDon(hd); // Gán hóa đơn vừa tạo
+
+            // C. Lưu phiếu xuống CSDL
+            if (!phieuDatBanDAO.themPhieuDatBan(p, p.getTrangThai())) {
+                ok = false;
+                break;
+            }
+
+            // ========================================================================
+            // [FIX LỖI TRÙNG KHÓA CHÍNH TẠI ĐÂY]
+            // Ngủ 50ms để Database kịp lưu mã phiếu cũ (ví dụ ...001)
+            // trước khi vòng lặp tiếp theo chạy để sinh mã ...002
+            // ========================================================================
+            try {
+                Thread.sleep(50);
+            } catch (InterruptedException ex) {
+                ex.printStackTrace();
+            }
+            // ========================================================================
+        }
+
+        // 8. Lưu món ăn (nếu có gọi món kèm)
+        if (ok && !dsMonDaChon.isEmpty()) {
+            for (ChiTietHoaDon c : dsMonDaChon) {
+                c.setHoaDon(hd);
+                if (!chiTietHoaDonDAO.themChiTietHoaDon(c)) {
+                    // Không break, lỗi món nào báo món đó hoặc bỏ qua,
+                    // nhưng phiếu đặt bàn đã thành công thì vẫn tính là thành công.
+                    System.err.println("Lỗi thêm món: " + c.getMonAn().getTenMonAn());
+                }
+            }
+        }
+
+        // 9. Kết thúc
+        if (ok) {
+            showAlert(AlertType.INFORMATION, "Thành công", "Đặt bàn thành công!\nMã HĐ: " + maHD);
+            // Quay về màn hình danh sách bàn
+            trangChu.setMainContent(new Gui_DanhSachBan(trangChu));
+        } else {
+            showAlert(AlertType.ERROR, "Lỗi", "Có lỗi xảy ra trong quá trình lưu dữ liệu.");
+        }
+
+    } catch (Exception e) {
+        e.printStackTrace();
+        showAlert(AlertType.ERROR, "Lỗi ngoại lệ", e.getMessage());
     }
+}
 }

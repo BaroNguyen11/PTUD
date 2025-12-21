@@ -17,9 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
 public class CheckIn_DAO {
-    
+
     public boolean capNhatTrangThaiBan(String maBan, String trangThai) {
         Connection con = null;
         PreparedStatement ps = null;
@@ -47,7 +46,7 @@ public class CheckIn_DAO {
             }
         }
     }
-    
+
     public PhieuDatBan timPhieuDatBanTheoBanTrongNgay(String maBan) {
         PhieuDatBan phieu = null;
 
@@ -59,11 +58,11 @@ public class CheckIn_DAO {
             con = ConnectDB.getConnection();
 
             String sql = """
-                SELECT maPhieu, maBan, ghiChu, maKhachHang, thoiGianBatDau, soNguoi, trangThai, maNhanVien, maHoaDon, maKhachHang
-                FROM PhieuDatBan
-                WHERE maBan = ? 
-                  AND CAST(ngayDat AS DATE) = CAST(GETDATE() AS DATE)
-            """;
+                        SELECT maPhieu, maBan, ghiChu, maKhachHang, thoiGianBatDau, soNguoi, trangThai, maNhanVien, maHoaDon, maKhachHang
+                        FROM PhieuDatBan
+                        WHERE maBan = ? 
+                          AND CAST(ngayDat AS DATE) = CAST(GETDATE() AS DATE)
+                    """;
 
             stmt = con.prepareStatement(sql);
             stmt.setString(1, maBan);
@@ -72,27 +71,27 @@ public class CheckIn_DAO {
 
             KhachHang kh = new KhachHang();
             kh.setMaKhachHang(rs.getString("maKhachHang"));
-            
+
             HoaDon hd = new HoaDon();
             hd.setMaHoaDon(rs.getString("maHoaDon"));
-            
+
             BanAn ban = new BanAn();
             ban.setMaBan(rs.getString("maBan"));
-            
-            NhanVien nv = new  NhanVien();
+
+            NhanVien nv = new NhanVien();
             nv.setMaNhanVien(rs.getString("maNhanVien"));
-            
+
             if (rs.next()) {
                 phieu = new PhieuDatBan(
-                    rs.getString("maPhieu"),
-                    rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
-                    rs.getString("trangThai"),
-                    rs.getInt("soLuongNguoi"),
-                    rs.getString("ghiChu"),
-                    kh,
-                    ban,
-                    nv,
-                    hd
+                        rs.getString("maPhieu"),
+                        rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
+                        rs.getString("trangThai"),
+                        rs.getInt("soLuongNguoi"),
+                        rs.getString("ghiChu"),
+                        kh,
+                        ban,
+                        nv,
+                        hd
                 );
             }
 
@@ -101,17 +100,19 @@ public class CheckIn_DAO {
         }
         return phieu;
     }
-    
-    
+
+
     public static List<PhieuDatBan> getPhieuDatBanTheoHoaDonVaNgay(String maHoaDon, LocalDate ngay) {
         List<PhieuDatBan> ds = new ArrayList<>();
 
+        // --- SỬA SQL: Thêm điều kiện loại trừ trạng thái hủy ---
         String sql = """
-            SELECT * 
-            FROM PhieuDatBan 
-            WHERE maHoaDon = ? 
-              AND CAST(thoiGianBatDau AS DATE) = ?
-        """;
+                    SELECT * FROM PhieuDatBan 
+                    WHERE maHoaDon = ? 
+                      AND CAST(thoiGianBatDau AS DATE) = ?
+                      AND trangThai != N'Đã hủy'  
+                      AND trangThai != N'Đã thanh toán' 
+                """;
 
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -122,26 +123,25 @@ public class CheckIn_DAO {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-
-            		KhachHang kh = new KhachHang();
+                KhachHang kh = new KhachHang();
                 kh.setMaKhachHang(rs.getString("maKhachHang"));
-                
+
                 HoaDon hd = new HoaDon();
                 hd.setMaHoaDon(rs.getString("maHoaDon"));
-                
+
                 BanAn ban = new BanAn();
                 ban.setMaBan(rs.getString("maBan"));
-                
-                NhanVien nv = new  NhanVien();
+
+                NhanVien nv = new NhanVien();
                 nv.setMaNhanVien(rs.getString("maNhanVien"));
-                
+
                 PhieuDatBan p = new PhieuDatBan(
-                    rs.getString("maPhieu"),
-                    rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
-                    rs.getString("trangThai"),
-                    rs.getInt("soNguoi"),
-                    rs.getString("ghiChu"),
-                    kh, ban, nv, hd
+                        rs.getString("maPhieu"),
+                        rs.getTimestamp("thoiGianBatDau").toLocalDateTime(),
+                        rs.getString("trangThai"),
+                        rs.getInt("soNguoi"),
+                        rs.getString("ghiChu"),
+                        kh, ban, nv, hd
                 );
 
                 ds.add(p);
@@ -153,10 +153,10 @@ public class CheckIn_DAO {
 
         return ds;
     }
-    
+
     public static boolean capNhatTrangThaiPhieuDatBan(String maPhieu, String trangThaiMoi) {
         String sql = "UPDATE PhieuDatBan SET trangThai = ? WHERE maPhieu = ?";
-        
+
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement stmt = con.prepareStatement(sql)) {
 
@@ -171,6 +171,6 @@ public class CheckIn_DAO {
 
         return false;
     }
-    
+
 
 }

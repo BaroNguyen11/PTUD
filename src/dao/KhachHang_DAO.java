@@ -4,6 +4,8 @@ import ConnectDB.ConnectDB;
 import entity.KhachHang;
 
 import java.sql.*;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -83,33 +85,7 @@ public class KhachHang_DAO {
         return kh;
     }
 
-    // Tìm kiếm khách hàng theo tên hoặc số điện thoại
-    public List<KhachHang> searchKhachHang(String keyword) {
-        List<KhachHang> list = new ArrayList<>();
-        String sql = "SELECT * FROM KhachHang WHERE tenKhachHang LIKE ? OR soDienThoai LIKE ? ORDER BY maKhachHang";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, "%" + keyword + "%");
-            ps.setString(2, "%" + keyword + "%");
-
-            ResultSet rs = ps.executeQuery();
-            while (rs.next()) {
-                KhachHang kh = new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("tenKhachHang"),
-                        rs.getString("soDienThoai"),
-                        rs.getDouble("diemTichLuy")
-                );
-                list.add(kh);
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
 
     // Thêm khách hàng mới
     public boolean addKhachHang(KhachHang kh) {
@@ -129,36 +105,52 @@ public class KhachHang_DAO {
         return false;
     }
 
-    public String getMaKhachHangCuoiCung() {
-        String maCuoi = null;
-        String sql = "SELECT TOP 1 maKhachHang FROM KhachHang WHERE maKhachHang LIKE 'KH%' ORDER BY maKhachHang DESC";
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) {
-                maCuoi = rs.getString("maKhachHang");
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi khi lấy mã KH cuối: " + e.getMessage());
-        }
-        return maCuoi;
-    }
+
 
     public String taoMaKhachHangMoi() {
-        String maCuoi = getMaKhachHangCuoiCung();
-        if (maCuoi == null) {
-            return "KH001";
+        // 1. Lấy ngày hiện tại và định dạng thành chuỗi (Ví dụ: 20122025)
+        LocalDate now = LocalDate.now();
+        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
+        String dateStr = now.format(dtf);
+
+        // 2. Tạo tiền tố mã: KH + Ngày (Ví dụ: KH20122025)
+        String prefix = "KH" + dateStr;
+
+        // 3. Tìm mã khách hàng lớn nhất trong DB mà có chứa tiền tố này
+        String sql = "SELECT TOP 1 maKhachHang FROM KhachHang " +
+                "WHERE maKhachHang LIKE ? " +
+                "ORDER BY maKhachHang DESC";
+
+        String maMoi = prefix + "001"; // Mặc định nếu chưa có ai trong ngày hôm nay
+
+        try (Connection con = ConnectDB.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+
+            // Tìm kiếm các mã bắt đầu bằng "KH20122025%"
+            ps.setString(1, prefix + "%");
+
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                String maCuoi = rs.getString("maKhachHang");
+                // maCuoi dạng: KH20122025001
+                // Lấy 3 số cuối (độ dài chuỗi - 3)
+                try {
+                    String phanSo = maCuoi.substring(maCuoi.length() - 3);
+                    int soTiepTheo = Integer.parseInt(phanSo) + 1;
+
+                    // Format lại thành 3 chữ số (ví dụ: 1 -> "001", 10 -> "010")
+                    maMoi = prefix + String.format("%03d", soTiepTheo);
+                } catch (NumberFormatException e) {
+                    // Phòng trường hợp mã cũ trong DB không đúng định dạng số
+                    e.printStackTrace();
+                    System.err.println("Lỗi format mã cũ: " + maCuoi + ", reset về 001");
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
 
-        try {
-            String phanSo = maCuoi.substring(2);
-            int soMoi = Integer.parseInt(phanSo) + 1;
-
-            return String.format("KH%03d", soMoi);
-        } catch (NumberFormatException | StringIndexOutOfBoundsException e) {
-            System.err.println("Lỗi định dạng mã KH cuối: " + maCuoi);
-            return "KH001";
-        }
+        return maMoi;
     }
 
     // Thêm khách hàng mới với mã tự động
@@ -211,37 +203,6 @@ public class KhachHang_DAO {
         return false;
     }
 
-    // Cập nhật điểm tích lũy
-    public boolean updateDiemTichLuy(String maKhachHang, double diemThem) {
-        String sql = "UPDATE KhachHang SET diemTichLuy = diemTichLuy + ? WHERE maKhachHang = ?";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setDouble(1, diemThem);
-            ps.setString(2, maKhachHang);
-
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    // Đặt lại điểm tích lũy
-    public boolean resetDiemTichLuy(String maKhachHang) {
-        String sql = "UPDATE KhachHang SET diemTichLuy = 0 WHERE maKhachHang = ?";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, maKhachHang);
-            return ps.executeUpdate() > 0;
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
 
     // Kiểm tra số điện thoại đã tồn tại chưa (dùng cho thêm mới)
     public boolean isSoDienThoaiExists(String soDienThoai) {
@@ -305,63 +266,5 @@ public class KhachHang_DAO {
         return "KH001"; // Mã mặc định nếu không có khách hàng nào
     }
 
-    // Lấy top khách hàng có điểm tích lũy cao nhất
-    public List<KhachHang> getTopKhachHangTheoDiem(int topN) {
-        List<KhachHang> list = new ArrayList<>();
-        String sql = "SELECT TOP (?) * FROM KhachHang ORDER BY diemTichLuy DESC, maKhachHang";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setInt(1, topN);
-            ResultSet rs = ps.executeQuery();
-
-            while (rs.next()) {
-                KhachHang kh = new KhachHang(
-                        rs.getString("maKhachHang"),
-                        rs.getString("tenKhachHang"),
-                        rs.getString("soDienThoai"),
-                        rs.getDouble("diemTichLuy")
-                );
-                list.add(kh);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return list;
-    }
-
-    // Đếm tổng số khách hàng
-    public int getTongSoKhachHang() {
-        String sql = "SELECT COUNT(*) FROM KhachHang";
-
-        try (Connection con = ConnectDB.getConnection();
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            if (rs.next()) {
-                return rs.getInt(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
-
-    // Lấy tổng điểm tích lũy của tất cả khách hàng
-    public double getTongDiemTichLuy() {
-        String sql = "SELECT SUM(diemTichLuy) FROM KhachHang";
-
-        try (Connection con = ConnectDB.getConnection();
-             Statement stmt = con.createStatement();
-             ResultSet rs = stmt.executeQuery(sql)) {
-
-            if (rs.next()) {
-                return rs.getDouble(1);
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return 0;
-    }
 }
