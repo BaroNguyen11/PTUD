@@ -476,7 +476,7 @@ public class Gui_QuanLiHoaDon extends BorderPane {
     // =============================================================
 
     private void selectInvoice(String data) {
-        String[] parts = data.split(",");
+        String[] parts = data.split(",", -1);
         DecimalFormat dcm = new DecimalFormat("#,##0.0 đ");
 
         double tong = Double.parseDouble(parts[3]);

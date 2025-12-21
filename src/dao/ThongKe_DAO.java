@@ -811,26 +811,43 @@ public class ThongKe_DAO {
     }
 
     // 5. Hiệu suất khu vực (Tỷ lệ % sử dụng theo Vị trí)
-    // Trả về Map<Tên khu vực, % sử dụng>
     public Map<String, Double> getHieuSuatKhuVuc() {
         Map<String, Double> map = new HashMap<>();
-        // Tính % bàn đang dùng trên tổng số bàn của từng khu vực
-        String sql = "SELECT \n" +
-                "    viTri,\n" +
-                "    (COUNT(CASE WHEN trangThai IN (N'Đang dùng', N'Đã đặt') THEN 1 ELSE NULL END) * 100.0 / COUNT(*)) as TyLe\n" +
-                "FROM BanAn\n" +
-                "GROUP BY viTri;";
+
+        // SQL: Tính % số lượt đặt của từng khu vực so với Tổng số lượt đặt (Trong tháng này)
+        // Loại bỏ các đơn đã hủy
+        String sql = """
+        WITH TongLuotDat AS (
+            SELECT COUNT(*) as Tong 
+            FROM PhieuDatBan 
+            WHERE MONTH(thoiGianBatDau) = MONTH(GETDATE()) 
+              AND YEAR(thoiGianBatDau) = YEAR(GETDATE())
+              AND trangThai != N'Đã hủy'
+        )
+        SELECT 
+            b.viTri,
+            (COUNT(p.maPhieu) * 100.0 / NULLIF((SELECT Tong FROM TongLuotDat), 0)) as TyLe
+        FROM PhieuDatBan p
+        JOIN BanAn b ON p.maBan = b.maBan
+        WHERE MONTH(p.thoiGianBatDau) = MONTH(GETDATE()) 
+          AND YEAR(p.thoiGianBatDau) = YEAR(GETDATE())
+          AND p.trangThai != N'Đã hủy'
+        GROUP BY b.viTri
+    """;
 
         try (Connection con = ConnectDB.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
-                // Giả sử viTri lưu trong DB dạng enum hoặc string (VD: 'LAU_1')
-                String khuVuc = rs.getString(1);
-                double tyLe = rs.getDouble(2);
+                String khuVuc = rs.getString("viTri");
+                double tyLe = rs.getDouble("TyLe");
 
-                // Làm đẹp tên khu vực (VD: LAU_1 -> Tầng 1)
+                // Xử lý null và tên khu vực
+                if (khuVuc == null) khuVuc = "Khác";
+
+                // Nếu DB bạn lưu là "Tầng 1" thì nó hiện "Tầng 1".
+                // Nếu DB lưu mã (LAU_1), đoạn này sẽ map lại cho đẹp:
                 if (khuVuc.equalsIgnoreCase("LAU_1")) khuVuc = "Tầng 1";
                 else if (khuVuc.equalsIgnoreCase("LAU_2")) khuVuc = "Tầng 2";
                 else if (khuVuc.equalsIgnoreCase("VIP")) khuVuc = "Phòng VIP";
