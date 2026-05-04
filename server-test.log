@@ -1,0 +1,20 @@
+Bound BanAnRemote
+Bound CaRemote
+Bound CheckInRemote
+Bound ChiTietHoaDonRemote
+Bound DangNhapRemote
+Bound DashboardRemote
+Bound HoaDonRemote
+Bound KhachHangRemote
+Bound MonAnRemote
+Bound NhanVienRemote
+Bound PhieuDatBanRemote
+Bound QLHDRemote
+Bound QLKMRemote
+Bound QLMonRemote
+Bound QuanLyBanRemote
+Bound TaiKhoanRemote
+Bound ThanhToanRemote
+Bound ThongKeRemote
+RMI server started on port 1099
+Mongo database: QLNhaHang2BTCHECK

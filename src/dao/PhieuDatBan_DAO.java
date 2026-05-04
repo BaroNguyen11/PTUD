@@ -1,785 +1,106 @@
 package dao;
 
-import java.sql.*;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Updates;
+import common.entity.*;
+import org.bson.Document;
 
-import entity.BanAn;
-import entity.HoaDon;
-import entity.KhachHang;
-import entity.NhanVien;
-import entity.PhieuDatBan;
-import entity.TrangThai;
-import ConnectDB.ConnectDB;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 
-
-public class PhieuDatBan_DAO {
-
-    private static final DateTimeFormatter SQL_DATETIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
+public class PhieuDatBan_DAO extends MongoDaoSupport {
     private BanAn_DAO banAn_DAO;
 
     public PhieuDatBan_DAO() {
-        // Constructor mặc định (Nếu bạn khởi tạo BanAn_DAO ở đây)
-        this.banAn_DAO = new BanAn_DAO();
+        banAn_DAO = new BanAn_DAO();
     }
-
 
     public boolean themPhieuDatBan(PhieuDatBan pdb, String trangThaiPhieu) {
-
-        // 1. Tự sinh mã mới
-        LocalDate ngayDat;
-        if (pdb.getHoaDon().getNgayTao() != null) {
-            ngayDat = pdb.getHoaDon().getNgayTao().toLocalDate();
-        } else {
-            ngayDat = LocalDate.now();
-        }
-
-        String maPDBMoi = taoMaPhieuMoi(ngayDat);
-
-        // 2. CÂU LỆNH SQL ĐÃ SỬA: Thêm cột maPhieu
-        String sql = "INSERT INTO PhieuDatBan (maPhieu, thoiGianBatDau, trangThai, soNguoi, ghiChu, maKhachHang, maBan, maNhanVien, maHoaDon) "
-                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            // --- Gán giá trị ---
-
-            // 1. MaPhieu mới
-            stmt.setString(1, maPDBMoi);
-
-            // 2. ThoiGianBatDau (Chuyển LocalDateTime sang String cho SQL)
-            String thoiGianSQL = pdb.getThoiGianBatDau().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            stmt.setString(2, thoiGianSQL);
-
-            stmt.setString(3, trangThaiPhieu);
-
-            // 4. SoNguoi
-            stmt.setInt(4, pdb.getSoNguoi());
-
-            // 5. GhiChu
-            stmt.setString(5, pdb.getGhiChu());
-
-            // 6. Ma Khach Hang (Xử lý vãng lai)
-            String maKH = (pdb.getKhachHang() != null && !pdb.getKhachHang().getMaKhachHang().equals("000"))
-                    ? pdb.getKhachHang().getMaKhachHang() : null;
-            if (maKH != null) {
-                stmt.setString(6, maKH);
-            } else {
-                stmt.setNull(6, Types.NVARCHAR);
-            }
-
-            // 7. Ma Ban
-            stmt.setString(7, pdb.getBan().getMaBan());
-
-            // 8. Ma Nhan Vien
-            stmt.setString(8, pdb.getNhanVien().getMaNhanVien());
-
-            // 9. Ma Hoa Don
-            stmt.setString(9, pdb.getHoaDon().getMaHoaDon());
-
-            return stmt.executeUpdate() > 0;
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi thêm Phiếu Đặt Bàn: " + e.getMessage());
-            e.printStackTrace(); // In chi tiết lỗi để kiểm tra ràng buộc khác
-            return false;
-        }
+        col("PhieuDatBan").insertOne(phieuDatBanDoc(pdb, trangThaiPhieu));
+        return true;
     }
 
-    // Trong PhieuDatBan_DAO.java
-
     public String getMaPhieuCuoiCung(LocalDate ngayCanTim) {
-        String maPhieu = null;
-
-        // Tạo tiền tố: PDB-20122025-
-        String datePart = ngayCanTim.format(DateTimeFormatter.ofPattern("ddMMyyyy"));
-        String prefixPattern = "PDB-" + datePart + "-%";
-
-        // SQL đơn giản hóa: Không cần JOIN HoaDon, chỉ cần tìm trong PhieuDatBan
-        String sql = "SELECT TOP 1 maPhieu FROM PhieuDatBan " +
-                "WHERE maPhieu LIKE ? " +
-                "ORDER BY maPhieu DESC";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setString(1, prefixPattern);
-
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                maPhieu = rs.getString("maPhieu");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return maPhieu;
+        String prefix = "PDB" + ngayCanTim.format(DateTimeFormatter.ofPattern("ddMMyyyy"));
+        return maxId("PhieuDatBan", "maPhieu", prefix);
     }
 
     public String taoMaPhieuMoi(LocalDate ngayDat) {
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
-        String ngayFormat = ngayDat.format(dtf);
-        String tienToMoi = "PDB-" + ngayFormat + "-";
-
-        // Tìm mã lớn nhất hiện có trong DB
-        String maCuoi = getMaPhieuCuoiCung(ngayDat);
-
-        if (maCuoi == null || maCuoi.isEmpty()) {
-            return tienToMoi + "001";
-        }
-
+        String prefix = "PDB" + ngayDat.format(DateTimeFormatter.ofPattern("ddMMyyyy"));
+        String last = maxId("PhieuDatBan", "maPhieu", prefix);
+        if (last == null) return prefix + "001";
         try {
-            // maCuoi ví dụ: PDB-20122025-001
-            // Lấy 3 số cuối (index 13 trở đi)
-            String phanSo = maCuoi.substring(maCuoi.length() - 3);
-            int soMoi = Integer.parseInt(phanSo) + 1;
-            return tienToMoi + String.format("%03d", soMoi);
-        } catch (Exception e) {
-            e.printStackTrace();
-            // Nếu lỗi format thì fallback về 001
-            System.err.println("Lỗi parse mã cũ: " + maCuoi + ", reset về 001");
-            return tienToMoi + "001";
+            return prefix + String.format("%03d", Integer.parseInt(last.substring(last.length() - 3)) + 1);
+        } catch (RuntimeException ex) {
+            return prefix + "001";
         }
     }
+
     public boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau) {
-        // Giả định: Bàn được coi là bị trùng nếu có PhieuDatBan trùng ngày và status là 'Đã đặt' hoặc 'Đang dùng'
-
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String thoiGianSQL = thoiGianBatDau.format(dtf);
-        String sql = "SELECT maPhieu FROM PhieuDatBan " +
-                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-                "AND (trangThai = N'Đã đặt' OR trangThai = N'Đang dùng')";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setString(1, maBan);
-            stmt.setString(2, thoiGianSQL);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                return rs.next(); // Trả về true nếu tìm thấy ít nhất một phiếu
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi kiểm tra trùng bàn: " + e.getMessage());
-            return true; // Giả định có lỗi CSDL là trùng để đảm bảo an toàn
+        LocalDate ngay = thoiGianBatDau.toLocalDate();
+        for (Document d : docs("PhieuDatBan", Filters.eq("maBan", maBan))) {
+            String tt = s(d, "trangThai");
+            if (sameDay(d.get("thoiGianBatDau"), ngay) && !"Đã hủy".equalsIgnoreCase(tt) && !"Đã dùng".equalsIgnoreCase(tt)) return true;
         }
-    }
-    public PhieuDatBan getPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) {
-        PhieuDatBan pdb = null;
-        DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
-        String ngayFormat = ngayDat.format(dtf);
-
-        String sql = "SELECT p.*, kh.tenKhachHang, kh.soDienThoai FROM PhieuDatBan p " +
-                "JOIN KhachHang kh ON p.maKhachHang = kh.maKhachHang " +
-                "WHERE p.maBan = ? AND p.maPhieu LIKE 'PDB-" + ngayFormat + "-%' " +
-                "AND (p.trangThai = N'Đã đặt' OR p.trangThai = N'Đang dùng')";
-
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setString(1, maBan);
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    pdb = new PhieuDatBan();
-                    pdb.setGhiChu(rs.getString("ghiChu"));
-
-                    KhachHang kh = new KhachHang();
-                    kh.setTenKhachHang(rs.getString("tenKhachHang"));
-                    kh.setSoDienThoai(rs.getString("soDienThoai"));
-                    pdb.setKhachHang(kh);
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi tra cứu phiếu đặt bàn: " + e.getMessage());
-        }
-        return pdb;
-    }
-//    public boolean huyPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngay) {
-//        Connection con = null;
-//        PreparedStatement psGetHD = null;
-//        PreparedStatement psUpdateHD = null;
-//        PreparedStatement psUpdatePDB = null;
-//
-//        String trangThaiHuy = "Đã hủy"; // Đảm bảo trong DB cũng là N'Đã hủy'
-//
-//        try {
-//            con = ConnectDB.getConnection();
-//
-//            // 1. TẮT TỰ ĐỘNG LƯU (Bắt đầu Transaction)
-//            con.setAutoCommit(false);
-//
-//            // ---------------------------------------------------------
-//            // BƯỚC 1: Lấy mã Hóa Đơn đang dính với cái bàn này trước
-//            // ---------------------------------------------------------
-//            String sqlGetHD = "SELECT maHoaDon FROM PhieuDatBan " +
-//                    "WHERE maBan = ? " +
-//                    "AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-//                    "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-//
-//            psGetHD = con.prepareStatement(sqlGetHD);
-//            psGetHD.setString(1, maBan);
-//            psGetHD.setDate(2, java.sql.Date.valueOf(ngay));
-//
-//            ResultSet rs = psGetHD.executeQuery();
-//            String maHoaDon = null;
-//            if (rs.next()) {
-//                maHoaDon = rs.getString("maHoaDon");
-//            }
-//
-//            // ---------------------------------------------------------
-//            // BƯỚC 2: Cập nhật Hóa Đơn (Nếu tìm thấy)
-//            // ---------------------------------------------------------
-//            if (maHoaDon != null) {
-//                String sqlUpdateHD = "UPDATE HoaDon SET trangThai = ? WHERE maHoaDon = ?";
-//                psUpdateHD = con.prepareStatement(sqlUpdateHD);
-//                psUpdateHD.setString(1, trangThaiHuy); // Set thành 'Đã hủy'
-//                psUpdateHD.setString(2, maHoaDon);
-//
-//                // Chạy lệnh update Hóa đơn
-//                psUpdateHD.executeUpdate();
-//            }
-//
-//            // ---------------------------------------------------------
-//            // BƯỚC 3: Cập nhật Phiếu Đặt Bàn (Code cũ của bạn)
-//            // ---------------------------------------------------------
-//            String sqlUpdatePDB = "UPDATE PhieuDatBan SET trangThai = ? " +
-//                    "WHERE maBan = ? " +
-//                    "AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-//                    "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-//
-//            psUpdatePDB = con.prepareStatement(sqlUpdatePDB);
-//            psUpdatePDB.setString(1, trangThaiHuy);
-//            psUpdatePDB.setString(2, maBan);
-//            psUpdatePDB.setDate(3, java.sql.Date.valueOf(ngay));
-//
-//            int rowsPDB = psUpdatePDB.executeUpdate();
-//
-//            // ---------------------------------------------------------
-//            // KẾT THÚC: Kiểm tra và Chốt sổ
-//            // ---------------------------------------------------------
-//            if (rowsPDB > 0) {
-//                con.commit(); // Thành công hết thì mới LƯU
-//                return true;
-//            } else {
-//                con.rollback(); // Không tìm thấy phiếu để hủy thì hoàn tác
-//                return false;
-//            }
-//
-//        } catch (SQLException e) {
-//            // Có lỗi xảy ra ở bất kỳ bước nào -> HOÀN TÁC TOÀN BỘ
-//            try {
-//                if (con != null) con.rollback();
-//            } catch (SQLException ex) {
-//                ex.printStackTrace();
-//            }
-//            e.printStackTrace();
-//            return false;
-//        } finally {
-//            // Đóng kết nối thủ công vì không dùng try-with-resources cho transaction phức tạp
-//            try {
-//                if (psGetHD != null) psGetHD.close();
-//                if (psUpdateHD != null) psUpdateHD.close();
-//                if (psUpdatePDB != null) psUpdatePDB.close();
-//                // Trả lại trạng thái auto commit mặc định cho connection pool (nếu dùng)
-//                if (con != null) {
-//                    con.setAutoCommit(true);
-//                    con.close();
-//                }
-//            } catch (SQLException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//    }
-public boolean huyPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngay) {
-    Connection con = null;
-    PreparedStatement psGetHD = null;
-    PreparedStatement psUpdatePDB = null;
-    PreparedStatement psUpdateBan = null;
-    PreparedStatement psCheckConLai = null;
-    PreparedStatement psUpdateHD = null;
-
-    try {
-        con = ConnectDB.getConnection();
-        con.setAutoCommit(false); // --- BẮT ĐẦU TRANSACTION ---
-
-        // BƯỚC 1: Lấy mã Hóa Đơn của bàn này (để tí nữa kiểm tra)
-        String sqlGetHD = "SELECT maHoaDon FROM PhieuDatBan " +
-                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-                "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-        psGetHD = con.prepareStatement(sqlGetHD);
-        psGetHD.setString(1, maBan);
-        psGetHD.setDate(2, java.sql.Date.valueOf(ngay));
-        ResultSet rs = psGetHD.executeQuery();
-
-        String maHoaDon = null;
-        if (rs.next()) {
-            maHoaDon = rs.getString("maHoaDon");
-        }
-        rs.close();
-
-        // BƯỚC 2: Hủy Phiếu Đặt Bàn của RIÊNG bàn này
-        String sqlUpdatePDB = "UPDATE PhieuDatBan SET trangThai = N'Đã hủy' " +
-                "WHERE maBan = ? AND CAST(thoiGianBatDau AS DATE) = CAST(? AS DATE) " +
-                "AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-        psUpdatePDB = con.prepareStatement(sqlUpdatePDB);
-        psUpdatePDB.setString(1, maBan);
-        psUpdatePDB.setDate(2, java.sql.Date.valueOf(ngay));
-        int rowsPDB = psUpdatePDB.executeUpdate();
-
-        if (rowsPDB > 0) {
-            // BƯỚC 3: Trả bàn này về trạng thái 'Trống' ngay lập tức
-            String sqlUpdateBan = "UPDATE BanAn SET trangThai = N'Trống' WHERE maBan = ?";
-            psUpdateBan = con.prepareStatement(sqlUpdateBan);
-            psUpdateBan.setString(1, maBan);
-            psUpdateBan.executeUpdate();
-
-            // BƯỚC 4: (QUAN TRỌNG) Kiểm tra xem Hóa Đơn này còn bàn nào khác dùng không?
-            if (maHoaDon != null) {
-                String sqlCheck = "SELECT COUNT(*) FROM PhieuDatBan " +
-                        "WHERE maHoaDon = ? AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-                psCheckConLai = con.prepareStatement(sqlCheck);
-                psCheckConLai.setString(1, maHoaDon);
-                ResultSet rsCheck = psCheckConLai.executeQuery();
-
-                int count = 0;
-                if (rsCheck.next()) {
-                    count = rsCheck.getInt(1);
-                }
-                rsCheck.close();
-
-                // Nếu count == 0 nghĩa là bàn vừa hủy là bàn cuối cùng -> Hủy luôn hóa đơn
-                // Nếu count > 0 nghĩa là vẫn còn bàn khác (Bàn ghép còn lại) -> Giữ nguyên hóa đơn
-                if (count == 0) {
-                    String sqlUpdateHD = "UPDATE HoaDon SET trangThai = N'Đã hủy' WHERE maHoaDon = ?";
-                    psUpdateHD = con.prepareStatement(sqlUpdateHD);
-                    psUpdateHD.setString(1, maHoaDon);
-                    psUpdateHD.executeUpdate();
-                }
-            }
-
-            con.commit(); // Lưu tất cả thay đổi
-            return true;
-        } else {
-            con.rollback();
-            return false;
-        }
-
-    } catch (SQLException e) {
-        try { if (con != null) con.rollback(); } catch (SQLException ex) {}
-        e.printStackTrace();
         return false;
-    } finally {
-        // Đóng resource kỹ càng
-        try {
-            if (psGetHD != null) psGetHD.close();
-            if (psUpdatePDB != null) psUpdatePDB.close();
-            if (psUpdateBan != null) psUpdateBan.close();
-            if (psCheckConLai != null) psCheckConLai.close();
-            if (psUpdateHD != null) psUpdateHD.close();
-            if (con != null) { con.setAutoCommit(true); con.close(); }
-        } catch (SQLException e) { e.printStackTrace(); }
     }
-}
-    public boolean huyTatCaPhieuByMaHoaDon(String maHoaDon) {
-        Connection con = null;
-        PreparedStatement psUpdateHD = null;
-        PreparedStatement psUpdatePDB = null;
-        PreparedStatement psGetBan = null;
-        PreparedStatement psUpdateBan = null;
-        ResultSet rs = null;
 
-        String trangThaiHuy = "Đã hủy";
-        String trangThaiTrong = "Trống";
+    public PhieuDatBan getPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) {
+        for (Document d : docs("PhieuDatBan", Filters.eq("maBan", maBan))) {
+            if (sameDay(d.get("thoiGianBatDau"), ngayDat)) return phieuDatBan(d);
+        }
+        return null;
+    }
 
-        try {
-            con = ConnectDB.getConnection();
-            con.setAutoCommit(false); // --- BẮT ĐẦU TRANSACTION ---
-
-            // BƯỚC 1: Cập nhật trạng thái HÓA ĐƠN -> 'Đã hủy'
-            String sqlUpdateHD = "UPDATE HoaDon SET trangThai = ? WHERE maHoaDon = ?";
-            psUpdateHD = con.prepareStatement(sqlUpdateHD);
-            psUpdateHD.setString(1, trangThaiHuy);
-            psUpdateHD.setString(2, maHoaDon);
-            psUpdateHD.executeUpdate();
-
-            // BƯỚC 2: Lấy danh sách MÃ BÀN đang dính tới hóa đơn này (để lát nữa set về Trống)
-            // Chỉ lấy những phiếu đang 'Đã đặt' hoặc 'Đang dùng'
-            String sqlGetBan = "SELECT maBan FROM PhieuDatBan WHERE maHoaDon = ? AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-            psGetBan = con.prepareStatement(sqlGetBan);
-            psGetBan.setString(1, maHoaDon);
-            rs = psGetBan.executeQuery();
-
-            List<String> dsMaBan = new ArrayList<>();
-            while (rs.next()) {
-                dsMaBan.add(rs.getString("maBan"));
-            }
-
-            // BƯỚC 3: Cập nhật trạng thái PHIẾU ĐẶT BÀN -> 'Đã hủy'
-            String sqlUpdatePDB = "UPDATE PhieuDatBan SET trangThai = ? " +
-                    "WHERE maHoaDon = ? AND trangThai IN (N'Đã đặt', N'Đang dùng')";
-            psUpdatePDB = con.prepareStatement(sqlUpdatePDB);
-            psUpdatePDB.setString(1, trangThaiHuy);
-            psUpdatePDB.setString(2, maHoaDon);
-            int rowAffected = psUpdatePDB.executeUpdate();
-
-            // BƯỚC 4: Cập nhật trạng thái BÀN ĂN -> 'Trống'
-            if (!dsMaBan.isEmpty()) {
-                String sqlUpdateBan = "UPDATE BanAn SET trangThai = ? WHERE maBan = ?";
-                psUpdateBan = con.prepareStatement(sqlUpdateBan);
-                for (String maBan : dsMaBan) {
-                    psUpdateBan.setString(1, trangThaiTrong); // Set về 'Trống'
-                    psUpdateBan.setString(2, maBan);
-                    psUpdateBan.addBatch(); // Gom lệnh lại chạy 1 lần
-                }
-                psUpdateBan.executeBatch();
-            }
-
-            // --- KẾT THÚC ---
-            if (rowAffected > 0) {
-                con.commit(); // Thành công thì lưu tất cả
-                return true;
-            } else {
-                con.rollback(); // Không tìm thấy phiếu nào thì hoàn tác
-                return false;
-            }
-
-        } catch (SQLException e) {
-            try {
-                if (con != null) con.rollback(); // Gặp lỗi thì quay xe
-            } catch (SQLException ex) {
-                ex.printStackTrace();
-            }
-            System.err.println("Lỗi Transaction Hủy bàn ghép: " + e.getMessage());
-            e.printStackTrace();
-            return false;
-        } finally {
-            // Đóng kết nối kỹ càng
-            try {
-                if (rs != null) rs.close();
-                if (psUpdateHD != null) psUpdateHD.close();
-                if (psGetBan != null) psGetBan.close();
-                if (psUpdatePDB != null) psUpdatePDB.close();
-                if (psUpdateBan != null) psUpdateBan.close();
-                if (con != null) {
-                    con.setAutoCommit(true);
-                    con.close();
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
+    public boolean huyPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngay) {
+        boolean ok = false;
+        for (Document d : docs("PhieuDatBan", Filters.eq("maBan", maBan))) {
+            if (sameDay(d.get("thoiGianBatDau"), ngay)) {
+                ok |= update("PhieuDatBan", Filters.eq("maPhieu", s(d, "maPhieu")), new Document("trangThai", "Đã hủy"));
             }
         }
+        return ok;
     }
 
+    public boolean huyTatCaPhieuByMaHoaDon(String maHoaDon) {
+        return col("PhieuDatBan").updateMany(Filters.eq("maHoaDon", maHoaDon), new Document("$set", new Document("trangThai", "Đã hủy"))).getModifiedCount() > 0;
+    }
 
     public static List<PhieuDatBan> getByMaHoaDon(String maHoaDon) {
         List<PhieuDatBan> list = new ArrayList<>();
-        String sql = "SELECT * FROM PhieuDatBan WHERE maHoaDon = ?";
-
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, maHoaDon);
-            ResultSet rs = pstmt.executeQuery();
-
-            while (rs.next()) {
-                PhieuDatBan phieu = new PhieuDatBan();
-                phieu.setMaPhieu(rs.getString("maPhieu"));
-                phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
-                phieu.setTrangThai(rs.getString("trangThai"));
-                phieu.setSoNguoi(rs.getInt("soNguoi"));
-                phieu.setGhiChu(rs.getNString("ghiChu"));
-
-                HoaDon hd = new HoaDon();
-                hd.setMaHoaDon(maHoaDon);
-
-                KhachHang kh = new KhachHang();
-                kh.setMaKhachHang(rs.getString("maKhachHang"));
-
-                NhanVien nv = new NhanVien();
-                nv.setMaNhanVien(rs.getString("maNhanVien"));
-
-                BanAn ban = new BanAn();
-                ban.setMaBan(rs.getString("maBan"));
-
-                phieu.setKhachHang(kh);
-                phieu.setBan(ban);
-                phieu.setNhanVien(nv);
-                phieu.setHoaDon(hd);
-
-
-                list.add(phieu);
-            }
-
-        } catch (SQLException e) {
-            System.err.println("❌ Lỗi lấy phiếu đặt bàn theo mã hóa đơn: " + e.getMessage());
-            e.printStackTrace();
-        }
-
+        for (Document d : docs("PhieuDatBan", Filters.eq("maHoaDon", maHoaDon))) list.add(phieuDatBan(d));
         return list;
     }
 
     public static PhieuDatBan timMotPhieuBangMaHD(String maHoaDon) {
-        if (maHoaDon == null || maHoaDon.trim().isEmpty()) {
-            return null;
-        }
-
-        String sql = "SELECT * FROM PhieuDatBan WHERE maHoaDon = ?";
-
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-
-            pstmt.setString(1, maHoaDon.trim());
-            ResultSet rs = pstmt.executeQuery();
-
-            if (rs.next()) {
-                PhieuDatBan phieu = new PhieuDatBan();
-                phieu.setMaPhieu(rs.getString("maPhieu"));
-                phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
-                phieu.setTrangThai(rs.getString("trangThai"));
-                phieu.setSoNguoi(rs.getInt("soNguoi"));
-                phieu.setGhiChu(rs.getNString("ghiChu"));
-
-                HoaDon hd = new HoaDon();
-                hd.setMaHoaDon(maHoaDon);
-
-                KhachHang kh = new KhachHang();
-                kh.setMaKhachHang(rs.getString("maKhachHang"));
-
-                NhanVien nv = new NhanVien();
-                nv.setMaNhanVien(rs.getString("maNhanVien"));
-
-                BanAn ban = new BanAn();
-                ban.setMaBan(rs.getString("maBan"));
-
-                phieu.setKhachHang(kh);
-                phieu.setBan(ban);
-                phieu.setNhanVien(nv);
-                phieu.setHoaDon(hd);
-
-
-                return phieu;
-            }
-
-        } catch (SQLException e) {
-            System.err.println("❌ Lỗi lấy phiếu đặt bàn theo mã hóa đơn: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return null;  // Không tìm thấy
+        return phieuDatBan(col("PhieuDatBan").find(Filters.eq("maHoaDon", maHoaDon)).first());
     }
-// Thay thế toàn bộ hàm chuyenBanNhieuSangNhieu cũ bằng hàm này:
 
-    public boolean chuyenBanNhieuSangNhieu(List<String> dsMaBanCu, List<String> dsMaBanMoi, String maHoaDon,String trangThaiMoi, LocalDate ngayChuyen) {
-        Connection con = null;
-        PreparedStatement pstmt = null;
-        ResultSet rs = null;
-
-        try {
-            con = ConnectDB.getConnection();
-            con.setAutoCommit(false); // --- BẮT ĐẦU TRANSACTION ---
-
-            // 1. LẤY THÔNG TIN CƠ BẢN TỪ 1 PHIẾU CŨ
-            String sqlGetInfo = "SELECT TOP 1 maKhachHang, maNhanVien, ghiChu, soNguoi FROM PhieuDatBan WHERE maHoaDon = ?";
-            pstmt = con.prepareStatement(sqlGetInfo);
-            pstmt.setString(1, maHoaDon);
-            rs = pstmt.executeQuery();
-
-            String maKhachHang = null;
-            String maNhanVien = null;
-            String ghiChu = "";
-            int soNguoi = 0;
-
-            if (rs.next()) {
-                maKhachHang = rs.getString("maKhachHang");
-                maNhanVien = rs.getString("maNhanVien");
-                ghiChu = rs.getString("ghiChu");
-                soNguoi = rs.getInt("soNguoi");
-            }
-            rs.close();
-            pstmt.close();
-
-            // 2. CẬP NHẬT TRẠNG THÁI BÀN CŨ -> 'TRỐNG'
-            String sqlUpdateOldBan = "UPDATE BanAn SET trangThai = N'Trống' WHERE maBan = ?";
-            pstmt = con.prepareStatement(sqlUpdateOldBan);
-            for (String maCu : dsMaBanCu) {
-                pstmt.setString(1, maCu);
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
-            pstmt.close();
-
-            // 3. CẬP NHẬT TRẠNG THÁI BÀN MỚI -> 'ĐANG SỬ DỤNG'
-            String trangThaiBanAn = trangThaiMoi.equals("Đang dùng") ? "Đang sử dụng" : trangThaiMoi;
-            String sqlUpdateNewBan = "UPDATE BanAn SET trangThai = ? WHERE maBan = ?";
-            pstmt = con.prepareStatement(sqlUpdateNewBan);
-            for (String maMoi : dsMaBanMoi) {
-                pstmt.setString(1, trangThaiBanAn); // <--- Dùng biến, không dùng cứng N'Đang ...'
-                pstmt.setString(2, maMoi);
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
-            pstmt.close();
-
-            // 4. XÓA CÁC PHIẾU ĐẶT BÀN CŨ
-            String sqlDeleteOldPDB = "DELETE FROM PhieuDatBan WHERE maHoaDon = ? AND maBan = ?";
-            pstmt = con.prepareStatement(sqlDeleteOldPDB);
-            for (String maCu : dsMaBanCu) {
-                pstmt.setString(1, maHoaDon);
-                pstmt.setString(2, maCu);
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
-            pstmt.close();
-
-            // 5. TẠO PHIẾU ĐẶT BÀN MỚI
-
-            // --- KHẮC PHỤC LỖI TREO: Lấy mã phiếu cuối cùng TRONG CÙNG KẾT NỐI (con) ---
-
-            DateTimeFormatter dtf = DateTimeFormatter.ofPattern("ddMMyyyy");
-            String ngayFormat = ngayChuyen.format(dtf);
-            String prefix = "PDB-" + ngayFormat + "-";
-
-            // Query trực tiếp bằng 'con' để tránh Deadlock
-            String sqlGetMaxID = "SELECT TOP 1 maPhieu FROM PhieuDatBan WHERE maPhieu LIKE '" + prefix + "%' ORDER BY maPhieu DESC";
-            Statement stMax = con.createStatement();
-            ResultSet rsMax = stMax.executeQuery(sqlGetMaxID);
-
-            int currentSuffix = 0;
-            if (rsMax.next()) {
-                String maCuoi = rsMax.getString("maPhieu");
-                try {
-                    currentSuffix = Integer.parseInt(maCuoi.substring(13));
-                } catch (Exception e) { currentSuffix = 0; }
-            }
-            rsMax.close();
-            stMax.close();
-            // --------------------------------------------------------------------------
-
-            LocalDateTime thoiGianMoi = LocalDateTime.of(ngayChuyen, java.time.LocalTime.now());
-            String thoiGianSQL = thoiGianMoi.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-            String sqlInsertNewPDB = "INSERT INTO PhieuDatBan (maPhieu, thoiGianBatDau, trangThai, soNguoi, ghiChu, maKhachHang, maBan, maNhanVien, maHoaDon) "
-                    + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
-            pstmt = con.prepareStatement(sqlInsertNewPDB);
-
-            for (String maMoi : dsMaBanMoi) {
-                currentSuffix++;
-                String maPhieuMoi = prefix + String.format("%03d", currentSuffix);
-
-                pstmt.setString(1, maPhieuMoi);
-                pstmt.setString(2, thoiGianSQL);
-                pstmt.setString(3, trangThaiMoi);
-                pstmt.setInt(4, soNguoi);
-                pstmt.setString(5, ghiChu);
-                pstmt.setString(6, maKhachHang);
-                pstmt.setString(7, maMoi);
-                pstmt.setString(8, maNhanVien);
-                pstmt.setString(9, maHoaDon);
-
-                pstmt.addBatch();
-            }
-            pstmt.executeBatch();
-
-            con.commit(); // XÁC NHẬN GIAO DỊCH
-            return true;
-
-        } catch (SQLException e) {
-            e.printStackTrace();
-            try {
-                if (con != null) con.rollback();
-            } catch (SQLException ex) { ex.printStackTrace(); }
-            return false;
-        } finally {
-            try {
-                if (pstmt != null) pstmt.close();
-                if (con != null) {
-                    con.setAutoCommit(true);
-                    con.close();
-                }
-            } catch (SQLException ex) { ex.printStackTrace(); }
+    public boolean chuyenBanNhieuSangNhieu(List<String> dsMaBanCu, List<String> dsMaBanMoi, String maHoaDon, String trangThaiMoi, LocalDate ngayChuyen) {
+        for (String maBanCu : dsMaBanCu) {
+            col("BanAn").updateOne(Filters.eq("maBan", maBanCu), Updates.set("trangThai", TrangThai.TRONG.name()));
         }
+        for (String maBanMoi : dsMaBanMoi) {
+            col("BanAn").updateOne(Filters.eq("maBan", maBanMoi), Updates.set("trangThai", trangThaiMoi));
+        }
+        List<Document> phieu = docs("PhieuDatBan", Filters.eq("maHoaDon", maHoaDon));
+        int i = 0;
+        for (Document d : phieu) {
+            if (sameDay(d.get("thoiGianBatDau"), ngayChuyen) && i < dsMaBanMoi.size()) {
+                col("PhieuDatBan").updateOne(Filters.eq("maPhieu", s(d, "maPhieu")), Updates.set("maBan", dsMaBanMoi.get(i++)));
+            }
+        }
+        return true;
     }
+
     public PhieuDatBan getPhieuDatBanMoiNhat(String maBan) {
-        PhieuDatBan phieu = null;
-
-        // --- SỬA SQL: Thêm hd.ngayTao vào danh sách lấy ---
-        String sql = "SELECT TOP 1 p.maPhieu, p.thoiGianBatDau, p.ghiChu, p.soNguoi, p.trangThai, " +
-                "k.maKhachHang, k.tenKhachHang, k.soDienThoai, " +
-                "nv.maNhanVien, nv.tenNhanVien, " +
-                "hd.maHoaDon, hd.ngayTao " + // <--- ĐÃ THÊM hd.ngayTao
-                "FROM PhieuDatBan p " +
-                "JOIN KhachHang k ON p.maKhachHang = k.maKhachHang " +
-                "JOIN NhanVien nv ON p.maNhanVien = nv.maNhanVien " +
-                "LEFT JOIN HoaDon hd ON p.maHoaDon = hd.maHoaDon " +
-                "WHERE p.maBan = ? " +
-                "AND p.trangThai IN (N'Đang dùng', N'Đã đặt') " +
-                "ORDER BY p.thoiGianBatDau DESC";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, maBan);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    phieu = new PhieuDatBan();
-                    phieu.setMaPhieu(rs.getString("maPhieu"));
-                    phieu.setThoiGianBatDau(rs.getTimestamp("thoiGianBatDau").toLocalDateTime());
-                    phieu.setGhiChu(rs.getString("ghiChu"));
-                    phieu.setSoNguoi(rs.getInt("soNguoi"));
-                    phieu.setTrangThai(rs.getString("trangThai"));
-
-                    BanAn ban = new BanAn();
-                    ban.setMaBan(maBan);
-                    phieu.setBan(ban);
-
-                    KhachHang kh = new KhachHang();
-                    kh.setMaKhachHang(rs.getString("maKhachHang"));
-                    kh.setTenKhachHang(rs.getString("tenKhachHang"));
-                    kh.setSoDienThoai(rs.getString("soDienThoai"));
-                    phieu.setKhachHang(kh);
-
-                    NhanVien nv = new NhanVien();
-                    nv.setMaNhanVien(rs.getString("maNhanVien"));
-                    nv.setTenNhanVien(rs.getString("tenNhanVien"));
-                    phieu.setNhanVien(nv);
-
-                    // --- SỬA: Map đầy đủ thông tin Hóa Đơn ---
-                    String maHD = rs.getString("maHoaDon");
-                    if (maHD != null) {
-                        HoaDon hd = new HoaDon();
-                        hd.setMaHoaDon(maHD);
-                        // Lấy ngày tạo từ DB lên, nếu null thì mới lấy ngày hiện tại
-                        Timestamp ts = rs.getTimestamp("ngayTao");
-                        hd.setNgayTao(ts != null ? ts.toLocalDateTime() : LocalDateTime.now());
-                        phieu.setHoaDon(hd);
-                    }
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return phieu;
+        return phieuDatBan(col("PhieuDatBan").find(Filters.eq("maBan", maBan)).sort(new Document("thoiGianBatDau", -1)).first());
     }
-    public int demSoBanDangSuDungCuaHoaDon(String maHoaDon) {
-        int count = 0;
-        // Chỉ đếm những phiếu đang 'Đã đặt' hoặc 'Đang dùng'
-        String sql = "SELECT COUNT(*) FROM PhieuDatBan WHERE maHoaDon = ? AND trangThai IN (N'Đã đặt', N'Đang dùng')";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-            ps.setString(1, maHoaDon);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                count = rs.getInt(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return count;
+    public int demSoBanDangSuDungCuaHoaDon(String maHoaDon) {
+        return (int) col("PhieuDatBan").countDocuments(Filters.and(Filters.eq("maHoaDon", maHoaDon), Filters.eq("trangThai", "Đang dùng")));
     }
 }

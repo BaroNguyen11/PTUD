@@ -1,239 +1,64 @@
 package dao;
 
-import ConnectDB.ConnectDB;
-import entity.MonAn;
+import com.mongodb.client.model.Filters;
+import com.mongodb.client.model.Sorts;
+import common.entity.MonAn;
+import org.bson.Document;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MonAn_DAO {
+public class MonAn_DAO extends MongoDaoSupport {
 
-
-
-        // ✅ Sửa method getAllMonAn
-        public List<MonAn> getAllMonAn() {
-            List<MonAn> dsMonAn = new ArrayList<>();
-            String sql = "SELECT * FROM MonAn";
-            try (Connection con = ConnectDB.getConnection();
-                 PreparedStatement ps = con.prepareStatement(sql);
-                 ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    MonAn mon = new MonAn(
-                            rs.getString("maMonAn"),
-                            rs.getString("tenMonAn"),
-                            rs.getString("loaiMon"),
-                            rs.getDouble("giaTien"),
-                            rs.getString("moTa"),
-                            rs.getString("hinhAnh") // ✅ THÊM TRƯỜNG HÌNH ẢNH
-                    );
-                    dsMonAn.add(mon);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return dsMonAn;
-        }
-
-        // ✅ Sửa method getMonAnByLoai (nếu có)
-        public List<MonAn> getMonAnByLoai(String loaiMon) {
-            List<MonAn> dsMonAn = new ArrayList<>();
-            String sql = "SELECT * FROM MonAn WHERE loaiMon = ?";
-            try (Connection con = ConnectDB.getConnection();
-                 PreparedStatement ps = con.prepareStatement(sql)) {
-                ps.setString(1, loaiMon);
-                ResultSet rs = ps.executeQuery();
-                while (rs.next()) {
-                    MonAn mon = new MonAn(
-                            rs.getString("maMonAn"),
-                            rs.getString("tenMonAn"),
-                            rs.getString("loaiMon"),
-                            rs.getDouble("giaTien"),
-                            rs.getString("moTa"),
-                            rs.getString("hinhAnh") // ✅ THÊM TRƯỜNG HÌNH ẢNH
-                    );
-                    dsMonAn.add(mon);
-                }
-            } catch (SQLException e) {
-                e.printStackTrace();
-            }
-            return dsMonAn;
-        }
-    public double layGiaSauKhuyenMai(String maMonAn, LocalDate ngayDat, double giaMacDinh) {
-
-        String sql =
-                "SELECT TOP 1 c.giaSauKhuyenMai " +
-                        "FROM ChiTietKMMonAn c JOIN KhuyenMai k ON c.maKhuyenMai = k.maKhuyenMai " +
-                        "WHERE c.maMonAn = ? " +
-                        "AND ? BETWEEN k.ngayBatDau AND k.ngayKetThuc " +
-                        "ORDER BY c.giaSauKhuyenMai ASC"; // Lấy khuyến mãi có giá tốt nhất
-
-        double giaCuoiCung = giaMacDinh;
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setString(1, maMonAn);
-            // Chuyển LocalDate sang java.sql.Date hoặc String phù hợp với SQL
-            stmt.setDate(2, java.sql.Date.valueOf(ngayDat));
-
-            try (ResultSet rs = stmt.executeQuery()) {
-                if (rs.next()) {
-                    giaCuoiCung = rs.getDouble("giaSauKhuyenMai");
-                }
-            }
-        } catch (SQLException e) {
-            System.err.println("Lỗi SQL khi tra cứu giá khuyến mãi: " + e.getMessage());
-        }
-        return giaCuoiCung;
+    public List<MonAn> getAllMonAn() {
+        List<MonAn> list = new ArrayList<>();
+        for (Document d : col("MonAn").find().sort(Sorts.ascending("maMonAn"))) list.add(monAn(d));
+        return list;
     }
-    public static MonAn getMonAnByMa(String maMonAn) {
-        MonAn mon = null;
-        String sql = "SELECT * FROM MonAn WHERE maMonAn = ?";
 
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
+    public List<MonAn> getMonAnByLoai(String loaiMon) {
+        List<MonAn> list = new ArrayList<>();
+        for (Document d : col("MonAn").find(Filters.eq("loaiMon", loaiMon)).sort(Sorts.ascending("maMonAn"))) list.add(monAn(d));
+        return list;
+    }
 
-            ps.setString(1, maMonAn);
-
-            try (ResultSet rs = ps.executeQuery()) {
-                if (rs.next()) {
-                    mon = new MonAn(
-                            rs.getString("maMonAn"),
-                            rs.getString("tenMonAn"),
-                            rs.getString("loaiMon"),
-                            rs.getDouble("giaTien"),
-                            rs.getString("moTa"),
-                            rs.getString("hinhAnh")
-                    );
-                }
+    public double layGiaSauKhuyenMai(String maMonAn, LocalDate ngayDat, double giaMacDinh) {
+        for (Document ct : docs("ChiTietKMMonAn", Filters.eq("maMonAn", maMonAn))) {
+            Document km = one("KhuyenMai", "maKhuyenMai", s(ct, "maKhuyenMai"));
+            if (km != null && inRange(toDate(ngayDat), toLocalDate(km.get("ngayBatDau")), toLocalDate(km.get("ngayKetThuc")))) {
+                return dbl(ct, "giaSauKhuyenMai");
             }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
         }
+        return giaMacDinh;
+    }
 
-        return mon;
+    public static MonAn getMonAnByMa(String maMonAn) {
+        return monAn(one("MonAn", "maMonAn", maMonAn));
     }
 
     public static String getMaMonByTen(String tenMon) {
-        String sql = "SELECT maMonAn FROM MonAn WHERE tenMonAn = ?";
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement ps = con.prepareStatement(sql)) {
-
-            ps.setString(1, tenMon);
-            ResultSet rs = ps.executeQuery();
-            if (rs.next()) {
-                return rs.getString("maMonAn");
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return null;
+        Document d = one("MonAn", "tenMonAn", tenMon);
+        return d == null ? null : s(d, "maMonAn");
     }
+
     public List<String> layDanhSachMonAnGiaKMString() {
-        List<String> ds = new ArrayList<>();
-
-        String sql = """
-	        SELECT 
-	            ma.maMonAn,
-	            ma.tenMonAn,
-	            ma.loaiMon,
-	            ma.giaTien,
-	            ma.moTa,
-	            CASE 
-	                WHEN EXISTS (
-	                    SELECT 1
-	                    FROM ChiTietKMMonAn ctkm
-	                    JOIN KhuyenMai km ON km.maKhuyenMai = ctkm.maKhuyenMai
-	                    WHERE ctkm.maMonAn = ma.maMonAn
-	                      AND km.ngayKetThuc >= ?
-	                      AND km.ngayBatDau <= ?
-	                ) THEN 1
-	                ELSE 0
-	            END AS CoGiamGia,
-	            ISNULL((
-	                SELECT MIN(ctkm.giaSauKhuyenMai)
-	                FROM ChiTietKMMonAn ctkm
-	                JOIN KhuyenMai km ON km.maKhuyenMai = ctkm.maKhuyenMai
-	                WHERE ctkm.maMonAn = ma.maMonAn
-	                  AND km.ngayKetThuc >= ?
-	                  AND km.ngayBatDau <= ?
-	            ), ma.giaTien) AS giaSauKhuyenMai,
-	            ISNULL((
-	                SELECT STRING_AGG(ctkm.maKhuyenMai, ',')
-	                FROM ChiTietKMMonAn ctkm
-	                JOIN KhuyenMai km ON km.maKhuyenMai = ctkm.maKhuyenMai
-	                WHERE ctkm.maMonAn = ma.maMonAn
-	                  AND km.ngayKetThuc >= ?
-	                  AND km.ngayBatDau <= ?
-	            ), 'NA') AS maKhuyenMai, 
-	            ma.hinhAnh
-	        FROM MonAn ma
-	        ORDER BY ma.tenMonAn
-	        """;
-
-        try (PreparedStatement ps = ConnectDB.getConnection().prepareStatement(sql)) {
-            // set tham số cho ngày bắt đầu và kết thúc khuyến mãi mới
-            ps.setObject(1, LocalDate.now());
-            ps.setObject(2, LocalDate.now());
-            ps.setObject(3, LocalDate.now());
-            ps.setObject(4, LocalDate.now());
-            ps.setObject(5, LocalDate.now());
-            ps.setObject(6, LocalDate.now());
-
-            try (ResultSet rs = ps.executeQuery()) {
-                while (rs.next()) {
-                    String line = rs.getString("maMonAn") + "-" +
-                            rs.getString("tenMonAn") + "-" +
-                            rs.getString("loaiMon") + "-" +
-                            rs.getBigDecimal("giaTien") + "-" +
-                            rs.getString("moTa") + "-" +
-                            rs.getInt("CoGiamGia") + "-" +
-                            rs.getBigDecimal("giaSauKhuyenMai") + "-" +
-                            rs.getString("maKhuyenMai") + "-" +
-                            rs.getString("hinhAnh");
-                    ds.add(line);
-                }
-            }
-
-        } catch (SQLException e) {
-            e.printStackTrace();
+        List<String> list = new ArrayList<>();
+        for (Document d : docs("MonAn")) {
+            MonAn m = monAn(d);
+            double gia = layGiaSauKhuyenMai(m.getMaMonAn(), LocalDate.now(), m.getGiaTien());
+            list.add(m.getMaMonAn() + "," + m.getTenMonAn() + "," + m.getLoaiMon() + "," + m.getGiaTien() + "," + gia);
         }
-
-        return ds;
+        return list;
     }
-    // Trong class MonAn_DAO
+
     public List<MonAn> timKiemMonAn(String tuKhoa) {
-        List<MonAn> dsMon = new ArrayList<>();
-        String sql = "SELECT * FROM MonAn WHERE TenMonAn LIKE N'%' + ? + '%'";
-
-        try (Connection con = ConnectDB.getConnection();
-             PreparedStatement stmt = con.prepareStatement(sql)) {
-
-            stmt.setString(1, tuKhoa);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                // Map dữ liệu từ ResultSet vào Object MonAn
-                // (Bạn tự điều chỉnh các cột cho khớp với DB của bạn)
-                String maMon = rs.getString("maMonAn");
-                String tenMon = rs.getString("tenMonAn");
-                String loai = rs.getString("loaiMon");
-                double gia = rs.getDouble("giaTien");
-                String moTa = rs.getString("moTa");
-                String hinhAnh = rs.getString("hinhAnh");
-
-
-                dsMon.add(new MonAn(maMon, tenMon,loai, gia, moTa, hinhAnh));
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-        return dsMon;
+        List<MonAn> list = new ArrayList<>();
+        for (Document d : col("MonAn").find(Filters.or(
+                Filters.regex("maMonAn", contains(tuKhoa)),
+                Filters.regex("tenMonAn", contains(tuKhoa)),
+                Filters.regex("loaiMon", contains(tuKhoa))
+        ))) list.add(monAn(d));
+        return list;
     }
 }
