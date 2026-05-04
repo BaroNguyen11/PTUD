@@ -24,4 +24,5 @@ public class KhachHangRemoteImpl extends UnicastRemoteObject implements KhachHan
     public boolean isSoDienThoaiExists(String soDienThoai) throws RemoteException { return RemoteCallLogger.log("KhachHangRemoteImpl", "isSoDienThoaiExists", new Object[]{soDienThoai}, () -> dao.isSoDienThoaiExists(soDienThoai)); }
     public boolean isSoDienThoaiExistsForOther(String soDienThoai, String maKhachHang) throws RemoteException { return RemoteCallLogger.log("KhachHangRemoteImpl", "isSoDienThoaiExistsForOther", new Object[]{soDienThoai, maKhachHang}, () -> dao.isSoDienThoaiExistsForOther(soDienThoai, maKhachHang)); }
     public String generateMaKhachHang() throws RemoteException { return RemoteCallLogger.log("KhachHangRemoteImpl", "generateMaKhachHang", new Object[]{}, () -> dao.generateMaKhachHang()); }
+    public List<KhachHang> searchKhachHang(String keyword) throws RemoteException { return RemoteCallLogger.log("KhachHangRemoteImpl", "searchKhachHang", new Object[]{keyword}, () -> dao.searchKhachHang(keyword)); }
 }

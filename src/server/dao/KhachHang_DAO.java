@@ -18,6 +18,20 @@ public class KhachHang_DAO extends MongoDaoSupport {
         return list;
     }
 
+    /**
+     * Tìm kiếm khách hàng theo mã, tên hoặc SĐT.
+     * Sử dụng MongoDB $regex với CASE_INSENSITIVE.
+     */
+    public List<KhachHang> searchKhachHang(String keyword) {
+        List<KhachHang> list = new ArrayList<>();
+        for (Document d : col("KhachHang").find(Filters.or(
+                Filters.regex("maKhachHang", contains(keyword)),
+                Filters.regex("tenKhachHang", contains(keyword)),
+                Filters.regex("soDienThoai", contains(keyword))
+        )).sort(Sorts.ascending("maKhachHang"))) list.add(khachHang(d));
+        return list;
+    }
+
     public static KhachHang getKhachHangById(String maKH) {
         return khachHang(one("KhachHang", "maKhachHang", maKH));
     }

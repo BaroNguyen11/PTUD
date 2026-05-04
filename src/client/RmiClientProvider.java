@@ -29,7 +29,18 @@ public final class RmiClientProvider {
 
     private static Remote lookup(String serviceName) {
         try {
-            String host = System.getProperty("rmi.host", DEFAULT_HOST);
+            String host = System.getProperty("rmi.host");
+            if (host == null || host.isEmpty() || host.equalsIgnoreCase("localhost")) {
+                // Thử tìm IP Server qua UDP Broadcast
+                String discoveredIp = common.NetworkDiscovery.discoverServer();
+                if (discoveredIp != null) {
+                    host = discoveredIp;
+                    System.setProperty("rmi.host", host);
+                } else {
+                    host = DEFAULT_HOST; // Fallback to localhost
+                }
+            }
+            
             String port = System.getProperty("rmi.port", DEFAULT_PORT);
             return (Remote) Naming.lookup("rmi://" + host + ":" + port + "/" + serviceName);
         } catch (Exception e) {

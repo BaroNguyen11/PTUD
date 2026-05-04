@@ -17,4 +17,5 @@ public interface KhachHangRemote extends Remote {
     boolean isSoDienThoaiExists(String soDienThoai) throws RemoteException;
     boolean isSoDienThoaiExistsForOther(String soDienThoai, String maKhachHang) throws RemoteException;
     String generateMaKhachHang() throws RemoteException;
+    List<KhachHang> searchKhachHang(String keyword) throws RemoteException;
 }

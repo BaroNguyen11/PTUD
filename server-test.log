@@ -28,87 +28,7 @@ Mongo database: QLNhaHang2BTCHECK
 [RMI] DangNhapRemoteImpl.isAdmin called by client params=[admin]
 [RMI] DangNhapRemoteImpl.isAdmin result=true
 [RMI] NhanVienRemoteImpl.getNhanVienByMa called by client params=[NV001]
-[RMI] NhanVienRemoteImpl.getNhanVienByMa result=NhanVien{maNhanVien='NV001', tenNhanVien='Qu?n tr? viên', chucVu='Qu?n l?', CCCD='001001001001', soDienThoai='0900000001', ngaySinh=1995-01-01, ngayVaoLam=2024-01-01, ngayThoiViec=null}
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay result=236000.0
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua result=199000.0
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[236000.0, 199000.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=18.6%
-[RMI] DashboardRemoteImpl.getLuotDatBanHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getLuotDatBanHomNay result=1
-[RMI] DashboardRemoteImpl.getLuotDatBanHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getLuotDatBanHomQua result=1
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay result=4
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua result=3
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[4.0, 3.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=33.3%
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay result=1
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua result=1
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
-[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan called by client params=[]
-[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan result={Mon=236000.0, Sun=199000.0}
-[RMI] DashboardRemoteImpl.getTopMonBanChay called by client params=[5]
-[RMI] DashboardRemoteImpl.getTopMonBanChay result={Com chien hai san=2, Ca phe sua=2, Tra dao=2, Ga nuong mat ong=1}
-[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio called by client params=[]
-[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio result={19:00=4}
-[RMI] DangNhapRemoteImpl.authenticate called by client params=[admin, 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92]
-[RMI] DangNhapRemoteImpl.authenticate result=true
-[RMI] DangNhapRemoteImpl.isTaiKhoanHoatDong called by client params=[admin]
-[RMI] DangNhapRemoteImpl.isTaiKhoanHoatDong result=true
-[RMI] DangNhapRemoteImpl.getMaNhanVien called by client params=[admin]
-[RMI] DangNhapRemoteImpl.getMaNhanVien result=NV001
-[RMI] DangNhapRemoteImpl.isAdmin called by client params=[admin]
-[RMI] DangNhapRemoteImpl.isAdmin result=true
-[RMI] NhanVienRemoteImpl.getNhanVienByMa called by client params=[NV001]
-[RMI] NhanVienRemoteImpl.getNhanVienByMa result=NhanVien{maNhanVien='NV001', tenNhanVien='Qu?n tr? viên', chucVu='Qu?n l?', CCCD='001001001001', soDienThoai='0900000001', ngaySinh=1995-01-01, ngayVaoLam=2024-01-01, ngayThoiViec=null}
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay result=236000.0
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua result=199000.0
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[236000.0, 199000.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=18.6%
-[RMI] DashboardRemoteImpl.getLuotDatBanHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getLuotDatBanHomNay result=1
-[RMI] DashboardRemoteImpl.getLuotDatBanHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getLuotDatBanHomQua result=1
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay result=4
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua result=3
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[4.0, 3.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=33.3%
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay called by client params=[]
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay result=1
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua called by client params=[]
-[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua result=1
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
-[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
-[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan called by client params=[]
-[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan result={Mon=236000.0, Sun=199000.0}
-[RMI] DashboardRemoteImpl.getTopMonBanChay called by client params=[5]
-[RMI] DashboardRemoteImpl.getTopMonBanChay result={Com chien hai san=2, Ca phe sua=2, Tra dao=2, Ga nuong mat ong=1}
-[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio called by client params=[]
-[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio result={19:00=4}
-[RMI] DangNhapRemoteImpl.authenticate called by client params=[admin, 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92]
-[RMI] DangNhapRemoteImpl.authenticate result=true
-[RMI] DangNhapRemoteImpl.isTaiKhoanHoatDong called by client params=[admin]
-[RMI] DangNhapRemoteImpl.isTaiKhoanHoatDong result=true
-[RMI] DangNhapRemoteImpl.getMaNhanVien called by client params=[admin]
-[RMI] DangNhapRemoteImpl.getMaNhanVien result=NV001
-[RMI] DangNhapRemoteImpl.isAdmin called by client params=[admin]
-[RMI] DangNhapRemoteImpl.isAdmin result=true
-[RMI] NhanVienRemoteImpl.getNhanVienByMa called by client params=[NV001]
-[RMI] NhanVienRemoteImpl.getNhanVienByMa result=NhanVien{maNhanVien='NV001', tenNhanVien='Qu?n tr? viên', chucVu='Qu?n l?', CCCD='001001001001', soDienThoai='0900000001', ngaySinh=1995-01-01, ngayVaoLam=2024-01-01, ngayThoiViec=null}
+[RMI] NhanVienRemoteImpl.getNhanVienByMa result=NhanVien{maNhanVien='NV001', tenNhanVien='Qu?n tr? viên', chucVu='Qu?n lý', CCCD='001001001001', soDienThoai='0900000001', ngaySinh=1995-01-01, ngayVaoLam=2024-01-01, ngayThoiViec=null}
 [RMI] DashboardRemoteImpl.getTongDoanhThuHomNay called by client params=[]
 [RMI] DashboardRemoteImpl.getTongDoanhThuHomNay result=236000.0
 [RMI] DashboardRemoteImpl.getTongDoanhThuHomQua called by client params=[]
@@ -142,10 +62,646 @@ Mongo database: QLNhaHang2BTCHECK
 [RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
 [RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DANG_SU_DUNG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
 [RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
-[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='Ðang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
 [RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026001]
 [RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=1
 [RMI] QuanLyBanRemoteImpl.getAllBanAn called by client params=[]
 [RMI] QuanLyBanRemoteImpl.getAllBanAn result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B005', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B006', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B007', loai='VIP', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B008'...(truncated)
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DANG_SU_DUNG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026001]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=1
+[RMI] QuanLyBanRemoteImpl.getAllBanAn called by client params=[]
+[RMI] QuanLyBanRemoteImpl.getAllBanAn result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B005', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B006', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B007', loai='VIP', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B008'...(truncated)
+[RMI] QLMonRemoteImpl.getDanhSachMonAn called by client params=[]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] ThongKeRemoteImpl.getDoanhThuThangNay called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuThangNay result=435000.0
+[RMI] ThongKeRemoteImpl.getDoanhThuThangTruoc called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuThangTruoc result=0.0
+[RMI] ThongKeRemoteImpl.getDoanhThuThangNay called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuThangNay result=435000.0
+[RMI] ThongKeRemoteImpl.getDoanhThuTrungBinhBan called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuTrungBinhBan result=54375.0
+[RMI] ThongKeRemoteImpl.getTiLeTienMat called by client params=[]
+[RMI] ThongKeRemoteImpl.getTiLeTienMat result=50.0
+[RMI] ThongKeRemoteImpl.getTiLeTienMat called by client params=[]
+[RMI] ThongKeRemoteImpl.getTiLeTienMat result=50.0
+[RMI] ThongKeRemoteImpl.getDoanhThuCaToi called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuCaToi result=0.0
+[RMI] ThongKeRemoteImpl.getDoanhThuTheoThang called by client params=[2026]
+[RMI] ThongKeRemoteImpl.getDoanhThuTheoThang result={05=435000.0}
+[RMI] ThongKeRemoteImpl.getDoanhThuTheoCa called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuTheoCa result={}
+[RMI] ThongKeRemoteImpl.getTongLuotDatBan called by client params=[]
+[RMI] ThongKeRemoteImpl.getTongLuotDatBan result=2
+[RMI] ThongKeRemoteImpl.getTyLeLapDay called by client params=[]
+[RMI] ThongKeRemoteImpl.getTyLeLapDay result=0.0
+[RMI] ThongKeRemoteImpl.getTyLeHuyDat called by client params=[]
+[RMI] ThongKeRemoteImpl.getTyLeHuyDat result=0.0
+[RMI] ThongKeRemoteImpl.getThoiGianSuDungTB called by client params=[]
+[RMI] ThongKeRemoteImpl.getThoiGianSuDungTB result=0.0
+[RMI] ThongKeRemoteImpl.getHieuSuatKhuVuc called by client params=[]
+[RMI] ThongKeRemoteImpl.getHieuSuatKhuVuc result={}
+[RMI] ThongKeRemoteImpl.getMonBanChayNhat called by client params=[]
+[RMI] ThongKeRemoteImpl.getMonBanChayNhat result=[Com chien hai san, 2]
+[RMI] ThongKeRemoteImpl.getMonDoanhThuCaoNhat called by client params=[]
+[RMI] ThongKeRemoteImpl.getMonDoanhThuCaoNhat result=[Com chien hai san, 2]
+[RMI] ThongKeRemoteImpl.getThongKeDoUong called by client params=[]
+[RMI] ThongKeRemoteImpl.getThongKeDoUong result=[0.0, 0.0]
+[RMI] ThongKeRemoteImpl.getTopMonAnBanChay called by client params=[]
+[RMI] ThongKeRemoteImpl.getTopMonAnBanChay result={Com chien hai san=2, Ca phe sua=2, Tra dao=2, Ga nuong mat ong=1}
+[RMI] ThongKeRemoteImpl.getDoanhThuTheoNhomMon called by client params=[]
+[RMI] ThongKeRemoteImpl.getDoanhThuTheoNhomMon result={Com=178000.0, Do uong=128000.0, Mon chinh=129000.0}
+[RMI] ThongKeRemoteImpl.getThongKeKhachHang called by client params=[]
+[RMI] ThongKeRemoteImpl.getThongKeKhachHang result=[2, 1]
+[RMI] ThongKeRemoteImpl.getChiTieuTrungBinh called by client params=[]
+[RMI] ThongKeRemoteImpl.getChiTieuTrungBinh result=217500.0
+[RMI] ThongKeRemoteImpl.getTanSuatTrungBinh called by client params=[]
+[RMI] ThongKeRemoteImpl.getTanSuatTrungBinh result=0.0
+[RMI] ThongKeRemoteImpl.getTopKhachHang called by client params=[]
+[RMI] ThongKeRemoteImpl.getTopKhachHang result=[[Ljava.lang.String;@70366cae, [Ljava.lang.String;@3fbf6153]
+[RMI] QLHDRemoteImpl.loadDanhSachHoaDon called by client params=[]
+[RMI] QLHDRemoteImpl.loadDanhSachHoaDon result=[HD04052026001,Khach le,Qu?n tr? viên,236000.0,450000.0,,04/05/2026,?ang ph?c v?,Dung tai cho,B001, HD03052026001,Khach quen,Qu?n tr? viên,199000.0,350000.0,Ti?n m?t,03/05/2026,?ã thanh toán,Hoa don mau,B002]
+[RMI] QLKMRemoteImpl.layTatCaKhuyenMaiStrings called by client params=[]
+[RMI] QLKMRemoteImpl.layTatCaKhuyenMaiStrings result=[KM001,Giam 10 phan tram,27/04/2026,03/06/2026,100000.0,50000.0,1,10.0,0,?ang áp d?ng]
+[RMI] KhachHangRemoteImpl.getAllKhachHang called by client params=[]
+[RMI] KhachHangRemoteImpl.getAllKhachHang result=[KhachHang{maKhachHang='KH001', tenKhachHang='Khach le', soDienThoai='0901000001', diemTichLuy=0.0}, KhachHang{maKhachHang='KH002', tenKhachHang='Khach quen', soDienThoai='0901000002', diemTichLuy=120.0}]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn called by client params=[]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] QLMonRemoteImpl.getDanhSachMonAn called by client params=[]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] QLMonRemoteImpl.getDanhSachMonAn called by client params=[]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] KhachHangRemoteImpl.getAllKhachHang called by client params=[]
+[RMI] KhachHangRemoteImpl.getAllKhachHang result=[KhachHang{maKhachHang='KH001', tenKhachHang='Khach le', soDienThoai='0901000001', diemTichLuy=0.0}, KhachHang{maKhachHang='KH002', tenKhachHang='Khach quen', soDienThoai='0901000002', diemTichLuy=120.0}]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn called by client params=[]
+[RMI] QLMonRemoteImpl.getDanhSachMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DANG_SU_DUNG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026001]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=1
+[RMI] QuanLyBanRemoteImpl.getAllBanAn called by client params=[]
+[RMI] QuanLyBanRemoteImpl.getAllBanAn result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B005', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B006', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B007', loai='VIP', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B008'...(truncated)
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DANG_SU_DUNG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026001]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=1
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay result=236000.0
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua result=199000.0
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[236000.0, 199000.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=18.6%
+[RMI] DashboardRemoteImpl.getLuotDatBanHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getLuotDatBanHomNay result=1
+[RMI] DashboardRemoteImpl.getLuotDatBanHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getLuotDatBanHomQua result=1
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay result=4
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua result=3
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[4.0, 3.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=33.3%
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay result=1
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua result=1
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
+[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan called by client params=[]
+[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan result={Mon=236000.0, Sun=199000.0}
+[RMI] DashboardRemoteImpl.getTopMonBanChay called by client params=[5]
+[RMI] DashboardRemoteImpl.getTopMonBanChay result={Com chien hai san=2, Ca phe sua=2, Tra dao=2, Ga nuong mat ong=1}
+[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio called by client params=[]
+[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio result={19:00=4}
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DANG_SU_DUNG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026001]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=1
+[RMI] QuanLyBanRemoteImpl.getAllBanAn called by client params=[]
+[RMI] QuanLyBanRemoteImpl.getAllBanAn result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B005', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B006', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B007', loai='VIP', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B008'...(truncated)
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DANG_SU_DUNG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026001]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=1
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B001, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B001]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026001
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026001]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B001]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026001
+[RMI] PhieuDatBanRemoteImpl.getByMaHoaDon called by client params=[HD04052026001]
+[RMI] PhieuDatBanRemoteImpl.getByMaHoaDon result=[PhieuDatBan{maPhieu='PDB04052026001', thoiGianBatDau=2026-05-04T19:18:53.533, trangThai='?ang dùng', soNguoi=4, ghiChu='Dùng ngay'}]
+[RMI] ThanhToanRemoteImpl.getChiTietHoaDonTheoMa called by client params=[HD04052026001]
+[RMI] ThanhToanRemoteImpl.getChiTietHoaDonTheoMa result=[Com chien hai san,2,89000.0,178000.0, Ca phe sua,2,29000.0,58000.0]
+[RMI] KhachHangRemoteImpl.getKhachHangById called by client params=[KH001]
+[RMI] KhachHangRemoteImpl.getKhachHangById result=KhachHang{maKhachHang='KH001', tenKhachHang='Khach le', soDienThoai='0901000001', diemTichLuy=0.0}
+[RMI] ThanhToanRemoteImpl.getKhuyenMaiApDungChoHoaDon called by client params=[HD04052026001, 236000.0]
+[RMI] ThanhToanRemoteImpl.getKhuyenMaiApDungChoHoaDon result=[Giam 10 phan tram | Ngày h?t h?n: 03/06/2026 | ?i?u ki?n: 100000.0 | T?i ?a: 50,000.0 VND | Gi?m giá: 10.0 %]
+[RMI] ThanhToanRemoteImpl.capNhatTrangThaiHoanTat called by client params=[PDB04052026001]
+[RMI] ThanhToanRemoteImpl.capNhatTrangThaiHoanTat result=true
+[RMI] ThanhToanRemoteImpl.capNhatTrangThaiTrong called by client params=[B001]
+[RMI] ThanhToanRemoteImpl.capNhatTrangThaiTrong result=false
+[RMI] ThanhToanRemoteImpl.capNhatTrangThaiThanhToan called by client params=[HD04052026001, Ti?n m?t]
+[RMI] ThanhToanRemoteImpl.capNhatTrangThaiThanhToan result=true
+[RMI] ThanhToanRemoteImpl.taoChiTietKMHD called by client params=[HD04052026001, KM001, 23600.0]
+[RMI] ThanhToanRemoteImpl.taoChiTietKMHD result=true
+[RMI] KhachHangRemoteImpl.getKhachHangById called by client params=[KH001]
+[RMI] KhachHangRemoteImpl.getKhachHangById result=KhachHang{maKhachHang='KH001', tenKhachHang='Khach le', soDienThoai='0901000001', diemTichLuy=0.0}
+[RMI] ThanhToanRemoteImpl.updateDiemTichLuy called by client params=[KH001, 11.21]
+[RMI] ThanhToanRemoteImpl.updateDiemTichLuy result=true
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] MonAnRemoteImpl.getAllMonAn called by client params=[]
+[RMI] MonAnRemoteImpl.getAllMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] MonAnRemoteImpl.getAllMonAn called by client params=[]
+[RMI] MonAnRemoteImpl.getAllMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA004, 2026-05-04, 29000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=29000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA004, 2026-05-04, 29000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=29000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA004, 2026-05-04, 29000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=29000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA004, 2026-05-04, 29000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=29000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA004, 2026-05-04, 29000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=29000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA002, 2026-05-04, 69000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=69000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA003, 2026-05-04, 129000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=129000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai called by client params=[MA006, 2026-05-04, 25000.0]
+[RMI] MonAnRemoteImpl.layGiaSauKhuyenMai result=25000.0
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0000000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.themKhachHangMoi called by client params=[KhachHang{maKhachHang='null', tenKhachHang='Thanh', soDienThoai='0300000000', diemTichLuy=0.0}]
+[RMI] KhachHangRemoteImpl.themKhachHangMoi result=true
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=KhachHang{maKhachHang='KH04052026001', tenKhachHang='Thanh', soDienThoai='0300000000', diemTichLuy=0.0}
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000001]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000001]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=null
+[RMI] KhachHangRemoteImpl.themKhachHangMoi called by client params=[KhachHang{maKhachHang='null', tenKhachHang='test', soDienThoai='0300000001', diemTichLuy=0.0}]
+[RMI] KhachHangRemoteImpl.themKhachHangMoi result=true
+[RMI] PhieuDatBanRemoteImpl.kiemTraBanDaDatTrongNgay called by client params=[B001, 2026-05-05T19:00]
+[RMI] PhieuDatBanRemoteImpl.kiemTraBanDaDatTrongNgay result=false
+[RMI] PhieuDatBanRemoteImpl.kiemTraBanDaDatTrongNgay called by client params=[B002, 2026-05-05T19:00]
+[RMI] PhieuDatBanRemoteImpl.kiemTraBanDaDatTrongNgay result=false
+[RMI] HoaDonRemoteImpl.themHoaDon called by client params=[HoaDon{maHoaDon='null', ngayTao=2026-05-04T23:46:34.566640600, trangThai='null', phuongThuc='null', ghiChu='null'}]
+[RMI] HoaDonRemoteImpl.themHoaDon result=HD04052026002
+[RMI] BanAnRemoteImpl.updateTrangThaiBan called by client params=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, DA_DAT]
+[RMI] BanAnRemoteImpl.updateTrangThaiBan result=true
+[RMI] PhieuDatBanRemoteImpl.themPhieuDatBan called by client params=[PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}, ?ã ??t]
+[RMI] PhieuDatBanRemoteImpl.themPhieuDatBan result=true
+[RMI] BanAnRemoteImpl.updateTrangThaiBan called by client params=[BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, DA_DAT]
+[RMI] BanAnRemoteImpl.updateTrangThaiBan result=true
+[RMI] PhieuDatBanRemoteImpl.themPhieuDatBan called by client params=[PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}, ?ã ??t]
+[RMI] PhieuDatBanRemoteImpl.themPhieuDatBan result=true
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon called by client params=[ChiTietHoaDon{hoaDon=HoaDon{maHoaDon='HD04052026002', ngayTao=2026-05-04T23:46:34.566640600, trangThai='null', phuongThuc='null', ghiChu='null'}, monAn=MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, soLuong=3}]
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon result=true
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon called by client params=[ChiTietHoaDon{hoaDon=HoaDon{maHoaDon='HD04052026002', ngayTao=2026-05-04T23:46:34.566640600, trangThai='null', phuongThuc='null', ghiChu='null'}, monAn=MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, soLuong=3}]
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon result=true
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon called by client params=[ChiTietHoaDon{hoaDon=HoaDon{maHoaDon='HD04052026002', ngayTao=2026-05-04T23:46:34.566640600, trangThai='null', phuongThuc='null', ghiChu='null'}, monAn=MonAn{maMonAn='MA006', tenMonAn='Banh flan', loaiMon='Trang mieng', giaTien=25000.0, moTa='Banh flan mem'}, soLuong=2}]
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon result=true
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon called by client params=[ChiTietHoaDon{hoaDon=HoaDon{maHoaDon='HD04052026002', ngayTao=2026-05-04T23:46:34.566640600, trangThai='null', phuongThuc='null', ghiChu='null'}, monAn=MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, soLuong=3}]
+[RMI] ChiTietHoaDonRemoteImpl.themChiTietHoaDon result=true
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-05]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-06]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-07]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã ??t', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B001, 2026-05-07]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=null
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B001]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B001]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] PhieuDatBanRemoteImpl.huyTatCaPhieuByMaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.huyTatCaPhieuByMaHoaDon result=true
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-07]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-07]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B002, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=null
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] PhieuDatBanRemoteImpl.huyTatCaPhieuByMaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.huyTatCaPhieuByMaHoaDon result=false
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B002, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=null
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] PhieuDatBanRemoteImpl.huyPhieuDatBanByMaBanVaNgay called by client params=[B002, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.huyPhieuDatBanByMaBanVaNgay result=false
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B002, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=null
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay called by client params=[HD04052026002, 2026-05-04]
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay result=[]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay called by client params=[HD04052026002, 2026-05-04]
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay result=[]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay called by client params=[HD04052026002, 2026-05-04]
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay result=[]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay called by client params=[HD04052026002, 2026-05-04]
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay result=[]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay called by client params=[HD04052026002, 2026-05-04]
+[RMI] CheckInRemoteImpl.getPhieuDatBanTheoHoaDonVaNgay result=[]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_2, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B005', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B006', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B007', loai='VIP', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B008', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B002, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=null
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] PhieuDatBanRemoteImpl.huyTatCaPhieuByMaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.huyTatCaPhieuByMaHoaDon result=false
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B002]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay called by client params=[B002, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanByMaBanVaNgay result=null
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B002]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon called by client params=[HD04052026002]
+[RMI] BanAnRemoteImpl.getDanhSachBanCungHoaDon result=[B001, B002]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan called by client params=[B001]
+[RMI] BanAnRemoteImpl.getMaHoaDonTuBan result=HD04052026002
+[RMI] PhieuDatBanRemoteImpl.chuyenBanNhieuSangNhieu called by client params=[[B001, B002], [B004, B003], HD04052026002, ?ã ??t, 2026-05-04]
+[RMI] PhieuDatBanRemoteImpl.chuyenBanNhieuSangNhieu result=true
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_2, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B005', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B006', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B007', loai='VIP', trangThai='TRONG', viTri='LAU_2'}, BanAn{maBan='B008', loai='THUONG', trangThai='TRONG', viTri='LAU_2'}]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
 [RMI] CaRemoteImpl.getCaDangLam called by client params=[NV001]
 [RMI] CaRemoteImpl.getCaDangLam result=null
+[RMI] DangNhapRemoteImpl.authenticate called by client params=[admin, 8d969eef6ecad3c29a3a629280e686cf0c3f5d5a86aff3ca12020c923adc6c92]
+[RMI] DangNhapRemoteImpl.authenticate result=true
+[RMI] DangNhapRemoteImpl.isTaiKhoanHoatDong called by client params=[admin]
+[RMI] DangNhapRemoteImpl.isTaiKhoanHoatDong result=true
+[RMI] DangNhapRemoteImpl.getMaNhanVien called by client params=[admin]
+[RMI] DangNhapRemoteImpl.getMaNhanVien result=NV001
+[RMI] DangNhapRemoteImpl.isAdmin called by client params=[admin]
+[RMI] DangNhapRemoteImpl.isAdmin result=true
+[RMI] NhanVienRemoteImpl.getNhanVienByMa called by client params=[NV001]
+[RMI] NhanVienRemoteImpl.getNhanVienByMa result=NhanVien{maNhanVien='NV001', tenNhanVien='Qu?n tr? viên', chucVu='Qu?n lý', CCCD='001001001001', soDienThoai='0900000001', ngaySinh=1995-01-01, ngayVaoLam=2024-01-01, ngayThoiViec=null}
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay result=967000.0
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua result=199000.0
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[967000.0, 199000.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=385.9%
+[RMI] DashboardRemoteImpl.getLuotDatBanHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getLuotDatBanHomNay result=1
+[RMI] DashboardRemoteImpl.getLuotDatBanHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getLuotDatBanHomQua result=1
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay result=15
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua result=3
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[15.0, 3.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=400.0%
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay result=1
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua result=1
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
+[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan called by client params=[]
+[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan result={Mon=967000.0, Sun=199000.0}
+[RMI] DashboardRemoteImpl.getTopMonBanChay called by client params=[5]
+[RMI] DashboardRemoteImpl.getTopMonBanChay result={Ca phe sua=5, Ga nuong mat ong=4, Pho bo=3, Com chien hai san=2, Banh flan=2}
+[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio called by client params=[]
+[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio result={19:00=4}
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomNay result=967000.0
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getTongDoanhThuHomQua result=199000.0
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[967000.0, 199000.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=385.9%
+[RMI] DashboardRemoteImpl.getLuotDatBanHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getLuotDatBanHomNay result=1
+[RMI] DashboardRemoteImpl.getLuotDatBanHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getLuotDatBanHomQua result=1
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomNay result=15
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getSoMonBanRaHomQua result=3
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[15.0, 3.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=400.0%
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay called by client params=[]
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomNay result=1
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua called by client params=[]
+[RMI] DashboardRemoteImpl.getSoKhachPhucVuHomQua result=1
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi called by client params=[1.0, 1.0]
+[RMI] DashboardRemoteImpl.tinhPhanTramThayDoi result=0.0%
+[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan called by client params=[]
+[RMI] DashboardRemoteImpl.getDoanhThuTheoTuan result={Mon=967000.0, Sun=199000.0}
+[RMI] DashboardRemoteImpl.getTopMonBanChay called by client params=[5]
+[RMI] DashboardRemoteImpl.getTopMonBanChay result={Ca phe sua=5, Ga nuong mat ong=4, Pho bo=3, Com chien hai san=2, Banh flan=2}
+[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio called by client params=[]
+[RMI] DashboardRemoteImpl.getLuongKhachTheoKhungGio result={19:00=4}
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] MonAnRemoteImpl.getAllMonAn called by client params=[]
+[RMI] MonAnRemoteImpl.getAllMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] MonAnRemoteImpl.getAllMonAn called by client params=[]
+[RMI] MonAnRemoteImpl.getAllMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-05]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] MonAnRemoteImpl.getAllMonAn called by client params=[]
+[RMI] MonAnRemoteImpl.getAllMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] MonAnRemoteImpl.getAllMonAn called by client params=[]
+[RMI] MonAnRemoteImpl.getAllMonAn result=[MonAn{maMonAn='MA001', tenMonAn='Com chien hai san', loaiMon='Com', giaTien=89000.0, moTa='Com chien tom muc'}, MonAn{maMonAn='MA002', tenMonAn='Pho bo', loaiMon='Mon nuoc', giaTien=69000.0, moTa='Pho bo tai'}, MonAn{maMonAn='MA003', tenMonAn='Ga nuong mat ong', loaiMon='Mon chinh', giaTien=129000.0, moTa='Ga nuong vi mat ong'}, MonAn{maMonAn='MA004', tenMonAn='Ca phe sua', loaiMon='Do uong', giaTien=29000.0, moTa='Ca phe sua da'}, MonAn{maMonAn='MA005', tenMonAn='Tra dao', loaiMon='Do uong', g...(truncated)
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=KhachHang{maKhachHang='KH04052026001', tenKhachHang='Thanh', soDienThoai='0300000000', diemTichLuy=0.0}
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=KhachHang{maKhachHang='KH04052026001', tenKhachHang='Thanh', soDienThoai='0300000000', diemTichLuy=0.0}
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt called by client params=[0300000000]
+[RMI] KhachHangRemoteImpl.getKhachHangBySdt result=KhachHang{maKhachHang='KH04052026001', tenKhachHang='Thanh', soDienThoai='0300000000', diemTichLuy=0.0}
+[RMI] PhieuDatBanRemoteImpl.kiemTraBanDaDatTrongNgay called by client params=[B001, 2026-05-05T18:00]
+[RMI] PhieuDatBanRemoteImpl.kiemTraBanDaDatTrongNgay result=false
+[RMI] HoaDonRemoteImpl.themHoaDon called by client params=[HoaDon{maHoaDon='null', ngayTao=2026-05-04T23:57:01.228263300, trangThai='null', phuongThuc='null', ghiChu='null'}]
+[RMI] HoaDonRemoteImpl.themHoaDon result=HD04052026003
+[RMI] BanAnRemoteImpl.updateTrangThaiBan called by client params=[BanAn{maBan='B001', loai='VIP', trangThai='TRONG', viTri='LAU_1'}, DA_DAT]
+[RMI] BanAnRemoteImpl.updateTrangThaiBan result=true
+[RMI] PhieuDatBanRemoteImpl.themPhieuDatBan called by client params=[PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T18:00, trangThai='?ã ??t', soNguoi=6, ghiChu=''}, ?ã ??t]
+[RMI] PhieuDatBanRemoteImpl.themPhieuDatBan result=true
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-05]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-06]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri called by client params=[LAU_1, 2026-05-04]
+[RMI] BanAnRemoteImpl.getTrangThaiBanTheoNgayVaViTri result=[BanAn{maBan='B001', loai='VIP', trangThai='DA_DAT', viTri='LAU_1'}, BanAn{maBan='B002', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B003', loai='THUONG', trangThai='TRONG', viTri='LAU_1'}, BanAn{maBan='B004', loai='VIP', trangThai='TRONG', viTri='LAU_1'}]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat called by client params=[B001]
+[RMI] PhieuDatBanRemoteImpl.getPhieuDatBanMoiNhat result=PhieuDatBan{maPhieu='null', thoiGianBatDau=2026-05-05T19:00, trangThai='?ã h?y', soNguoi=10, ghiChu=''}
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon called by client params=[HD04052026002]
+[RMI] PhieuDatBanRemoteImpl.demSoBanDangSuDungCuaHoaDon result=0

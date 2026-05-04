@@ -26,4 +26,5 @@ public class QLHDRemoteImpl extends UnicastRemoteObject implements QLHDRemote {
     public List<String> getChiTietHoaDonTheoMa(String maHoaDon) throws RemoteException { return RemoteCallLogger.log("QLHDRemoteImpl", "getChiTietHoaDonTheoMa", new Object[]{maHoaDon}, () -> dao.getChiTietHoaDonTheoMa(maHoaDon)); }
     public List<String> loadDanhSachHoaDon() throws RemoteException { return RemoteCallLogger.log("QLHDRemoteImpl", "loadDanhSachHoaDon", new Object[]{}, () -> dao.loadDanhSachHoaDon()); }
     public String layHoaDonString(String maHoaDon) throws RemoteException { return RemoteCallLogger.log("QLHDRemoteImpl", "layHoaDonString", new Object[]{maHoaDon}, () -> QLHD_DAO.layHoaDonString(maHoaDon)); }
+    public List<HoaDon> searchHoaDon(String keyword) throws RemoteException { return RemoteCallLogger.log("QLHDRemoteImpl", "searchHoaDon", new Object[]{keyword}, () -> dao.searchHoaDon(keyword)); }
 }

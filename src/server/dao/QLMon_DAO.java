@@ -14,6 +14,9 @@ public class QLMon_DAO extends MongoDaoSupport {
 
     public boolean insertMon(MonAn mon) {
         col("MonAn").insertOne(monAnDoc(mon));
+        try {
+            server.trigger.DataChangeNotifierImpl.getInstance().notifyClients("MonAn", "INSERT", mon.getMaMonAn());
+        } catch (Exception e) {}
         return true;
     }
 
@@ -22,6 +25,12 @@ public class QLMon_DAO extends MongoDaoSupport {
     }
 
     public boolean updateMon(MonAn mon) {
-        return update("MonAn", Filters.eq("maMonAn", mon.getMaMonAn()), monAnDoc(mon));
+        boolean res = update("MonAn", Filters.eq("maMonAn", mon.getMaMonAn()), monAnDoc(mon));
+        if (res) {
+            try {
+                server.trigger.DataChangeNotifierImpl.getInstance().notifyClients("MonAn", "UPDATE", mon.getMaMonAn());
+            } catch (Exception e) {}
+        }
+        return res;
     }
 }

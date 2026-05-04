@@ -18,9 +18,35 @@ public class QLHD_DAO extends MongoDaoSupport {
         return list;
     }
 
+    /**
+     * Tìm kiếm hóa đơn theo mã hóa đơn, trạng thái, phương thức thanh toán.
+     * Sử dụng MongoDB $regex với CASE_INSENSITIVE.
+     */
+    public List<HoaDon> searchHoaDon(String keyword) {
+        List<HoaDon> list = new ArrayList<>();
+        for (Document d : col("HoaDon").find(Filters.or(
+                Filters.regex("maHoaDon", contains(keyword)),
+                Filters.regex("trangThai", contains(keyword)),
+                Filters.regex("phuongThuc", contains(keyword)),
+                Filters.regex("ghiChu", contains(keyword))
+        )).sort(Sorts.descending("ngayTao"))) list.add(hoaDon(d));
+        return list;
+    }
+
     public boolean insertHoaDon(HoaDon hd, String maNhanVien, String maKhachHang) {
         Document d = hoaDonDoc(hd).append("maNhanVien", maNhanVien).append("maKhachHang", maKhachHang);
         col("HoaDon").insertOne(d);
+        
+        // Trigger: Tự động cộng điểm tích lũy cho khách hàng
+        try {
+            double tongTien = tinhTongTien(hd.getMaHoaDon());
+            server.trigger.HoaDonTrigger.onHoaDonInserted(hd, maKhachHang, tongTien);
+            // Thông báo real-time update
+            server.trigger.DataChangeNotifierImpl.getInstance().notifyClients("HoaDon", "INSERT", hd.getMaHoaDon());
+        } catch (Exception e) {
+            System.err.println("Error firing trigger/notifier: " + e.getMessage());
+        }
+        
         return true;
     }
 

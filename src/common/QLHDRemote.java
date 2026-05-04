@@ -19,4 +19,5 @@ public interface QLHDRemote extends Remote {
     List<String> getChiTietHoaDonTheoMa(String maHoaDon) throws RemoteException;
     List<String> loadDanhSachHoaDon() throws RemoteException;
     String layHoaDonString(String maHoaDon) throws RemoteException;
+    List<HoaDon> searchHoaDon(String keyword) throws RemoteException;
 }

@@ -103,6 +103,34 @@ public class Gui_QLMon extends BorderPane {
         } catch (Exception e) {
             // System.err.println("CSS not found");
         }
+        
+        // Đăng ký nhận thông báo real-time
+        dangKyNhanThongBao();
+    }
+
+    private common.DataChangeListener dataChangeListener;
+
+    private void dangKyNhanThongBao() {
+        try {
+            common.DataChangeNotifierRemote notifier = client.RmiClientProvider.get("DataChangeNotifierRemote", common.DataChangeNotifierRemote.class);
+            if (notifier != null) {
+                dataChangeListener = new java.rmi.server.UnicastRemoteObject() {
+                    @Override
+                    public void onDataChanged(String collection, String action, String documentId) throws java.rmi.RemoteException {
+                        if ("MonAn".equals(collection)) {
+                            // Cập nhật UI trên JavaFX thread
+                            javafx.application.Platform.runLater(() -> {
+                                System.out.println("[Real-time] Cập nhật danh sách món ăn từ Server");
+                                taiLaiDanhSachMonAnMoiNhat();
+                            });
+                        }
+                    }
+                };
+                notifier.registerListener((common.DataChangeListener) dataChangeListener);
+            }
+        } catch (Exception e) {
+            System.err.println("Không thể đăng ký nhận thông báo real-time: " + e.getMessage());
+        }
     }
 
     // ===== HEADER =====

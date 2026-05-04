@@ -13,6 +13,18 @@ import java.time.*;
 import java.util.*;
 import java.util.regex.Pattern;
 
+/**
+ * MongoDaoSupport — Lớp ODM (Object-Document Mapping) hỗ trợ cho MongoDB.
+ *
+ * Lớp này cung cấp các phương thức ánh xạ giữa Java Entity và MongoDB Document,
+ * tương tự vai trò của ORM (Hibernate) nhưng dành cho NoSQL (MongoDB).
+ *
+ * Bao gồm:
+ * - Generic CRUD operations (insert, find, update, delete)
+ * - Entity ↔ Document mapping methods (banAn(), monAn(), nhanVien()...)
+ * - Query helpers (contains(), inRange(), sameDay()...)
+ * - ID generation (nextId(), maxId())
+ */
 abstract class MongoDaoSupport {
     static {
         ensureServerOnly();
@@ -138,6 +150,61 @@ abstract class MongoDaoSupport {
     static boolean delete(String collection, Bson filter) {
         return col(collection).deleteOne(filter).getDeletedCount() > 0;
     }
+
+    // ==================== GENERIC CRUD (ODM Pattern) ====================
+
+    /**
+     * Insert một document vào collection (Create).
+     */
+    static void insertDoc(String collection, Document doc) {
+        col(collection).insertOne(doc);
+    }
+
+    /**
+     * Tìm document theo ID field (Read).
+     */
+    static Document findById(String collection, String idField, String idValue) {
+        return one(collection, idField, idValue);
+    }
+
+    /**
+     * Update document theo filter, chỉ set các field trong updateDoc (Update).
+     */
+    static boolean updateById(String collection, String idField, String idValue, Document updateDoc) {
+        return update(collection, Filters.eq(idField, idValue), updateDoc);
+    }
+
+    /**
+     * Xóa document theo ID field (Delete).
+     */
+    static boolean deleteById(String collection, String idField, String idValue) {
+        return delete(collection, Filters.eq(idField, idValue));
+    }
+
+    /**
+     * Đếm số document thỏa filter.
+     */
+    static long countByFilter(String collection, Bson filter) {
+        return col(collection).countDocuments(filter);
+    }
+
+    /**
+     * Kiểm tra tồn tại theo field.
+     */
+    static boolean existsByField(String collection, String field, String value) {
+        return col(collection).countDocuments(Filters.eq(field, value)) > 0;
+    }
+
+    /**
+     * Tìm danh sách document theo filter với sắp xếp.
+     */
+    static List<Document> findWithFilter(String collection, Bson filter, Bson sort) {
+        List<Document> result = new ArrayList<>();
+        col(collection).find(filter).sort(sort).into(result);
+        return result;
+    }
+
+    // ==================== ENTITY MAPPING (ODM) ====================
 
     static BanAn banAn(Document d) {
         if (d == null) return null;

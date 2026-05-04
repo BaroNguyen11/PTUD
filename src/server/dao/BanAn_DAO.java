@@ -19,7 +19,8 @@ public class BanAn_DAO extends MongoDaoSupport {
 
     public List<BanAn> getBanAnTheoViTri(ViTri viTri) {
         List<BanAn> list = new ArrayList<>();
-        for (Document d : docs("BanAn", Filters.eq("viTri", viTri.name()))) list.add(banAn(d));
+        for (Document d : docs("BanAn", Filters.eq("viTri", viTri.name())))
+            list.add(banAn(d));
         return list;
     }
 
@@ -30,8 +31,10 @@ public class BanAn_DAO extends MongoDaoSupport {
             PhieuDatBan p = phieuByBan.get(ban.getMaBan());
             if (p != null) {
                 String tt = p.getTrangThai();
-                if ("Đang dùng".equalsIgnoreCase(tt) || "DANG_SU_DUNG".equalsIgnoreCase(tt)) ban.setTrangThai(TrangThai.DANG_SU_DUNG);
-                else if ("Đã đặt".equalsIgnoreCase(tt) || "DA_DAT".equalsIgnoreCase(tt)) ban.setTrangThai(TrangThai.DA_DAT);
+                if ("Đang dùng".equalsIgnoreCase(tt) || "DANG_SU_DUNG".equalsIgnoreCase(tt))
+                    ban.setTrangThai(TrangThai.DANG_SU_DUNG);
+                else if ("Đã đặt".equalsIgnoreCase(tt) || "DA_DAT".equalsIgnoreCase(tt))
+                    ban.setTrangThai(TrangThai.DA_DAT);
             }
         }
         return list;
@@ -40,9 +43,11 @@ public class BanAn_DAO extends MongoDaoSupport {
     public Map<String, PhieuDatBan> getPhieuDatBanMapByNgay(LocalDate ngay) {
         Map<String, PhieuDatBan> map = new HashMap<>();
         for (Document d : docs("PhieuDatBan")) {
-            if (!sameDay(d.get("thoiGianBatDau"), ngay)) continue;
+            if (!sameDay(d.get("thoiGianBatDau"), ngay))
+                continue;
             String tt = s(d, "trangThai");
-            if ("Đã hủy".equalsIgnoreCase(tt) || "Đã dùng".equalsIgnoreCase(tt)) continue;
+            if ("Đã hủy".equalsIgnoreCase(tt) || "Đã dùng".equalsIgnoreCase(tt))
+                continue;
             map.put(s(d, "maBan"), phieuDatBan(d));
         }
         return map;
@@ -59,9 +64,11 @@ public class BanAn_DAO extends MongoDaoSupport {
 
     public List<String> getDanhSachBanCungHoaDon(String maHoaDon) {
         List<String> list = new ArrayList<>();
-        for (Document d : docs("PhieuDatBan", Filters.and(Filters.eq("maHoaDon", maHoaDon), Filters.ne("maBan", null)))) {
+        for (Document d : docs("PhieuDatBan",
+                Filters.and(Filters.eq("maHoaDon", maHoaDon), Filters.ne("maBan", null)))) {
             String maBan = s(d, "maBan");
-            if (!list.contains(maBan)) list.add(maBan);
+            if (!list.contains(maBan))
+                list.add(maBan);
         }
         return list;
     }

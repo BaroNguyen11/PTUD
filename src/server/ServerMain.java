@@ -16,6 +16,7 @@ public class ServerMain {
         try {
             configureRmiHostname();
             DevDataSeeder.ensureMinimumLoginData(ConnectDB.getDatabase());
+            SchemaValidator.ensureConstraints(ConnectDB.getDatabase());
             ConnectDB.getDatabase().listCollectionNames().first();
 
             Registry registry = createOrGetRegistry(port);
@@ -37,9 +38,11 @@ public class ServerMain {
             bind(registry, "TaiKhoanRemote", new TaiKhoanRemoteImpl());
             bind(registry, "ThanhToanRemote", new ThanhToanRemoteImpl());
             bind(registry, "ThongKeRemote", new ThongKeRemoteImpl());
+            bind(registry, "DataChangeNotifierRemote", server.trigger.DataChangeNotifierImpl.getInstance());
 
             System.out.println("RMI server started on port " + port);
             System.out.println("Mongo database: " + ConnectDB.getDatabase().getName());
+            common.NetworkDiscovery.startServerDiscoveryListener();
             new CountDownLatch(1).await();
         } catch (Exception e) {
             System.err.println("RMI server failed to start");
