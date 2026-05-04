@@ -1,7 +1,7 @@
 package server;
 
 import common.NhanVienRemote;
-import dao.NhanVien_DAO;
+import server.dao.NhanVien_DAO;
 import common.entity.NhanVien;
 
 import java.rmi.RemoteException;

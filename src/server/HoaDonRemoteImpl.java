@@ -1,7 +1,7 @@
 package server;
 
 import common.HoaDonRemote;
-import dao.HoaDon_DAO;
+import server.dao.HoaDon_DAO;
 import common.entity.HoaDon;
 
 import java.rmi.RemoteException;

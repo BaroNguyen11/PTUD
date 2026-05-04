@@ -1,7 +1,7 @@
 package server;
 
 import common.DashboardRemote;
-import dao.Dashboard_DAO;
+import server.dao.Dashboard_DAO;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

@@ -1,4 +1,4 @@
-package dao;
+package server.dao;
 
 import com.mongodb.client.model.Filters;
 import common.entity.PhieuDatBan;

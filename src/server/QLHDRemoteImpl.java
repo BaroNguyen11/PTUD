@@ -1,7 +1,7 @@
 package server;
 
 import common.QLHDRemote;
-import dao.QLHD_DAO;
+import server.dao.QLHD_DAO;
 import common.entity.ChiTietHoaDon;
 import common.entity.HoaDon;
 

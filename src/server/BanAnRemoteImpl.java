@@ -1,7 +1,7 @@
 package server;
 
 import common.BanAnRemote;
-import dao.BanAn_DAO;
+import server.dao.BanAn_DAO;
 import common.entity.*;
 
 import java.rmi.RemoteException;

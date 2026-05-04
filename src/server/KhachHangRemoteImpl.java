@@ -1,7 +1,7 @@
 package server;
 
 import common.KhachHangRemote;
-import dao.KhachHang_DAO;
+import server.dao.KhachHang_DAO;
 import common.entity.KhachHang;
 
 import java.rmi.RemoteException;

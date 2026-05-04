@@ -1,7 +1,7 @@
 package server;
 
 import common.DangNhapRemote;
-import dao.DangNhap_DAO;
+import server.dao.DangNhap_DAO;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

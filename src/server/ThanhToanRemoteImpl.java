@@ -1,7 +1,7 @@
 package server;
 
 import common.ThanhToanRemote;
-import dao.ThanhToan_DAO;
+import server.dao.ThanhToan_DAO;
 import common.entity.*;
 
 import java.rmi.RemoteException;

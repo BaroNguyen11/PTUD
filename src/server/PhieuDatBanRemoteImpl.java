@@ -1,7 +1,7 @@
 package server;
 
 import common.PhieuDatBanRemote;
-import dao.PhieuDatBan_DAO;
+import server.dao.PhieuDatBan_DAO;
 import common.entity.PhieuDatBan;
 
 import java.rmi.RemoteException;

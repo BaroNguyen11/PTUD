@@ -1,7 +1,7 @@
 package server;
 
 import common.QuanLyBanRemote;
-import dao.QuanLyBan_DAO;
+import server.dao.QuanLyBan_DAO;
 import common.entity.BanAn;
 
 import java.rmi.RemoteException;

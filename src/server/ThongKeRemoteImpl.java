@@ -1,7 +1,7 @@
 package server;
 
 import common.ThongKeRemote;
-import dao.ThongKe_DAO;
+import server.dao.ThongKe_DAO;
 
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;

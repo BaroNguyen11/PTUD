@@ -1,7 +1,7 @@
 package server;
 
 import common.QLKMRemote;
-import dao.QLKM_DAO;
+import server.dao.QLKM_DAO;
 import common.entity.KhuyenMai;
 
 import java.rmi.RemoteException;

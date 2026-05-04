@@ -1,7 +1,7 @@
 package server;
 
 import common.CheckInRemote;
-import dao.CheckIn_DAO;
+import server.dao.CheckIn_DAO;
 import common.entity.PhieuDatBan;
 
 import java.rmi.RemoteException;

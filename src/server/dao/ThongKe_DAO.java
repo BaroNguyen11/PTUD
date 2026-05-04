@@ -1,4 +1,4 @@
-package dao;
+package server.dao;
 
 import org.bson.Document;
 

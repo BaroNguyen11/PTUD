@@ -1,8 +1,10 @@
 package server;
 
+import java.net.InetAddress;
 import java.rmi.Remote;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.concurrent.CountDownLatch;
 
 public class ServerMain {
     public static final int DEFAULT_PORT = 1099;
@@ -12,6 +14,8 @@ public class ServerMain {
         int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
 
         try {
+            configureRmiHostname();
+            DevDataSeeder.ensureMinimumLoginData(ConnectDB.getDatabase());
             ConnectDB.getDatabase().listCollectionNames().first();
 
             Registry registry = createOrGetRegistry(port);
@@ -36,10 +40,29 @@ public class ServerMain {
 
             System.out.println("RMI server started on port " + port);
             System.out.println("Mongo database: " + ConnectDB.getDatabase().getName());
+            new CountDownLatch(1).await();
         } catch (Exception e) {
             System.err.println("RMI server failed to start");
             e.printStackTrace();
         }
+    }
+
+    private static void configureRmiHostname() {
+        if (System.getProperty("java.rmi.server.hostname") != null) {
+            return;
+        }
+
+        String configuredHost = System.getProperty("rmi.host");
+        if (configuredHost == null || configuredHost.isBlank()) {
+            configuredHost = "localhost";
+            try {
+                InetAddress.getByName(configuredHost);
+            } catch (Exception ignored) {
+                configuredHost = "127.0.0.1";
+            }
+        }
+        System.setProperty("java.rmi.server.hostname", configuredHost);
+        System.out.println("RMI hostname: " + configuredHost);
     }
 
     private static Registry createOrGetRegistry(int port) throws Exception {

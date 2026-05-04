@@ -1,7 +1,7 @@
 package server;
 
 import common.QLMonRemote;
-import dao.QLMon_DAO;
+import server.dao.QLMon_DAO;
 import common.entity.MonAn;
 
 import java.rmi.RemoteException;

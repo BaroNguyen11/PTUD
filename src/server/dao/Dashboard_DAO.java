@@ -1,4 +1,4 @@
-package dao;
+package server.dao;
 
 import common.entity.KhachHang;
 import org.bson.Document;

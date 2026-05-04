@@ -1,7 +1,7 @@
 package server;
 
 import common.ChiTietHoaDonRemote;
-import dao.ChiTietHoaDon_DAO;
+import server.dao.ChiTietHoaDon_DAO;
 import common.entity.ChiTietHoaDon;
 
 import java.rmi.RemoteException;

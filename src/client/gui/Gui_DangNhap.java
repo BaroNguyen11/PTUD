@@ -171,7 +171,7 @@ public class Gui_DangNhap extends Application {
             Scene scene = new Scene(root);
 
             try {
-                scene.getStylesheets().add(getClass().getResource("/application/client.application.css").toExternalForm());
+                scene.getStylesheets().add(getClass().getResource("/client/application/application.css").toExternalForm());
             } catch (Exception e) {
                 throw new Exception(e.getMessage());
             }

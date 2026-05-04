@@ -4,6 +4,7 @@ bin/
 cache/
 .DS_Store
 Thumbs.db
+*.log
 
 # --- Bỏ qua cấu hình IDE riêng (để tránh xung đột Eclipse/IntelliJ) ---
 .idea/

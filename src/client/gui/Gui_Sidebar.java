@@ -156,7 +156,7 @@ public class Gui_Sidebar extends VBox {
         // Load CSS (nếu có)
         try {
             this.getStylesheets().add(
-                    getClass().getResource("/application/client.application.css").toExternalForm()
+                                    getClass().getResource("/client/application/application.css").toExternalForm()
             );
         } catch (Exception e) {
             System.err.println("⚠️ Không load được CSS: " + e.getMessage());

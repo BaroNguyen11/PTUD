@@ -1,7 +1,7 @@
 package server;
 
 import common.MonAnRemote;
-import dao.MonAn_DAO;
+import server.dao.MonAn_DAO;
 import common.entity.MonAn;
 
 import java.rmi.RemoteException;

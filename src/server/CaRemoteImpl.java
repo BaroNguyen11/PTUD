@@ -1,7 +1,7 @@
 package server;
 
 import common.CaRemote;
-import dao.Ca_DAO;
+import server.dao.Ca_DAO;
 import common.entity.Ca;
 
 import java.rmi.RemoteException;
