@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng dẫn sử dụng Phần mềm Nhà hàng</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+        }
+
+        body {
+          font-family: 'Inter', 'Segoe UI', sans-serif;
+          background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+          color: #2d3748;
+          line-height: 1.6;
+        }
+
+        .sidebar {
+          position: fixed;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          z-index: 100;
+          padding: 0;
+          background: linear-gradient(180deg, #0a2f52 0%, #082744 100%);
+          color: white;
+          box-shadow: 4px 0 24px rgba(0, 0, 0, 0.15);
+          transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+          padding: 24px 20px;
+          background: rgba(255, 255, 255, 0.05);
+          border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+          backdrop-filter: blur(10px);
+        }
+
+        .sidebar-header h5 {
+          font-size: 14px;
+          font-weight: 600;
+          letter-spacing: 1.5px;
+          text-transform: uppercase;
+          margin: 0;
+          color: #90cdf4;
+        }
+
+        .sidebar-sticky {
+          position: relative;
+          height: calc(100vh - 70px);
+          padding-top: 12px;
+          overflow-x: hidden;
+          overflow-y: auto;
+        }
+
+        .sidebar-sticky::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .sidebar-sticky::-webkit-scrollbar-track {
+          background: rgba(255, 255, 255, 0.05);
+        }
+
+        .sidebar-sticky::-webkit-scrollbar-thumb {
+          background: rgba(255, 255, 255, 0.2);
+          border-radius: 3px;
+        }
+
+        .nav-link {
+          font-weight: 500;
+          color: #cbd5e0;
+          padding: 12px 20px;
+          margin: 4px 12px;
+          border-radius: 8px;
+          transition: all 0.3s ease;
+          font-size: 14px;
+          display: flex;
+          align-items: center;
+        }
+
+        .nav-link:hover {
+          color: #fff;
+          background: rgba(255, 255, 255, 0.12);
+          transform: translateX(4px);
+        }
+
+        .nav-link.active {
+          color: #fff;
+          background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+          box-shadow: 0 4px 12px rgba(66, 153, 225, 0.4);
+        }
+
+        main {
+          margin-left: 16.666667%;
+          padding: 32px;
+        }
+
+        .page-header {
+          background: white;
+          padding: 32px 40px;
+          border-radius: 16px;
+          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+          margin-bottom: 32px;
+          border-left: 5px solid #4299e1;
+        }
+
+        .page-header h1 {
+          font-size: 32px;
+          font-weight: 700;
+          color: #1a202c;
+          margin: 0;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+
+        .content-section {
+          padding: 40px;
+          background: white;
+          margin-bottom: 24px;
+          border-radius: 16px;
+          box-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+          transition: all 0.3s ease;
+          border: 1px solid #e2e8f0;
+        }
+
+        .content-section:hover {
+          box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+          transform: translateY(-2px);
+        }
+
+        .content-section h3 {
+          color: #0a2f52;
+          font-size: 28px;
+          font-weight: 700;
+          margin-bottom: 20px;
+          padding-bottom: 16px;
+          border-bottom: 3px solid #e2e8f0;
+          position: relative;
+        }
+
+        .content-section h3::after {
+          content: '';
+          position: absolute;
+          bottom: -3px;
+          left: 0;
+          width: 80px;
+          height: 3px;
+          background: linear-gradient(90deg, #4299e1 0%, #3182ce 100%);
+        }
+
+        .status-badge {
+          padding: 8px 16px;
+          border-radius: 8px;
+          font-size: 13px;
+          font-weight: 600;
+          color: white;
+          display: inline-block;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .bg-empty {
+          background-color: #718096;
+        }
+
+        .bg-using {
+          background-color: #48bb78;
+        }
+
+        .bg-booked {
+          background-color: #fc8181;
+        }
+
+        h4 {
+          color: #2d3748;
+          font-size: 20px;
+          font-weight: 600;
+          margin-top: 32px;
+          margin-bottom: 16px;
+          padding-left: 16px;
+          border-left: 4px solid #4299e1;
+        }
+
+        .content-section p {
+          margin-bottom: 16px;
+          color: #4a5568;
+          font-size: 15px;
+        }
+
+        .content-section ul,
+        .content-section ol {
+          padding-left: 24px;
+          margin-bottom: 20px;
+        }
+
+        .content-section li {
+          margin-bottom: 12px;
+          color: #4a5568;
+          font-size: 15px;
+        }
+
+        .content-section li strong {
+          color: #2d3748;
+          font-weight: 600;
+        }
+
+        .alert {
+          border: none;
+          border-radius: 12px;
+          padding: 20px 24px;
+          margin-bottom: 24px;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+          border-left: 4px solid;
+        }
+
+        .alert-warning {
+          background: linear-gradient(135deg, #fef5e7 0%, #fdebd0 100%);
+          border-left-color: #f6ad55;
+          color: #744210;
+        }
+
+        .alert-warning strong {
+          color: #c05621;
+        }
+
+        .accordion-item {
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          margin-bottom: 12px;
+          overflow: hidden;
+          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .accordion-button {
+          font-weight: 600;
+          color: #2d3748;
+          background: #f7fafc;
+          padding: 16px 20px;
+          font-size: 15px;
+        }
+
+        .accordion-button:not(.collapsed) {
+          background: linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%);
+          color: #2c5282;
+          box-shadow: none;
+        }
+
+        .accordion-button:focus {
+          box-shadow: none;
+          border-color: #e2e8f0;
+        }
+
+        .accordion-body {
+          padding: 20px;
+          background: white;
+          color: #4a5568;
+          font-size: 14px;
+          line-height: 1.7;
+        }
+
+        code {
+          background: #2d3748;
+          color: #90cdf4;
+          padding: 3px 8px;
+          border-radius: 4px;
+          font-size: 13px;
+          font-family: 'Courier New', monospace;
+        }
+
+        footer {
+          margin-top: 48px;
+          padding: 24px 40px;
+          background: white;
+          border-radius: 12px;
+          text-align: center;
+          color: #718096;
+          font-size: 14px;
+          box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+          .sidebar {
+            position: relative;
+            width: 100%;
+            height: auto;
+          }
+
+          main {
+            margin-left: 0;
+            padding: 16px;
+          }
+
+          .content-section {
+            padding: 24px;
+          }
+
+          .page-header {
+            padding: 24px;
+          }
+        }
+
+        /* Smooth scroll */
+        html {
+          scroll-behavior: smooth;
+        }
+
+        /* Selection color */
+        ::selection {
+          background: #4299e1;
+          color: white;
+        }
+
+        /* From Uiverse.io by adamgiebl */
+        .dots-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          height: 100%;
+          width: 100%;
+        }
+
+        .dot {
+          height: 12px;
+          width: 12px;
+          margin-right: 10px;
+          border-radius: 10px;
+          background-color: #b3d4fc;
+          animation: pulse 1.5s infinite ease-in-out;
+        }
+
+        .dot:last-child {
+          margin-right: 0;
+        }
+
+        .dot:nth-child(1) {
+          animation-delay: -0.3s;
+        }
+
+        .dot:nth-child(2) {
+          animation-delay: -0.1s;
+        }
+
+        .dot:nth-child(3) {
+          animation-delay: 0.1s;
+        }
+
+        #page-loader {
+          position: fixed;
+          inset: 0;
+          background: linear-gradient(135deg, #f5f7fa, #e8ecf1);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          z-index: 9999;
+        }
+
+        #page-loader.hidden {
+          opacity: 0;
+          visibility: hidden;
+          transition: opacity 0.4s ease, visibility 0.4s ease;
+        }
+
+        @keyframes pulse {
+          0% {
+            transform: scale(0.8);
+            background-color: #b3d4fc;
+            box-shadow: 0 0 0 0 rgba(178, 212, 252, 0.7);
+          }
+
+          50% {
+            transform: scale(1.2);
+            background-color: #6793fb;
+            box-shadow: 0 0 0 10px rgba(178, 212, 252, 0);
+          }
+
+          100% {
+            transform: scale(0.8);
+            background-color: #b3d4fc;
+            box-shadow: 0 0 0 0 rgba(178, 212, 252, 0.7);
+          }
+        }
+    </style>
+</head>
+
+<body>
+<div id="page-loader">
+    <div class="dots-container">
+        <div class="dot"></div>
+        <div class="dot"></div>
+        <div class="dot"></div>
+    </div>
+</div>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav id="sidebarMenu" class="col-md-3 col-lg-2 d-md-block sidebar collapse">
+            <div class="sidebar-header">
+                <h5>📚 Mục lục</h5>
+            </div>
+            <div class="position-sticky sidebar-sticky">
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link active" href="#introduction">1. Giới thiệu chung</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#colors">2. Quy định màu sắc</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#booking">3. Quy trình Đặt bàn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#checkin">4. Check-in & Gọi món</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#advanced">5. Đổi & Gộp bàn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#cancel">6. Hủy bàn</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#shift">7. Kết ca & Đăng xuất</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">8. Câu hỏi thường gặp</a></li>
+                </ul>
+            </div>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10">
+            <div class="page-header">
+                <h1>📖 Hướng dẫn sử dụng Phần mềm</h1>
+            </div>
+
+            <div id="introduction" class="content-section">
+                <h3>1. Giới thiệu chung</h3>
+                <p>Chào mừng bạn đến với hệ thống quản lý nhà hàng. Phần mềm giúp bạn quản lý sơ đồ bàn, nhận đặt chỗ,
+                    gọi món và thanh toán một cách nhanh chóng và chính xác.</p>
+                <p><strong>Lưu ý:</strong> Để sử dụng tốt nhất, vui lòng không tắt phần mềm đột ngột mà hãy sử dụng nút
+                    <em class="text-danger">Đăng xuất</em>.
+                </p>
+            </div>
+
+            <div id="colors" class="content-section">
+                <h3>2. Ý nghĩa trạng thái bàn</h3>
+                <div class="d-flex justify-content-around align-items-center">
+                    <div>
+                        <p>Trên màn hình "Sơ đồ bàn ăn", các bàn sẽ có màu sắc khác nhau:</p>
+                        <ul>
+                            <li class="mb-3"><span class="status-badge bg-empty">Màu Xám</span> <strong>Bàn
+                                Trống</strong> — Sẵn sàng đón khách hoặc đặt trước.
+                            </li>
+                            <li class="mb-3"><span class="status-badge bg-booked">Màu Đỏ</span> <strong>Đã Đặt
+                                Trước</strong> —
+                                Khách chưa đến, bàn đang được giữ.
+                            </li>
+                            <li class="mb-3"><span class="status-badge bg-using">Màu Xanh Lá</span> <strong>Đang Phục
+                                Vụ</strong> — Khách đang ngồi ăn.
+                            </li>
+                        </ul>
+                    </div>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/dsban.jpg" alt=""
+                         style="max-width: 50%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+                </div>
+                <p><em>💡 Biểu tượng <b class="text-danger">Huy chương</b> 🏅 thể hiện đây là bàn VIP.</em></p>
+
+            </div>
+
+            <div id="booking" class="content-section">
+                <h3>3. Quy trình Đặt bàn trước</h3>
+                <ol>
+                    <li>Tại màn hình chính, chọn một hoặc nhiều <strong>Bàn Trống</strong>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Nhấn nút <strong>"Đặt bàn ngay"</strong> ở góc dưới.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/datban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Nhập số điện thoại khách hàng (Hệ thống tự gợi ý nếu là khách quen).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/nhapsdt.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Chọn ngày, giờ đến, số lượng khách và ghi chú (nếu có).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonngay.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>(Tùy chọn) Chọn trước món ăn nếu khách yêu cầu.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonmon.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Nhấn <strong>Xác nhận</strong>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/xacnhandatban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Bàn sẽ chuyển sang màu <span class="status-badge bg-booked">Đỏ</span>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/trangthaidadat.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                </ol>
+            </div>
+
+            <div id="checkin" class="content-section">
+                <h3>4. Check-in và Gọi món</h3>
+
+                <h4>a. Đối với khách đã đặt trước (Bàn Đỏ)</h4>
+                <ul>
+                    <li>Khi khách đến, nhấn vào bàn màu Đỏ (chọn 1 bàn nếu là bàn đơn, chọn 1 trong các bàn đã đặt nếu
+                        là bàn
+                        ghép).
+                    </li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chontrangthai.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Chọn nút <strong>Check-in</strong> trên bảng thông tin.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/checkin.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Bàn sẽ chuyển sang màu <span class="status-badge bg-using">Xanh</span> và bắt đầu tính giờ.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/dacheckin.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                </ul>
+
+                <h4>b. Gọi món thêm</h4>
+                <ul>
+                    <li>Nhấn vào bàn đang ăn (Màu xanh).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonbangoimon.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Chọn nút <strong>Gọi món</strong>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/goimon.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Tìm món ăn, chọn số lượng và nhấn "Xác nhận".</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/xacnhangoimon.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                </ul>
+            </div>
+
+            <div id="advanced" class="content-section">
+                <h3>5. Nghiệp vụ: Đổi bàn & Gộp bàn</h3>
+
+                <h4>Đổi bàn (Chuyển chỗ) - Áp dụng cho bàn đã check-in hoặc chưa check-in</h4>
+                <p>Dùng khi khách muốn đổi sang vị trí khác (VD: Từ tầng 1 lên tầng 2).</p>
+                <ol>
+                    <li>Bấm vào bàn hiện tại của khách. (ấn vào "Xem chi tiết")</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonbangoimon.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Chọn nút <strong>Đổi bàn</strong>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/doiban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Chọn bàn mới (Phải là bàn Trống, có thể chọn 1 hoặc nhiều bàn).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonbanmoi.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Xác nhận chuyển. Toàn bộ món ăn sẽ được chuyển sang bàn mới.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/xacnhandoiban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Trạng thái sau đổi.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/trangthaisaudoi.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+
+                </ol>
+
+                <h4>Gộp bàn (Ghép hóa đơn)</h4>
+                <p>Dùng khi nhóm khách đông cần ngồi nhiều bàn nhưng thanh toán chung 1 hóa đơn.</p>
+                <ol>
+                    <li>Chọn bàn chính (Đang có khách).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonbangop.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Chọn các bàn trống bên cạnh.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chonbangop.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Nhấn nút <strong>Gộp bàn</strong> ở góc dưới màn hình.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/gopban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Trạng thái sau gộp.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/dacheckin.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                </ol>
+            </div>
+            <div id="cancel" class="content-section">
+                <h3>6. Hủy bàn đã đặt</h3>
+                <ol>
+                    <li>Chọn bàn màu Đỏ (Đã đặt trước).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/chontrangthai.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Nhấn nút <strong>Hủy đặt bàn</strong> trên bảng thông tin.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/huyban.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Xác nhận hủy. Bàn sẽ trở về trạng thái Trống (Xám).</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/dsbangoc.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                </ol>
+            </div>
+
+            <div id="shift" class="content-section">
+                <h3>7. Kết ca & Đăng xuất</h3>
+                <div class="alert alert-warning">
+                    <strong>⚠️ Quan trọng:</strong> Bạn không thể đăng xuất nếu chưa Kết ca.
+                </div>
+                <p>Cuối ngày hoặc khi đổi ca làm việc:</p>
+                <ol>
+                    <li>Vào mục <strong>Kết ca</strong> trên menu bên trái.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/ketca.jpg" alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Hệ thống sẽ thống kê tổng tiền mặt, tiền thẻ trong ca của bạn.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/thongkeketca.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Kiểm tra kỹ số liệu và nhấn nút <strong>Kết thúc ca làm việc</strong>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/annutketca.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                    <li>Sau khi kết ca thành công, bạn có thể nhấn nút <strong>Đăng xuất</strong>.</li>
+                    <img src="https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/helper/dangxuat.jpg"
+                         alt=""
+                         style="max-width: 70%; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); margin: 16px 0;">
+                </ol>
+            </div>
+
+            <div id="faq" class="content-section">
+                <h3>8. Các lỗi thường gặp</h3>
+
+                <div class="accordion" id="accordionExample">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseOne">
+                                ❓ Tại sao tôi bấm Check-in nhưng không được?
+                            </button>
+                        </h2>
+                        <div id="collapseOne" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                Hãy kiểm tra <strong>Ngày xem</strong> trên lịch (góc trên bên phải). Bạn chỉ có thể
+                                Check-in cho các phiếu đặt trong ngày hôm nay.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                                    data-bs-target="#collapseTwo">
+                                ❓ Tại sao tôi không thể chọn món ăn?
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#accordionExample">
+                            <div class="accordion-body">
+                                Có thể món ăn đó đã bị Ngừng kinh doanh. Vui lòng liên hệ Quản lý để kiểm tra lại trong
+                                mục "Quản lý món ăn".
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <footer>
+                &copy; 2024 Phần mềm Quản lý Nhà hàng | Phát triển bởi VB
+            </footer>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('page-loader').classList.add('hidden');
+      }, 2000);
+    });
+    // Smooth scroll và active nav
+    document.querySelectorAll('.nav-link').forEach(link => {
+      link.addEventListener('click', function (e) {
+        document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+        this.classList.add('active');
+      });
+    });
+
+    // Scroll spy
+    window.addEventListener('scroll', () => {
+      let current = '';
+      document.querySelectorAll('.content-section').forEach(section => {
+        const sectionTop = section.offsetTop;
+        if (pageYOffset >= sectionTop - 150) {
+          current = section.getAttribute('id');
+        }
+      });
+
+      document.querySelectorAll('.nav-link').forEach(link => {
+        link.classList.remove('active');
+        if (link.getAttribute('href') === '#' + current) {
+          link.classList.add('active');
+        }
+      });
+    });
+</script>
+</body>
+
+</html>
