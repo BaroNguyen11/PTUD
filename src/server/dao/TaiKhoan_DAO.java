@@ -15,7 +15,8 @@ public class TaiKhoan_DAO extends MongoDaoSupport {
 
     public List<TaiKhoan> getAllTaiKhoan() {
         List<TaiKhoan> list = new ArrayList<>();
-        for (Document d : col("TaiKhoan").find().sort(Sorts.ascending("maTaiKhoan"))) list.add(taiKhoan(d));
+        for (Document d : col("TaiKhoan").find().sort(Sorts.ascending("maTaiKhoan")))
+            list.add(taiKhoan(d));
         return list;
     }
 
@@ -24,15 +25,18 @@ public class TaiKhoan_DAO extends MongoDaoSupport {
         for (TaiKhoan tk : getAllTaiKhoan()) {
             NhanVien nv = tk.getNhanVien();
             String haystack = (tk.getMaTaiKhoan() + " " + tk.getTaiKhoan() + " " +
-                    (nv == null ? "" : nv.getMaNhanVien() + " " + nv.getTenNhanVien() + " " + nv.getSoDienThoai())).toLowerCase();
-            if (haystack.contains((keyword == null ? "" : keyword).toLowerCase())) list.add(tk);
+                    (nv == null ? "" : nv.getMaNhanVien() + " " + nv.getTenNhanVien() + " " + nv.getSoDienThoai()))
+                    .toLowerCase();
+            if (haystack.contains((keyword == null ? "" : keyword).toLowerCase()))
+                list.add(tk);
         }
         return list;
     }
 
     public List<TaiKhoan> filterTaiKhoanTheoQuyen(boolean isQuanLy) {
         List<TaiKhoan> list = new ArrayList<>();
-        for (Document d : docs("TaiKhoan", Filters.eq("taiKhoanQuanLi", isQuanLy))) list.add(taiKhoan(d));
+        for (Document d : docs("TaiKhoan", Filters.eq("taiKhoanQuanLi", isQuanLy)))
+            list.add(taiKhoan(d));
         return list;
     }
 
@@ -74,10 +78,12 @@ public class TaiKhoan_DAO extends MongoDaoSupport {
 
     public List<NhanVien> getNhanVienChuaCoTaiKhoan() {
         Set<String> used = new HashSet<>();
-        for (Document d : docs("TaiKhoan")) used.add(s(d, "maNhanVien"));
+        for (Document d : docs("TaiKhoan"))
+            used.add(s(d, "maNhanVien"));
         List<NhanVien> list = new ArrayList<>();
         for (Document d : docs("NhanVien")) {
-            if (!used.contains(s(d, "maNhanVien"))) list.add(nhanVien(d));
+            if (!used.contains(s(d, "maNhanVien")))
+                list.add(nhanVien(d));
         }
         return list;
     }

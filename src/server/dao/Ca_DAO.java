@@ -18,7 +18,8 @@ public class Ca_DAO extends MongoDaoSupport {
     }
 
     public boolean ketCa(String maCa, double tongTienCuoiCa) {
-        return update("Ca", Filters.eq("maCa", maCa), new Document("thoiGianKetCa", toDate(LocalDateTime.now())).append("tongTienCuoiCa", tongTienCuoiCa));
+        return update("Ca", Filters.eq("maCa", maCa),
+                new Document("thoiGianKetCa", toDate(LocalDateTime.now())).append("tongTienCuoiCa", tongTienCuoiCa));
     }
 
     public Ca getCaDangMo() {
@@ -26,14 +27,17 @@ public class Ca_DAO extends MongoDaoSupport {
     }
 
     public Ca getCaDangLam(String maNhanVien) {
-        return ca(col("Ca").find(Filters.and(Filters.eq("maNhanVien", maNhanVien), Filters.eq("thoiGianKetCa", null))).sort(new Document("thoiGianVaoCa", -1)).first());
+        return ca(col("Ca").find(Filters.and(Filters.eq("maNhanVien", maNhanVien), Filters.eq("thoiGianKetCa", null)))
+                .sort(new Document("thoiGianVaoCa", -1)).first());
     }
 
     public double tinhTongTienMat(String maNhanVien, LocalDateTime thoiGianVaoCa) {
         double total = 0;
-        for (Document hd : docs("HoaDon", Filters.and(Filters.eq("maNhanVien", maNhanVien), Filters.eq("phuongThuc", "Tiền mặt")))) {
+        for (Document hd : docs("HoaDon",
+                Filters.and(Filters.eq("maNhanVien", maNhanVien), Filters.eq("phuongThuc", "Tiền mặt")))) {
             LocalDateTime ngay = toLocalDateTime(hd.get("ngayTao"));
-            if (ngay != null && !ngay.isBefore(thoiGianVaoCa)) total += invoiceTotal(s(hd, "maHoaDon"));
+            if (ngay != null && !ngay.isBefore(thoiGianVaoCa))
+                total += invoiceTotal(s(hd, "maHoaDon"));
         }
         return total;
     }
@@ -43,27 +47,31 @@ public class Ca_DAO extends MongoDaoSupport {
         for (Document hd : docs("HoaDon", Filters.eq("maNhanVien", maNhanVien))) {
             LocalDateTime ngay = toLocalDateTime(hd.get("ngayTao"));
             if (ngay != null && !ngay.isBefore(thoiGianVaoCa)) {
-                for (Document km : docs("ChiTietKMHD", Filters.eq("maHoaDon", s(hd, "maHoaDon")))) total += dbl(km, "soTienGiam");
+                for (Document km : docs("ChiTietKMHD", Filters.eq("maHoaDon", s(hd, "maHoaDon"))))
+                    total += dbl(km, "soTienGiam");
             }
         }
         return total;
     }
 
     public int demDonDangPhucVu(String maNhanVien, LocalDateTime thoiGianVaoCa) {
-        return (int) col("HoaDon").countDocuments(Filters.and(Filters.eq("maNhanVien", maNhanVien), Filters.ne("trangThai", "Đã thanh toán")));
+        return (int) col("HoaDon").countDocuments(
+                Filters.and(Filters.eq("maNhanVien", maNhanVien), Filters.ne("trangThai", "Đã thanh toán")));
     }
 
     public int demSoHoaDonTrongCa(String maNhanVien, LocalDateTime thoiGianVaoCa) {
         int count = 0;
         for (Document hd : docs("HoaDon", Filters.eq("maNhanVien", maNhanVien))) {
             LocalDateTime ngay = toLocalDateTime(hd.get("ngayTao"));
-            if (ngay != null && !ngay.isBefore(thoiGianVaoCa)) count++;
+            if (ngay != null && !ngay.isBefore(thoiGianVaoCa))
+                count++;
         }
         return count;
     }
 
     private Ca ca(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         NhanVien nv = NhanVien_DAO.getNhanVienByMa(s(d, "maNhanVien"));
         return new Ca(s(d, "maCa"), toLocalDateTime(d.get("thoiGianVaoCa")), toLocalDateTime(d.get("thoiGianKetCa")),
                 dbl(d, "tongTienDauCa"), dbl(d, "tongTienCuoiCa"), nv);

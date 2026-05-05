@@ -54,16 +54,22 @@ abstract class MongoDaoSupport {
     }
 
     static LocalDate toLocalDate(Object value) {
-        if (value == null) return null;
-        if (value instanceof LocalDate) return (LocalDate) value;
-        if (value instanceof Date) return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        if (value == null)
+            return null;
+        if (value instanceof LocalDate)
+            return (LocalDate) value;
+        if (value instanceof Date)
+            return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
         return LocalDate.parse(value.toString());
     }
 
     static LocalDateTime toLocalDateTime(Object value) {
-        if (value == null) return null;
-        if (value instanceof LocalDateTime) return (LocalDateTime) value;
-        if (value instanceof Date) return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
+        if (value == null)
+            return null;
+        if (value instanceof LocalDateTime)
+            return (LocalDateTime) value;
+        if (value instanceof Date)
+            return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         return LocalDateTime.parse(value.toString().replace(' ', 'T'));
     }
 
@@ -83,13 +89,16 @@ abstract class MongoDaoSupport {
 
     static boolean bool(Document d, String key) {
         Object value = d == null ? null : d.get(key);
-        if (value instanceof Boolean) return (Boolean) value;
-        if (value instanceof Number) return ((Number) value).intValue() != 0;
+        if (value instanceof Boolean)
+            return (Boolean) value;
+        if (value instanceof Number)
+            return ((Number) value).intValue() != 0;
         return value != null && Boolean.parseBoolean(value.toString());
     }
 
     static Pattern contains(String keyword) {
-        return Pattern.compile(Pattern.quote(keyword == null ? "" : keyword), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
+        return Pattern.compile(Pattern.quote(keyword == null ? "" : keyword),
+                Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE);
     }
 
     static boolean sameDay(Object value, LocalDate day) {
@@ -98,7 +107,8 @@ abstract class MongoDaoSupport {
     }
 
     /**
-     * Tạo Bson filter để lọc document theo ngày (MongoDB-native, thay thế sameDay Java-side).
+     * Tạo Bson filter để lọc document theo ngày (MongoDB-native, thay thế sameDay
+     * Java-side).
      * Dùng khoảng [startOfDay, startOfNextDay) để match chính xác 1 ngày.
      */
     static Bson sameDayFilter(String field, LocalDate date) {
@@ -109,7 +119,8 @@ abstract class MongoDaoSupport {
 
     static boolean inRange(Object value, LocalDate from, LocalDate to) {
         LocalDate actual = toLocalDate(value);
-        if (actual == null) return false;
+        if (actual == null)
+            return false;
         return (from == null || !actual.isBefore(from)) && (to == null || !actual.isAfter(to));
     }
 
@@ -217,13 +228,13 @@ abstract class MongoDaoSupport {
     // ==================== ENTITY MAPPING (ODM) ====================
 
     static BanAn banAn(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new BanAn(
                 s(d, "maBan"),
                 LoaiBan.fromDB(s(d, "loai")),
                 TrangThai.fromDB(s(d, "trangThai")),
-                ViTri.fromDB(s(d, "viTri"))
-        );
+                ViTri.fromDB(s(d, "viTri")));
     }
 
     static Document banAnDoc(BanAn b) {
@@ -234,7 +245,8 @@ abstract class MongoDaoSupport {
     }
 
     static KhachHang khachHang(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new KhachHang(s(d, "maKhachHang"), s(d, "tenKhachHang"), s(d, "soDienThoai"), dbl(d, "diemTichLuy"));
     }
 
@@ -246,11 +258,11 @@ abstract class MongoDaoSupport {
     }
 
     static NhanVien nhanVien(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new NhanVien(
                 s(d, "maNhanVien"), s(d, "tenNhanVien"), s(d, "chucVu"), s(d, "CCCD"), s(d, "soDienThoai"),
-                toLocalDate(d.get("ngaySinh")), toLocalDate(d.get("ngayVaoLam")), toLocalDate(d.get("ngayThoiViec"))
-        );
+                toLocalDate(d.get("ngaySinh")), toLocalDate(d.get("ngayVaoLam")), toLocalDate(d.get("ngayThoiViec")));
     }
 
     static Document nhanVienDoc(NhanVien n) {
@@ -265,8 +277,10 @@ abstract class MongoDaoSupport {
     }
 
     static MonAn monAn(Document d) {
-        if (d == null) return null;
-        return new MonAn(s(d, "maMonAn"), s(d, "tenMonAn"), s(d, "loaiMon"), dbl(d, "giaTien"), s(d, "moTa"), s(d, "img"));
+        if (d == null)
+            return null;
+        return new MonAn(s(d, "maMonAn"), s(d, "tenMonAn"), s(d, "loaiMon"), dbl(d, "giaTien"), s(d, "moTa"),
+                s(d, "img"));
     }
 
     static Document monAnDoc(MonAn m) {
@@ -279,7 +293,8 @@ abstract class MongoDaoSupport {
     }
 
     static KhuyenMai khuyenMai(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new KhuyenMai(s(d, "maKhuyenMai"), s(d, "tenKhuyenMai"), toLocalDate(d.get("ngayBatDau")),
                 toLocalDate(d.get("ngayKetThuc")), dbl(d, "dieuKienApDung"), dbl(d, "giaTriToiDa"),
                 bool(d, "giamGiaPhanTram"), dbl(d, "giaTriGiam"));
@@ -297,12 +312,13 @@ abstract class MongoDaoSupport {
     }
 
     static HoaDon hoaDon(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new HoaDon(
-                s(d, "maHoaDon"), toLocalDateTime(d.get("ngayTao")), s(d, "trangThai"), s(d, "phuongThuc"), s(d, "ghiChu"),
+                s(d, "maHoaDon"), toLocalDateTime(d.get("ngayTao")), s(d, "trangThai"), s(d, "phuongThuc"),
+                s(d, "ghiChu"),
                 nhanVien(one("NhanVien", "maNhanVien", s(d, "maNhanVien"))),
-                khachHang(one("KhachHang", "maKhachHang", s(d, "maKhachHang")))
-        );
+                khachHang(one("KhachHang", "maKhachHang", s(d, "maKhachHang"))));
     }
 
     static Document hoaDonDoc(HoaDon h) {
@@ -316,14 +332,15 @@ abstract class MongoDaoSupport {
     }
 
     static PhieuDatBan phieuDatBan(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new PhieuDatBan(
-                s(d, "maPhieu"), toLocalDateTime(d.get("thoiGianBatDau")), s(d, "trangThai"), integer(d, "soNguoi"), s(d, "ghiChu"),
+                s(d, "maPhieu"), toLocalDateTime(d.get("thoiGianBatDau")), s(d, "trangThai"), integer(d, "soNguoi"),
+                s(d, "ghiChu"),
                 khachHang(one("KhachHang", "maKhachHang", s(d, "maKhachHang"))),
                 banAn(one("BanAn", "maBan", s(d, "maBan"))),
                 nhanVien(one("NhanVien", "maNhanVien", s(d, "maNhanVien"))),
-                hoaDon(one("HoaDon", "maHoaDon", s(d, "maHoaDon")))
-        );
+                hoaDon(one("HoaDon", "maHoaDon", s(d, "maHoaDon"))));
     }
 
     static Document phieuDatBanDoc(PhieuDatBan p, String trangThaiPhieu) {
@@ -339,16 +356,17 @@ abstract class MongoDaoSupport {
     }
 
     static ChiTietHoaDon chiTietHoaDon(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new ChiTietHoaDon(
                 hoaDon(one("HoaDon", "maHoaDon", s(d, "maHoaDon"))),
                 monAn(one("MonAn", "maMonAn", s(d, "maMonAn"))),
-                integer(d, "soLuong")
-        );
+                integer(d, "soLuong"));
     }
 
     static TaiKhoan taiKhoan(Document d) {
-        if (d == null) return null;
+        if (d == null)
+            return null;
         return new TaiKhoan(s(d, "maTaiKhoan"), s(d, "taiKhoan"), s(d, "matKhau"), bool(d, "taiKhoanQuanLi"),
                 bool(d, "trangThaiHoatDong"), nhanVien(one("NhanVien", "maNhanVien", s(d, "maNhanVien"))));
     }
