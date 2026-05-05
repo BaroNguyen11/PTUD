@@ -1,6 +1,5 @@
 package server.dao;
 
-import com.mongodb.client.FindIterable;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
@@ -334,25 +333,31 @@ abstract class MongoDaoSupport {
     static PhieuDatBan phieuDatBan(Document d) {
         if (d == null)
             return null;
-        return new PhieuDatBan(
-                s(d, "maPhieu"), toLocalDateTime(d.get("thoiGianBatDau")), s(d, "trangThai"), integer(d, "soNguoi"),
+        PhieuDatBan p = new PhieuDatBan(
+                s(d, "maPhieu"), toLocalDateTime(d.get("thoiGianBatDau")),
+                toLocalDateTime(d.get("thoiGianKetThuc")),
+                s(d, "trangThai"), integer(d, "soNguoi"),
                 s(d, "ghiChu"),
                 khachHang(one("KhachHang", "maKhachHang", s(d, "maKhachHang"))),
                 banAn(one("BanAn", "maBan", s(d, "maBan"))),
                 nhanVien(one("NhanVien", "maNhanVien", s(d, "maNhanVien"))),
-                hoaDon(one("HoaDon", "maHoaDon", s(d, "maHoaDon"))));
+                hoaDon(one("HoaDon", "maHoaDon", s(d, "maHoaDon"))),
+                dbl(d, "tienCoc"));
+        return p;
     }
 
     static Document phieuDatBanDoc(PhieuDatBan p, String trangThaiPhieu) {
         return new Document("maPhieu", p.getMaPhieu())
                 .append("thoiGianBatDau", toDate(p.getThoiGianBatDau()))
+                .append("thoiGianKetThuc", toDate(p.getThoiGianKetThuc()))
                 .append("trangThai", trangThaiPhieu != null ? trangThaiPhieu : p.getTrangThai())
                 .append("soNguoi", p.getSoNguoi())
                 .append("ghiChu", p.getGhiChu())
                 .append("maKhachHang", p.getKhachHang() == null ? null : p.getKhachHang().getMaKhachHang())
                 .append("maBan", p.getBan() == null ? null : p.getBan().getMaBan())
                 .append("maNhanVien", p.getNhanVien() == null ? null : p.getNhanVien().getMaNhanVien())
-                .append("maHoaDon", p.getHoaDon() == null ? null : p.getHoaDon().getMaHoaDon());
+                .append("maHoaDon", p.getHoaDon() == null ? null : p.getHoaDon().getMaHoaDon())
+                .append("tienCoc", p.getTienCoc());
     }
 
     static ChiTietHoaDon chiTietHoaDon(Document d) {

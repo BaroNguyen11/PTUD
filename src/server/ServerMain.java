@@ -5,6 +5,8 @@ import java.rmi.Remote;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.concurrent.CountDownLatch;
+import server.trigger.DataChangeNotifierImpl;
+import common.NetworkDiscovery;
 
 public class ServerMain {
     public static final int DEFAULT_PORT = 1099;
@@ -15,10 +17,8 @@ public class ServerMain {
 
         try {
             configureRmiHostname();
-            DevDataSeeder.ensureMinimumLoginData(ConnectDB.getDatabase());
-            SchemaValidator.ensureConstraints(ConnectDB.getDatabase());
-            ConnectDB.getDatabase().listCollectionNames().first();
 
+            // Step 1: Open RMI Registry and bind services first
             Registry registry = createOrGetRegistry(port);
             bind(registry, "BanAnRemote", new BanAnRemoteImpl());
             bind(registry, "CaRemote", new CaRemoteImpl());
@@ -38,11 +38,17 @@ public class ServerMain {
             bind(registry, "TaiKhoanRemote", new TaiKhoanRemoteImpl());
             bind(registry, "ThanhToanRemote", new ThanhToanRemoteImpl());
             bind(registry, "ThongKeRemote", new ThongKeRemoteImpl());
-            bind(registry, "DataChangeNotifierRemote", server.trigger.DataChangeNotifierImpl.getInstance());
+            bind(registry, "DataChangeNotifierRemote", DataChangeNotifierImpl.getInstance());
 
             System.out.println("RMI server started on port " + port);
-            System.out.println("Mongo database: " + ConnectDB.getDatabase().getName());
-            common.NetworkDiscovery.startServerDiscoveryListener();
+
+            // Step 2: Perform DB seeding and validation after RMI is ready
+            System.out.println("Connecting to MongoDB...");
+            DevDataSeeder.ensureMinimumLoginData(ConnectDB.getDatabase());
+            SchemaValidator.ensureConstraints(ConnectDB.getDatabase());
+            System.out.println("Database ready: " + ConnectDB.getDatabase().getName());
+
+            NetworkDiscovery.startServerDiscoveryListener();
             new CountDownLatch(1).await();
         } catch (Exception e) {
             System.err.println("RMI server failed to start");

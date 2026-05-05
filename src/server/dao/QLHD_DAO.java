@@ -58,9 +58,9 @@ public class QLHD_DAO extends MongoDaoSupport {
 
     public double tinhTienCoc(String maHoaDon) {
         double total = 0;
-        for (String maBan : layDanhSachMaBanTheoHoaDon(maHoaDon)) {
-            BanAn b = BanAn_DAO.getByMaBan(maBan);
-            if (b != null && b.getLoai() != null) total += b.getLoai() == LoaiBan.VIP ? 450000 : 350000;
+        // Lấy tất cả các phiếu đặt bàn có mã hóa đơn này và cộng dồn tiền cọc
+        for (Document d : docs("PhieuDatBan", Filters.eq("maHoaDon", maHoaDon))) {
+            total += dbl(d, "tienCoc");
         }
         return total;
     }

@@ -430,41 +430,6 @@ public class Gui_TrangChu extends BorderPane {
      * @param iconCode Ký tự Unicode thay cho Enum FontAwesome
      * @return VBox đại diện cho thẻ
      */
-    private VBox createStatCard(String title, String value, String iconCode) {
-        VBox card = new VBox(10);
-        card.setPadding(new Insets(20));
-        card.setPrefSize(250, 120);
-        card.getStyleClass().add("stat-card"); // Class CSS: stat-card
-
-        // Icon (Label thay cho FontIcon)
-        Label icon = createSimpleIcon(iconCode);
-        icon.getStyleClass().add("card-icon");
-
-        // Cần chỉnh Font size để mô phỏng kích thước icon
-        icon.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-
-        // Tiêu đề
-        Label titleLabel = new Label(title);
-        titleLabel.setFont(Font.font("Arial", 12));
-        titleLabel.getStyleClass().add("card-title");
-
-        // Giá trị
-        Label valueLabel = new Label(value);
-        valueLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        valueLabel.getStyleClass().add("card-value");
-
-        card.getChildren().addAll(icon, titleLabel, valueLabel);
-        return card;
-    }
-
-    /**
-     * Hàm tiện ích để tạo Label mô phỏng icon bằng ký tự Unicode.
-     */
-    private Label createSimpleIcon(String unicode) {
-        Label iconLabel = new Label(unicode);
-        iconLabel.setFont(Font.font("Arial", 18)); // Kích thước cơ bản cho icon Header
-        return iconLabel;
-    }
 
     public void showAlert(Alert.AlertType type, String title, String message) {
         Alert alert = new Alert(type);

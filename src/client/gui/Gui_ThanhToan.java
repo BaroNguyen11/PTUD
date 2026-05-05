@@ -876,117 +876,9 @@ public class Gui_ThanhToan extends BorderPane {
         // Header
         previewContent.getChildren().add(taoHeader(1, 1, hoaDon, dsBan));
 
-        // Bảng món ăn
-        TableView<String> table = new TableView<String>();
-
-        table.setItems(FXCollections.observableArrayList(danhSach));
-
-        // Cột STT
-        TableColumn<String, Void> colSTT = new TableColumn<>("STT");
-        colSTT.setPrefWidth(30);
-        colSTT.setSortable(false);
-        colSTT.setCellFactory(col -> new TableCell<String, Void>() {
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty ? null : String.valueOf(getIndex() + 1));
-                setAlignment(Pos.CENTER);
-            }
-        });
-
-        // Cột tên món
-        TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
-
-        // Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
-        colTenMon.setCellValueFactory(cellData -> {
-            String tenMon = cellData.getValue().split(",")[0];
-            return new SimpleStringProperty(tenMon);
-        });
-
-        colTenMon.setCellFactory(tc -> new TableCell<String, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    setAlignment(Pos.CENTER_LEFT);
-                }
-            }
-        });
-
-        colTenMon.setPrefWidth(200);
-
-        // Cột số lượng
-        TableColumn<String, Integer> colSoLuong = new TableColumn<>("SL");
-
-        colSoLuong.setCellValueFactory(cellData -> {
-            int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
-            return new SimpleIntegerProperty(soLuong).asObject();
-        });
-
-        colSoLuong.setCellFactory(tc -> new TableCell<String, Integer>() {
-            @Override
-            protected void updateItem(Integer item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(String.valueOf(item));
-                    setAlignment(Pos.CENTER);
-                    setStyle("-fx-font-size: 13px;");
-                }
-            }
-        });
-
-        colSoLuong.setPrefWidth(40);
-
-        // Cột giá
-        TableColumn<String, Double> colGia = new TableColumn<>("Giá");
-        colGia.setCellValueFactory(cellData -> {
-            double giaTien = Double.parseDouble(cellData.getValue().split(",")[2]);
-            return new SimpleDoubleProperty(giaTien).asObject();
-        });
-        colGia.setPrefWidth(120);
-        colGia.setCellFactory(tc -> new TableCell<String, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
-                setAlignment(Pos.CENTER);
-            }
-
-        });
-
-        // Cột tổng tiền
-        TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
-        colTong.setPrefWidth(120);
-        colTong.setCellValueFactory(cellData -> {
-            double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
-            return new SimpleDoubleProperty(tongTien).asObject();
-        });
-        colTong.setCellFactory(tc -> new TableCell<String, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
-                setAlignment(Pos.CENTER);
-            }
-
-        });
-
-        table.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
-
-        int rowCount = table.getItems().size();
-        double rowHeight = 26;
-        double headerHeight = 28;
-        table.setPrefHeight(rowCount * rowHeight + headerHeight - 5);
-
-        previewContent.getChildren().add(table);
+        // Bảng món ăn (Sử dụng chung logic VBox cho ổn định)
+        VBox tableBox = taoTableInVBox(danhSach, 1);
+        previewContent.getChildren().add(tableBox);
 
         // Footer
         previewContent.getChildren().add(taoFooter(true, hoaDon));
@@ -996,6 +888,7 @@ public class Gui_ThanhToan extends BorderPane {
         // Nút Quay lại + In
         HBox buttons = new HBox(20);
         buttons.setAlignment(Pos.CENTER);
+        buttons.setPadding(new Insets(10));
 
         Button btnBack = new Button("Quay lại");
         btnBack.setPrefWidth(120);
@@ -1081,64 +974,51 @@ public class Gui_ThanhToan extends BorderPane {
         }
 
         PageLayout layout = printer.createPageLayout(Paper.A4, PageOrientation.PORTRAIT, Printer.MarginType.DEFAULT);
-        double maxHeight = layout.getPrintableHeight();
 
         int currentIndex = 0;
         int sttGlobal = 1;
         int pageNum = 1;
-        boolean hasMore = true;
-        while (hasMore) {
+        
+        // Chia danh sách thành các trang (mỗi trang tầm 15-20 món)
+        int itemsPerPage = 20; 
+        int totalItems = danhSach.size();
+
+        while (currentIndex < totalItems) {
             VBox pageBox = new VBox(10);
-            pageBox.setStyle("-fx-padding: 20; -fx-font-family: Arial; -fx-background-color: white;"); // Nền trắng cho
-            // page in
-            pageBox.setAlignment(Pos.TOP_CENTER); // Căn giữa theo chiều dọc trên cùng
+            pageBox.setStyle("-fx-padding: 30; -fx-background-color: white;");
+            pageBox.setAlignment(Pos.TOP_CENTER);
 
-            // Header chỉ trang đầu
+            // Header (Trang nào cũng hiện hoặc chỉ trang 1 tùy ý, ở đây chỉ trang 1)
             if (pageNum == 1) {
-                pageBox.getChildren().add(taoHeader(1, 1, hoaDon, dsBan)); // totalPages không biết trước, có thể để 1 hoặc tính trước
+                pageBox.getChildren().add(taoHeader(1, 1, hoaDon, dsBan));
+            } else {
+                Label lblPage = new Label("Trang " + pageNum);
+                pageBox.getChildren().add(lblPage);
             }
 
-            // Tính items cho trang này
-            int itemsPerPage = (pageNum == 1) ? 19 : 25;
-            int remaining = danhSach.size() - currentIndex;
-            int itemsThisPage = Math.min(itemsPerPage, remaining);
+            // Body: Chuyển sang dùng VBox hàng thay vì TableView
+            int toIndex = Math.min(currentIndex + itemsPerPage, totalItems);
+            List<String> subList = danhSach.subList(currentIndex, toIndex);
+            
+            VBox tableBox = taoTableInVBox(subList, sttGlobal);
+            pageBox.getChildren().add(tableBox);
+            VBox.setVgrow(tableBox, Priority.ALWAYS);
 
+            currentIndex = toIndex;
+            sttGlobal += subList.size();
+            boolean isLastPage = (currentIndex >= totalItems);
 
-            if (itemsThisPage > 0 && remaining >= 0) {
-                int from = currentIndex;
-                int to = currentIndex + itemsThisPage;
-                List<String> subList = danhSach.subList(from, to);
+            // Footer
+            pageBox.getChildren().add(taoFooter(isLastPage, hoaDon));
 
-                TableView<String> table = taoTable(subList, sttGlobal);
-                pageBox.getChildren().add(table);
-
-                // Cập nhật cho trang sau
-                currentIndex += itemsThisPage;
-                sttGlobal += itemsThisPage;
-            }
-
-            hasMore = remaining > itemsThisPage;
-
-            if ((pageNum == 1 && (itemsThisPage > 10 && itemsThisPage <= 19)) || (pageNum > 1 && (itemsThisPage > 16 && itemsThisPage <= 25)))
-                hasMore = true;
-
-            pageBox.getChildren().add(taoFooter(!hasMore, hoaDon));
-
-            pageBox.setAlignment(Pos.CENTER);
             pageBox.applyCss();
             pageBox.layout();
 
-//			// Scale nếu page cao quá (hiếm vì itemsPerPage fit)
-//			double pageHeight = pageBox.getBoundsInLocal().getHeight();
-//			if (pageHeight > maxHeight) {
-//				double scale = maxHeight / pageHeight;
-//				pageBox.setScaleX(scale);
-//				pageBox.setScaleY(scale);
-//			}
-
-
-            job.printPage(layout, pageBox);
-            pageNum++;
+            if (job.printPage(layout, pageBox)) {
+                pageNum++;
+            } else {
+                break; 
+            }
         }
 
         if (job.endJob()) {
@@ -1146,112 +1026,43 @@ public class Gui_ThanhToan extends BorderPane {
         }
     }
 
-    private TableView<String> taoTable(List<String> ds, int page) {
-        TableView<String> table = new TableView<>();
-        table.setItems(FXCollections.observableArrayList(ds));
+    // Hàm tạo bảng in bằng VBox/HBox cực kỳ ổn định
+    private VBox taoTableInVBox(List<String> ds, int startSTT) {
+        VBox table = new VBox();
+        table.setStyle("-fx-border-color: black; -fx-border-width: 1 0 0 0;");
+        
+        // Header Row
+        HBox header = new HBox(5);
+        header.setPadding(new Insets(5, 0, 5, 0));
+        header.setStyle("-fx-border-color: black; -fx-border-width: 0 0 1 0; -fx-background-color: #f2f2f2;");
+        
+        Label h1 = new Label("STT"); h1.setPrefWidth(40); h1.setStyle("-fx-font-weight: bold;");
+        Label h2 = new Label("Tên món"); h2.setPrefWidth(220); h2.setStyle("-fx-font-weight: bold;");
+        Label h3 = new Label("SL"); h3.setPrefWidth(40); h3.setStyle("-fx-font-weight: bold;"); h3.setAlignment(Pos.CENTER);
+        Label h4 = new Label("Giá"); h4.setPrefWidth(80); h4.setStyle("-fx-font-weight: bold;"); h4.setAlignment(Pos.CENTER_RIGHT);
+        Label h5 = new Label("Thành tiền"); h5.setPrefWidth(100); h5.setStyle("-fx-font-weight: bold;"); h5.setAlignment(Pos.CENTER_RIGHT);
+        
+        header.getChildren().addAll(h1, h2, h3, h4, h5);
+        table.getChildren().add(header);
 
-        // Cột STT
-        TableColumn<String, Void> colSTT = new TableColumn<>("STT");
-        colSTT.setPrefWidth(30);
-        colSTT.setSortable(false);
-        colSTT.setCellFactory(col -> new TableCell<String, Void>() {
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty ? null : String.valueOf(getIndex() + page));
-                setAlignment(Pos.CENTER);
-            }
-        });
+        int stt = startSTT;
+        DecimalFormat dcm = new DecimalFormat("#,###");
 
-        // Cột tên món
-        TableColumn<String, String> colTenMon = new TableColumn<>("Tên món");
-
-        // Gán dữ liệu từ thuộc tính "tenMonAn" trong class MonAn
-        colTenMon.setCellValueFactory(cellData -> {
-            String tenMon = cellData.getValue().split(",")[0];
-            return new SimpleStringProperty(tenMon);
-        });
-
-        colTenMon.setCellFactory(tc -> new TableCell<String, String>() {
-            @Override
-            protected void updateItem(String item, boolean empty) {
-                super.updateItem(item, empty);
-
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(item);
-                    setAlignment(Pos.CENTER_LEFT);
-                }
-            }
-        });
-
-        colTenMon.setPrefWidth(145);
-
-        // Cột số lượng
-        TableColumn<String, Integer> colSoLuong = new TableColumn<>("SL");
-
-        colSoLuong.setCellValueFactory(cellData -> {
-            int soLuong = Integer.parseInt(cellData.getValue().split(",")[1]);
-            return new SimpleIntegerProperty(soLuong).asObject();
-        });
-
-        colSoLuong.setCellFactory(tc -> new TableCell<String, Integer>() {
-            @Override
-            protected void updateItem(Integer item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setStyle("");
-                } else {
-                    setText(String.valueOf(item));
-                    setAlignment(Pos.CENTER);
-                    setStyle("-fx-font-size: 13px;");
-                }
-            }
-        });
-
-        colSoLuong.setPrefWidth(40);
-
-        // Cột giá
-        TableColumn<String, Double> colGia = new TableColumn<>("Giá");
-        colGia.setCellValueFactory(cellData -> {
-            double giaTien = Double.parseDouble(cellData.getValue().split(",")[2]);
-            return new SimpleDoubleProperty(giaTien).asObject();
-        });
-        colGia.setPrefWidth(120);
-        colGia.setCellFactory(tc -> new TableCell<String, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
-                setAlignment(Pos.CENTER);
-            }
-
-        });
-
-        // Cột tổng tiền
-        TableColumn<String, Double> colTong = new TableColumn<>("Tổng tiền");
-        colTong.setPrefWidth(120);
-        colTong.setCellValueFactory(cellData -> {
-            double tongTien = Double.parseDouble(cellData.getValue().split(",")[3]);
-            return new SimpleDoubleProperty(tongTien).asObject();
-        });
-        colTong.setCellFactory(tc -> new TableCell<String, Double>() {
-            @Override
-            protected void updateItem(Double item, boolean empty) {
-                super.updateItem(item, empty);
-                setText(empty || item == null ? null : String.format("%,.0fđ", item));
-                setAlignment(Pos.CENTER);
-            }
-
-        });
-
-        table.getStylesheets().add(getClass().getResource("/css/tableprint.css").toExternalForm());
-
-        table.getColumns().addAll(colSTT, colTenMon, colSoLuong, colGia, colTong);
-        table.setPrefHeight(ds.size() * 25 + 20);
+        for (String row : ds) {
+            String[] p = row.split(",");
+            HBox hRow = new HBox(5);
+            hRow.setPadding(new Insets(5, 0, 5, 0));
+            hRow.setStyle("-fx-border-color: #ccc; -fx-border-width: 0 0 1 0;");
+            
+            Label l1 = new Label(String.valueOf(stt++)); l1.setPrefWidth(40);
+            Label l2 = new Label(p[0]); l2.setPrefWidth(220); l2.setWrapText(true);
+            Label l3 = new Label(p[1]); l3.setPrefWidth(40); l3.setAlignment(Pos.CENTER);
+            Label l4 = new Label(dcm.format(Double.parseDouble(p[2]))); l4.setPrefWidth(80); l4.setAlignment(Pos.CENTER_RIGHT);
+            Label l5 = new Label(dcm.format(Double.parseDouble(p[3]))); l5.setPrefWidth(100); l5.setStyle("-fx-font-weight: bold;"); l5.setAlignment(Pos.CENTER_RIGHT);
+            
+            hRow.getChildren().addAll(l1, l2, l3, l4, l5);
+            table.getChildren().add(hRow);
+        }
         return table;
     }
 

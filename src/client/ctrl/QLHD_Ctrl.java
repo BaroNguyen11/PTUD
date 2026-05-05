@@ -109,7 +109,6 @@ public class QLHD_Ctrl {
             return null;
         }
 
-        String chuoi = "";
         for(String i : dsHoaDon) {
             if(i.split(",")[0].equals(maHoaDon))
                 return i;

@@ -2,6 +2,7 @@ package client.utils;
 
 import java.io.*;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 
@@ -27,7 +28,7 @@ public class SupabaseImageUploader {
         // URL upload
         String uploadUrl = SUPABASE_URL + "/storage/v1/object/" + BUCKET_NAME + "/" + folderPath;
 
-        HttpURLConnection conn = (HttpURLConnection) new URL(uploadUrl).openConnection();
+        HttpURLConnection conn = (HttpURLConnection) URI.create(uploadUrl).toURL().openConnection();
         conn.setRequestMethod("POST");
         conn.setRequestProperty("Authorization", "Bearer " + SUPABASE_API_KEY);
         conn.setRequestProperty("Content-Type", Files.probeContentType(file.toPath()));

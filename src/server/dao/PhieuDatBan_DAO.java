@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class PhieuDatBan_DAO extends MongoDaoSupport {
@@ -49,16 +50,50 @@ public class PhieuDatBan_DAO extends MongoDaoSupport {
     }
 
     /**
-     * Kiểm tra bàn đã được đặt trong ngày sử dụng MongoDB compound filter.
+     * Kiểm tra bàn có bị trùng khung giờ không (time-slot overlap).
+     * Hai khoảng thời gian [A_start, A_end) và [B_start, B_end) bị chồng nhau khi:
+     *   A_start < B_end  VÀ  B_start < A_end
+     *
+     * Nếu phiếu cũ không có thoiGianKetThuc → giả định kéo dài 2 giờ.
+     *
+     * @param maBan          Mã bàn cần kiểm tra
+     * @param thoiGianBatDau Thời gian bắt đầu của lịch đặt mới
+     * @param thoiGianKetThuc Thời gian kết thúc của lịch đặt mới
      */
-    public boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau) {
-        LocalDate ngay = thoiGianBatDau.toLocalDate();
+    public boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau, LocalDateTime thoiGianKetThuc) {
+        // Lọc các phiếu của cùng bàn, chưa hủy, chưa dùng xong
         Bson filter = Filters.and(
                 Filters.eq("maBan", maBan),
-                sameDayFilter("thoiGianBatDau", ngay),
                 Filters.nin("trangThai", Arrays.asList("Đã hủy", "Đã dùng"))
         );
-        return col("PhieuDatBan").countDocuments(filter) > 0;
+
+        Date newStart = java.util.Date.from(thoiGianBatDau.atZone(java.time.ZoneId.systemDefault()).toInstant());
+        Date newEnd   = java.util.Date.from(thoiGianKetThuc.atZone(java.time.ZoneId.systemDefault()).toInstant());
+
+        for (Document d : col("PhieuDatBan").find(filter)) {
+            Object rawStart = d.get("thoiGianBatDau");
+            Object rawEnd   = d.get("thoiGianKetThuc");
+
+            if (rawStart == null) continue;
+            Date existStart = (Date) rawStart;
+            // Nếu phiếu cũ không có giờ kết thúc → giả định 2 tiếng
+            Date existEnd = (rawEnd instanceof Date)
+                    ? (Date) rawEnd
+                    : new Date(existStart.getTime() + 2 * 3600_000L);
+
+            // Kiểm tra chồng: existStart < newEnd  VÀ  newStart < existEnd
+            if (existStart.before(newEnd) && newStart.before(existEnd)) {
+                return true; // Bị trùng
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Overload tương thích ngược: không có giờ kết thúc → giả định 2 tiếng.
+     */
+    public boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau) {
+        return kiemTraBanDaDatTrongNgay(maBan, thoiGianBatDau, thoiGianBatDau.plusHours(2));
     }
 
     /**
@@ -72,6 +107,19 @@ public class PhieuDatBan_DAO extends MongoDaoSupport {
         );
         return phieuDatBan(col("PhieuDatBan").find(filter)
                 .sort(new Document("thoiGianBatDau", -1)).first());
+    }
+
+    public List<PhieuDatBan> getDanhSachPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) {
+        List<PhieuDatBan> list = new ArrayList<>();
+        Bson filter = Filters.and(
+                Filters.eq("maBan", maBan),
+                sameDayFilter("thoiGianBatDau", ngayDat),
+                Filters.ne("trangThai", "Đã hủy")
+        );
+        col("PhieuDatBan").find(filter).sort(new Document("thoiGianBatDau", 1)).forEach(doc -> {
+            list.add(phieuDatBan(doc));
+        });
+        return list;
     }
 
     /**

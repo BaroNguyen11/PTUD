@@ -143,7 +143,7 @@ public class Gui_VaoCa {
                 long value = Long.parseLong(clean);
                 tongTienDauCa = value;
 
-                DecimalFormatSymbols s = new DecimalFormatSymbols(new Locale("vi", "VN"));
+                DecimalFormatSymbols s = new DecimalFormatSymbols(Locale.of("vi", "VN"));
                 s.setGroupingSeparator('.');
                 DecimalFormat f = new DecimalFormat("###,###,###", s);
                 String formatted = f.format(value);

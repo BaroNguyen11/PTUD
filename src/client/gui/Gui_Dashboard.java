@@ -32,7 +32,7 @@ public class Gui_Dashboard extends BorderPane {
 
     public Gui_Dashboard() {
         dashboardClient = new DashboardClient();
-        currencyFormat = NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
+        currencyFormat = NumberFormat.getCurrencyInstance(Locale.of("vi", "VN"));
 
         // === 1. SETUP ROOT CONTAINER ===
         VBox rootContent = new VBox(30);
@@ -415,7 +415,7 @@ public class Gui_Dashboard extends BorderPane {
         return wrapper;
     }
 
-    private void applyBlackTextStyle(Chart chart, Axis xAxis, Axis yAxis) {
+    private void applyBlackTextStyle(Chart chart, Axis<?> xAxis, Axis<?> yAxis) {
         String chartStyle = "-fx-text-fill: black; -fx-font-family: 'Segoe UI'; -fx-font-size: 12px;";
         String axisStyle = "-fx-tick-label-fill: #2d3436; -fx-axis-label-fill: #2d3436; -fx-font-family: 'Segoe UI'; -fx-font-size: 11px;";
         chart.setStyle(chartStyle);

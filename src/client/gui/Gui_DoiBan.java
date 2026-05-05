@@ -266,11 +266,10 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
 
     private void loadDanhSachBanTrong() {
         luoiBanTrong.getChildren().clear();
-        List<BanAn> dsBanTrong = banAnClient.getTrangThaiBanTheoNgayVaViTri(viTriHienTai, ngayDat)
-                .stream().filter(b -> b.getTrangThai() == TrangThai.TRONG).collect(Collectors.toList());
+        List<BanAn> dsTatCaBan = banAnClient.getTrangThaiBanTheoNgayVaViTri(viTriHienTai, ngayDat);
 
         int col = 0; int row = 0;
-        for (BanAn ban : dsBanTrong) {
+        for (BanAn ban : dsTatCaBan) {
             StackPane card = taoCardBan(ban);
 
             boolean isSelected = dsBanMoiDaChon.stream().anyMatch(b -> b.getMaBan().equals(ban.getMaBan()));
@@ -295,8 +294,14 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
         box.setAlignment(Pos.CENTER);
         box.setPadding(new Insets(10));
 
-        // Mặc định
-        box.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 2; -fx-border-radius: 12; -fx-background-radius: 12; -fx-cursor: hand;");
+        // Mặc định style theo trạng thái
+        if (ban.getTrangThai() == TrangThai.TRONG) {
+            box.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 2; -fx-border-radius: 12; -fx-background-radius: 12; -fx-cursor: hand;");
+        } else if (ban.getTrangThai() == TrangThai.DA_DAT) {
+            box.setStyle("-fx-background-color: #FFF5F5; -fx-border-color: #FEB2B2; -fx-border-width: 2; -fx-border-radius: 12; -fx-background-radius: 12; -fx-cursor: hand;");
+        } else {
+            box.setStyle("-fx-background-color: #F0FFF4; -fx-border-color: #9AE6B4; -fx-border-width: 2; -fx-border-radius: 12; -fx-background-radius: 12; -fx-cursor: hand;");
+        }
 
         // --- QUAN TRỌNG: GẮN ID ĐỂ TÌM KIẾM ---
         Label lblMa = new Label(ban.getMaBan());
@@ -353,8 +358,14 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
             box.setOnMouseExited(null);
 
         } else {
-            // == CHƯA CHỌN: Nền trắng, Chữ ĐEN/XÁM ==
-            box.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+            // == CHƯA CHỌN: Nền theo trạng thái ==
+            if (banData.getTrangThai() == TrangThai.TRONG) {
+                box.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+            } else if (banData.getTrangThai() == TrangThai.DA_DAT) {
+                box.setStyle("-fx-background-color: #FFF5F5; -fx-border-color: #FEB2B2; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+            } else {
+                box.setStyle("-fx-background-color: #F0FFF4; -fx-border-color: #9AE6B4; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+            }
 
             // QUAN TRỌNG: Set màu đen/xám rõ ràng bằng setStyle
             if(lblMa != null) lblMa.setStyle("-fx-text-fill: #2D3748; -fx-font-weight: bold; -fx-font-size: 16px;");
@@ -365,14 +376,20 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
             box.setOnMouseEntered(e -> {
                 boolean isAlreadySelected = dsBanMoiDaChon.stream().anyMatch(b -> b.getMaBan().equals(banData.getMaBan()));
                 if(!isAlreadySelected) {
-                    box.setStyle("-fx-background-color: #F7FAFC; -fx-border-color: #3182CE; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+                    box.setStyle("-fx-background-color: #EDF2F7; -fx-border-color: #3182CE; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
                 }
             });
 
             box.setOnMouseExited(e -> {
                 boolean isAlreadySelected = dsBanMoiDaChon.stream().anyMatch(b -> b.getMaBan().equals(banData.getMaBan()));
                 if(!isAlreadySelected) {
-                    box.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+                    if (banData.getTrangThai() == TrangThai.TRONG) {
+                        box.setStyle("-fx-background-color: white; -fx-border-color: #E2E8F0; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+                    } else if (banData.getTrangThai() == TrangThai.DA_DAT) {
+                        box.setStyle("-fx-background-color: #FFF5F5; -fx-border-color: #FEB2B2; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+                    } else {
+                        box.setStyle("-fx-background-color: #F0FFF4; -fx-border-color: #9AE6B4; -fx-border-width: 2; -fx-background-radius: 12; -fx-border-radius: 12; -fx-cursor: hand;");
+                    }
                 }
             });
         }
@@ -428,6 +445,25 @@ public class Gui_DoiBan extends Dialog<ButtonType> {
 
         confirm.showAndWait().ifPresent(res -> {
             if (res == ButtonType.YES) {
+                // KIỂM TRA TRÙNG LỊCH TRƯỚC KHI THỰC HIỆN
+                List<String> trung = new ArrayList<>();
+                for (BanAn bMoi : dsBanMoiDaChon) {
+                    if (banCu.getTrangThai() == TrangThai.DANG_SU_DUNG) {
+                        if (phieuDatBanClient.kiemTraBanDaDatTrongNgay(bMoi.getMaBan(), java.time.LocalDateTime.now(), java.time.LocalDateTime.now().plusHours(2))) {
+                            trung.add(bMoi.getMaBan());
+                        }
+                    } else {
+                        common.entity.PhieuDatBan pdbCu = phieuDatBanClient.getPhieuDatBanByMaBanVaNgay(banCu.getMaBan(), ngayDat);
+                        if (pdbCu != null && phieuDatBanClient.kiemTraBanDaDatTrongNgay(bMoi.getMaBan(), pdbCu.getThoiGianBatDau(), pdbCu.getThoiGianKetThuc())) {
+                            trung.add(bMoi.getMaBan());
+                        }
+                    }
+                }
+
+                if (!trung.isEmpty()) {
+                    new Alert(AlertType.ERROR, "Không thể chuyển! Bàn " + String.join(", ", trung) + " đã có người đặt trong khung giờ này.").show();
+                    return;
+                }
 
                 Dialog<Void> loading = new Dialog<>();
                 loading.initStyle(StageStyle.UNDECORATED);

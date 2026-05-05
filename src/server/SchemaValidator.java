@@ -1,6 +1,5 @@
 package server;
 
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.Indexes;
@@ -11,7 +10,6 @@ import com.mongodb.client.model.ValidationLevel;
 import org.bson.Document;
 
 import java.util.Arrays;
-import java.util.List;
 
 /**
  * SchemaValidator - Tạo ràng buộc (constraints) dưới database MongoDB.

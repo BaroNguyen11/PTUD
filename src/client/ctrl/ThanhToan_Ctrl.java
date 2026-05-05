@@ -2,10 +2,8 @@ package client.ctrl;
 
 import java.sql.SQLException;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -79,30 +77,15 @@ public class ThanhToan_Ctrl {
         return 5 / 100.0 * tongTien;
     }
 
-    public double tinhCoc(BanAn banAn) {
-        if (banAn == null) {
-            gui.showAlert(AlertType.ERROR, "Lỗi", "Bàn ăn không được null");
-            return 0;
-        }
-        double tienCoc = banAn.getLoai().equals(LoaiBan.VIP) ? 450000.0 : 350000;
-        return tienCoc;
-    }
-
     public double tinhCocBangDanhSachPhieu(List<PhieuDatBan> dsPhieu) {
         if (dsPhieu == null || dsPhieu.isEmpty()) {
             return 0.0;
         }
-
-        double tienCoc = 0.0;
-
-        for (PhieuDatBan phieu : dsPhieu) {
-            if (!phieu.getGhiChu().equals("Dùng ngay")) {
-                tienCoc += tinhCoc(new BanAnClient().getByMaBan(phieu.getBan().getMaBan()));
-            }
+        double total = 0.0;
+        for (PhieuDatBan p : dsPhieu) {
+            total += p.getTienCoc();
         }
-
-        return tienCoc;
-
+        return total;
     }
 
     public double tinhTienGiamGia(double giaTriGiam, boolean giamGiaPhanTram, double tongTien, double giaTriToiDa) {

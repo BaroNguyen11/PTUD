@@ -767,17 +767,62 @@ public class Gui_DanhSachBan extends BorderPane {
 
         boolean isBookedOrInUse = (ban.getTrangThai() == TrangThai.DA_DAT || ban.getTrangThai() == TrangThai.DANG_SU_DUNG);
         if (isBookedOrInUse) {
-            PhieuDatBan pdbInfo = phieuDatBanClient.getPhieuDatBanByMaBanVaNgay(ban.getMaBan(), datePicker.getValue());
-            if (pdbInfo != null) {
+            List<PhieuDatBan> dsPdb = phieuDatBanClient.getDanhSachPhieuDatBanByMaBanVaNgay(ban.getMaBan(), datePicker.getValue());
+            if (dsPdb != null && !dsPdb.isEmpty()) {
                 contentBox.getChildren().add(new Separator());
-                contentBox.getChildren().add(createLabel("Thông tin khách hàng:", "#4A5568", 14, true));
-                String tenKhach = (pdbInfo.getKhachHang() != null && pdbInfo.getKhachHang().getTenKhachHang() != null) ? pdbInfo.getKhachHang().getTenKhachHang() : "Không có thông tin";
-                String sdtKhach = (pdbInfo.getKhachHang() != null && pdbInfo.getKhachHang().getSoDienThoai() != null) ? pdbInfo.getKhachHang().getSoDienThoai() : "Không có thông tin";
-                contentBox.getChildren().addAll(
-                        createDetailRow("Tên khách:", tenKhach),
-                        createDetailRow("SĐT:", sdtKhach),
-                        createDetailRow("Ghi chú:", (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) ? pdbInfo.getGhiChu() : "---")
-                );
+                contentBox.getChildren().add(createLabel("Danh sách đặt bàn hôm nay:", "#4A5568", 14, true));
+                
+                VBox listPdbBox = new VBox(10);
+                java.time.format.DateTimeFormatter timeFormatter = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+
+                for (PhieuDatBan pdbInfo : dsPdb) {
+                    VBox item = new VBox(5);
+                    item.setPadding(new Insets(12));
+                    // Đổi nền sang màu xám cực nhạt nhưng đậm hơn chút để nổi bật
+                    item.setStyle("-fx-background-color: #EDF2F7; -fx-background-radius: 10; -fx-border-color: #CBD5E0; -fx-border-radius: 10;");
+                    
+                    String tenKhach = (pdbInfo.getKhachHang() != null && pdbInfo.getKhachHang().getTenKhachHang() != null) 
+                                      ? pdbInfo.getKhachHang().getTenKhachHang() : "Khách vãng lai";
+                    String thoiGian = pdbInfo.getThoiGianBatDau().format(timeFormatter) + " - " + 
+                                     (pdbInfo.getThoiGianKetThuc() != null ? pdbInfo.getThoiGianKetThuc().format(timeFormatter) : "---");
+                    
+                    HBox rowInfo = new HBox(12);
+                    rowInfo.setAlignment(Pos.CENTER_LEFT);
+                    
+                    Label lblInfo = new Label(thoiGian + " | " + tenKhach + " (" + pdbInfo.getTrangThai() + ")");
+                    // ÉP MÀU ĐEN ĐẬM BẰNG STYLE
+                    lblInfo.setStyle("-fx-text-fill: #1A202C; -fx-font-weight: bold; -fx-font-size: 14px;");
+                    
+                    Region spacerRow = new Region();
+                    HBox.setHgrow(spacerRow, Priority.ALWAYS);
+                    
+                    rowInfo.getChildren().addAll(lblInfo, spacerRow);
+
+                    // Chỉ hiện nút Check-in nếu phiếu đang ở trạng thái "Đã đặt"
+                    if (pdbInfo.getTrangThai().equalsIgnoreCase("Đã đặt")) {
+                        Button btnCi = createStyledButton("Check-in", "#2563EB", "#DBEAFE", ev -> {
+                            xuLyCheckIn(pdbInfo, dialog);
+                        });
+                        btnCi.setScaleX(0.8); btnCi.setScaleY(0.8); // Nhỏ lại cho vừa
+                        rowInfo.getChildren().add(btnCi);
+                    }
+                    
+                    item.getChildren().add(rowInfo);
+                    if (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) {
+                        Label lblNote = new Label("📝 " + pdbInfo.getGhiChu());
+                        lblNote.setFont(Font.font("Segoe UI", 11));
+                        lblNote.setTextFill(Color.GRAY);
+                        item.getChildren().add(lblNote);
+                    }
+                    
+                    listPdbBox.getChildren().add(item);
+                }
+                
+                ScrollPane scrollPdb = new ScrollPane(listPdbBox);
+                scrollPdb.setFitToWidth(true);
+                scrollPdb.setPrefHeight(150);
+                scrollPdb.setStyle("-fx-background-color: transparent; -fx-background: transparent;");
+                contentBox.getChildren().add(scrollPdb);
             }
 
             String maHDGop = banAnClient.getMaHoaDonTuBan(ban.getMaBan());
@@ -824,7 +869,19 @@ public class Gui_DanhSachBan extends BorderPane {
                         createStyledButton("Gọi món", "#7C3AED", "#EDE9FE", e -> {
                             xuLyGoiMon(ban);
                             dialog.close();
-                        }));
+                        }),
+                        createStyledButton("➕ Đặt bàn", "#2563EB", "#DBEAFE", e -> {
+                            dialog.close(); 
+                            List<BanAn> listBanChon = new ArrayList<>();
+                            listBanChon.add(ban);
+                            try {
+                                Gui_DatBan guiDatBan = new Gui_DatBan(trangChu, listBanChon, datePicker.getValue());
+                                trangChu.setMainContent(guiDatBan);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                            }
+                        })
+                );
                 break;
             case DA_DAT:
                 actionBox.getChildren().addAll(
@@ -836,29 +893,32 @@ public class Gui_DanhSachBan extends BorderPane {
                             xuLyHuyBan(ban);
                             dialog.close();
                         }),
-                        createStyledButton("Check-in", "#2563EB", "#DBEAFE", e -> {
-                            xuLyCheckIn(ban, dialog);
-                            dialog.close();
-                        })
-                );
-                break;
-            case TRONG:
-                // --- THÊM NÚT ĐẶT BÀN TẠI ĐÂY ---
-                actionBox.getChildren().add(
-                        createStyledButton("➕ Đặt bàn ngay", "#2563EB", "#DBEAFE", e -> {
-                            dialog.close(); // Đóng dialog thông tin trước
-
-                            // Tạo danh sách chứa bàn hiện tại để gửi sang màn hình đặt bàn
+                        createStyledButton("➕ Đặt bàn", "#2563EB", "#DBEAFE", e -> {
+                            dialog.close(); 
                             List<BanAn> listBanChon = new ArrayList<>();
                             listBanChon.add(ban);
-
-                            // Chuyển sang màn hình đặt bàn
                             try {
                                 Gui_DatBan guiDatBan = new Gui_DatBan(trangChu, listBanChon, datePicker.getValue());
                                 trangChu.setMainContent(guiDatBan);
                             } catch (Exception ex) {
                                 ex.printStackTrace();
-                                new Gui_DatBan(trangChu, listBanChon, datePicker.getValue());
+                            }
+                        })
+                );
+                break;
+            case TRONG:
+                // --- ĐẶT BÀN CHO BÀN TRỐNG ---
+                // --- LUÔN CHO PHÉP ĐẶT BÀN CHO KHUNG GIỜ KHÁC ---
+                actionBox.getChildren().add(
+                        createStyledButton("➕ Đặt bàn", "#2563EB", "#DBEAFE", e -> {
+                            dialog.close(); 
+                            List<BanAn> listBanChon = new ArrayList<>();
+                            listBanChon.add(ban);
+                            try {
+                                Gui_DatBan guiDatBan = new Gui_DatBan(trangChu, listBanChon, datePicker.getValue());
+                                trangChu.setMainContent(guiDatBan);
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
                             }
                         })
                 );
@@ -923,19 +983,14 @@ public class Gui_DanhSachBan extends BorderPane {
             showAlert(AlertType.ERROR, "Chưa chọn bàn", "Vui lòng click chọn ít nhất một bàn để đặt.");
             return;
         }
-        for (BanAn ban : danhSachBanDaChon) {
-            if (ban.getTrangThai() != TrangThai.TRONG) {
-                showAlert(AlertType.WARNING, "Bàn không hợp lệ", "Bàn " + ban.getMaBan() + " không trống.");
-                return;
-            }
-        }
+        // Cho phép đặt bàn kể cả khi trạng thái không trống (để đặt cho khung giờ khác)
+        // Logic kiểm tra trùng giờ đã được xử lý ở PhieuDatBan_DAO
         try {
             LocalDate ngayDat = datePicker.getValue();
             Gui_DatBan guiDatBan = new Gui_DatBan(trangChu, danhSachBanDaChon, ngayDat);
             trangChu.setMainContent(guiDatBan);
         } catch (Exception e) {
             e.printStackTrace();
-            new Gui_DatBan(trangChu, danhSachBanDaChon, datePicker.getValue());
         }
     }
 
@@ -1002,25 +1057,36 @@ public class Gui_DanhSachBan extends BorderPane {
         });
     }
 
-    private void xuLyCheckIn(BanAn ban, Dialog<Void> dialog) {
-        String maHDGop = banAnClient.getMaHoaDonTuBan(ban.getMaBan());
-        List<PhieuDatBan> dsPhieuDatBan = new CheckInClient().getPhieuDatBanTheoHoaDonVaNgay(maHDGop, ngayChon);
-        KhachHang kh = null;
-        if (dsPhieuDatBan != null && !dsPhieuDatBan.isEmpty() && dsPhieuDatBan.get(0).getKhachHang() != null) {
-            kh = new KhachHangClient().getKhachHangById(dsPhieuDatBan.get(0).getKhachHang().getMaKhachHang());
+    private void xuLyCheckIn(PhieuDatBan pdb, Dialog<Void> dialog) {
+        // 1. KIỂM TRA: Nếu bàn đang có khách (ĐANG_SU_DUNG), không cho check-in khách tiếp theo
+        BanAn banHienTai = banAnClient.getByMaBan(pdb.getBan().getMaBan());
+        if (banHienTai != null && banHienTai.getTrangThai() == TrangThai.DANG_SU_DUNG) {
+            showAlert(AlertType.WARNING, "Bàn đang có khách", 
+                "Bàn " + banHienTai.getMaBan() + " hiện đang có khách ngồi.\n" +
+                "Vui lòng đợi khách cũ thanh toán hoặc thực hiện 'Đổi bàn' cho khách đặt này sang bàn trống khác.");
+            return;
         }
+
+        // 2. KIỂM TRA: Thứ tự check-in (Không cho khách sau check-in trước khách trước)
+        List<PhieuDatBan> dsPhieuTrongNgay = phieuDatBanClient.getDanhSachPhieuDatBanByMaBanVaNgay(pdb.getBan().getMaBan(), pdb.getThoiGianBatDau().toLocalDate());
+        for (PhieuDatBan p : dsPhieuTrongNgay) {
+            // Nếu có phiếu nào sớm hơn khung giờ hiện tại mà vẫn đang "Đã đặt"
+            if (p.getThoiGianBatDau().isBefore(pdb.getThoiGianBatDau()) && p.getTrangThai().equalsIgnoreCase("Đã đặt")) {
+                showAlert(AlertType.WARNING, "Sai thứ tự check-in", 
+                    "Vẫn còn khách đặt ở khung giờ sớm hơn (" + p.getThoiGianBatDau().getHour() + ":" + p.getThoiGianBatDau().getMinute() + ") chưa đến.\n" +
+                    "Vui lòng xử lý (Check-in hoặc Hủy) cho khách đó trước khi cho khách sau vào.");
+                return;
+            }
+        }
+
+        KhachHang kh = pdb.getKhachHang();
         String tenKhach = (kh != null && kh.getTenKhachHang() != null) ? kh.getTenKhachHang() : "Khách hàng";
-        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Check-in cho " + tenKhach + "?", ButtonType.YES, ButtonType.NO);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Check-in cho " + tenKhach + " (Khung giờ: " + pdb.getThoiGianBatDau().getHour() + ":" + pdb.getThoiGianBatDau().getMinute() + ")?", ButtonType.YES, ButtonType.NO);
         alert.showAndWait().ifPresent(res -> {
             if (res == ButtonType.YES) {
-                for (PhieuDatBan pdb : dsPhieuDatBan) {
-                    if (pdb.getTrangThai().equalsIgnoreCase("Đã hủy") || pdb.getTrangThai().equalsIgnoreCase("Đã thanh toán")) {
-                        continue;
-                    }
-                    if (!controlCheckIn.capNhatTrangThai(pdb.getMaPhieu(), "Đang dùng") || !controlCheckIn.capNhatTrangThaiBan(pdb.getBan().getMaBan(), TrangThai.DANG_SU_DUNG)) {
-                        showAlert(AlertType.ERROR, "Lỗi", "Check-in thất bại.");
-                        return;
-                    }
+                if (!controlCheckIn.capNhatTrangThai(pdb.getMaPhieu(), "Đang dùng") || !controlCheckIn.capNhatTrangThaiBan(pdb.getBan().getMaBan(), TrangThai.DANG_SU_DUNG)) {
+                    showAlert(AlertType.ERROR, "Lỗi", "Check-in thất bại.");
+                    return;
                 }
                 showAlert(AlertType.INFORMATION, "Thành công", "Đã Check-in.");
                 dialog.close();

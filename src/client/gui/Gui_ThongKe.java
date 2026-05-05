@@ -2,7 +2,6 @@
 package client.gui;
 
 import client.ctrl.ThongKe_Ctrl;
-import client.service.ThongKeClient;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -22,8 +21,6 @@ import javafx.animation.FadeTransition;
 import javafx.util.Duration;
 
 import java.text.NumberFormat;
-import java.time.YearMonth;
-import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Map;
 
@@ -36,7 +33,7 @@ public class Gui_ThongKe extends VBox {
     ThongKe_Ctrl thongKeCtrl = new ThongKe_Ctrl();
 
     // ===== PHƯƠNG THỨC HỖ TRỢ ÁP DỤNG STYLE CHO BIỂU ĐỒ =====
-    private void applyBlackTextStyle(Chart chart, Axis xAxis, Axis yAxis) {
+    private void applyBlackTextStyle(Chart chart, Axis<?> xAxis, Axis<?> yAxis) {
         String chartStyle =
                 "-fx-text-fill: black;" +
                         "-fx-font-family: 'Segoe UI';" +
@@ -161,7 +158,7 @@ public class Gui_ThongKe extends VBox {
 
         statGrid.add(createModernStatCard(
                 "Tổng Doanh thu",
-                NumberFormat.getInstance(new Locale("vi", "VN")).format(thongKeCtrl.getTongTienThangNay()),
+                NumberFormat.getInstance(Locale.of("vi", "VN")).format(thongKeCtrl.getTongTienThangNay()),
                 "VND",
                 String.format("%s %.1f%%", symbol, Math.abs(tyLeDoanhThu)),
                 "So với tháng trước",
@@ -171,7 +168,7 @@ public class Gui_ThongKe extends VBox {
 
         statGrid.add(createModernStatCard(
                 "DT TB/Bàn",
-                NumberFormat.getInstance(new Locale("vi", "VN")).format(thongKeCtrl.getDoanhThuTBBan()),
+                NumberFormat.getInstance(Locale.of("vi", "VN")).format(thongKeCtrl.getDoanhThuTBBan()),
                 "VND",
                 "↑ 8%",
                 "Cao điểm: 650K",
@@ -1151,18 +1148,7 @@ private VBox createBookingSuccessRateChart(double successRate, double cancelRate
 
     // ===== CÁC BIỂU ĐỒ KHÁC GIỮ NGUYÊN =====
 
-    private VBox createBookingSuccessRateChart() {
-        PieChart chart = new PieChart(FXCollections.observableArrayList(
-                new PieChart.Data("Thành công", 95.5),
-                new PieChart.Data("Hủy/No-show", 4.5)
-        ));
-        chart.setTitle("Tỷ lệ Thành công");
-        chart.setLabelsVisible(true);
-        chart.setLegendSide(Side.BOTTOM);
-        chart.setPrefHeight(320);
-        chart.setStyle("-fx-background-color: transparent;");
-        return new VBox(chart);
-    }
+
 
 //    private VBox createTableTurnoverChart() {
 //        // 1. Cấu hình Trục
@@ -1254,7 +1240,6 @@ private VBox createBookingSuccessRateChart(double successRate, double cancelRate
         }
 
         // 4. Xử lý màu sắc và Tooltip (Giống biểu đồ doanh thu tháng)
-        int colorIndex = 0;
         for (XYChart.Data<String, Number> data : series.getData()) {
             data.nodeProperty().addListener((obs, oldVal, newVal) -> {
                 if (newVal != null) {
@@ -1308,7 +1293,6 @@ private VBox createBookingSuccessRateChart(double successRate, double cancelRate
 //                    newVal.setOnMouseExited(e -> newVal.setStyle("-fx-bar-fill: #43e97b;"));
                 }
             });
-            colorIndex++;
         }
 
         chart.getData().add(series);
@@ -1725,48 +1709,7 @@ private VBox createRevenueByMenuGroupChart() {
         wrapper.setStyle("-fx-background-color: transparent;");
         return wrapper;
     }
-    // ===== HÀM XỬ LÝ LOGIC SỰ KIỆN =====
 
-    /**
-     * Hàm trung tâm: Được gọi mỗi khi thay đổi bất kỳ bộ lọc nào.
-     * Nó sẽ lấy giá trị từ các ComboBox/DatePicker và gọi Controller để lấy dữ liệu mới.
-     */
-    private void loadDashboardData() {
-        String nhomTheo = cbGroup.getValue();
-        String khuVuc = cbArea.getValue();
-        java.time.LocalDate tuNgay = datePickerFrom.getValue();
-        java.time.LocalDate denNgay = datePickerTo.getValue();
-
-        // TODO: GỌI CONTROLLER Ở ĐÂY
-        // Ví dụ:
-        // Map<String, Double> newData = thongKeCtrl.getDoanhThuTheoTieuChi(nhomTheo, khuVuc, tuNgay, denNgay);
-        // updateChart(newData);
-
-        // Ví dụ làm mới biểu đồ tròn (Giả lập)
-        // createRevenueBySessionChart(); // Cần sửa hàm tạo biểu đồ thành hàm update dữ liệu
-    }
-
-    /**
-     * Xử lý xuất báo cáo ra Excel
-     */
-    private void handleExportReport() {
-        // Tạo FileChooser để chọn nơi lưu
-        javafx.stage.FileChooser fileChooser = new javafx.stage.FileChooser();
-        fileChooser.setTitle("Lưu Báo Cáo Doanh Thu");
-        fileChooser.getExtensionFilters().add(
-                new javafx.stage.FileChooser.ExtensionFilter("Excel Files", "*.xlsx")
-        );
-        fileChooser.setInitialFileName("BaoCao_DoanhThu_" + java.time.LocalDate.now() + ".xlsx");
-
-        java.io.File file = fileChooser.showSaveDialog(this.getScene().getWindow());
-
-        if (file != null) {
-            // TODO: Gọi hàm xuất Excel từ Controller/service
-            // boolean success = thongKeCtrl.exportToExcel(file, datePickerFrom.getValue(), datePickerTo.getValue());
-
-            showAlert("Thành công", "Đã xuất báo cáo thành công!");
-        }
-    }
 
     /**
      * Hàm hiển thị thông báo đơn giản

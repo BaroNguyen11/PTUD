@@ -1,6 +1,5 @@
 package server.dao;
 
-import com.mongodb.client.AggregateIterable;
 import com.mongodb.client.model.Accumulators;
 import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
@@ -9,8 +8,6 @@ import org.bson.Document;
 import org.bson.conversions.Bson;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.*;
 
 /**

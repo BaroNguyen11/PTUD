@@ -103,57 +103,69 @@ public class Gui_DangNhap extends Application {
 
         // ⭐️ Xử lý icon bên trái (User/Lock)
         try {
-            ImageView leftIconView = new ImageView(new Image(getClass().getResource(iconPath).toExternalForm()));
-            leftIconView.setFitWidth(18);
-            leftIconView.setFitHeight(18);
+            java.net.URL iconUrl = getClass().getResource(iconPath);
+            if (iconUrl != null) {
+                ImageView leftIconView = new ImageView(new Image(iconUrl.toExternalForm()));
+                leftIconView.setFitWidth(18);
+                leftIconView.setFitHeight(18);
 
-            StackPane.setAlignment(leftIconView, Pos.CENTER_LEFT);
-            StackPane.setMargin(leftIconView, new Insets(0, 0, 0, 15));
+                StackPane.setAlignment(leftIconView, Pos.CENTER_LEFT);
+                StackPane.setMargin(leftIconView, new Insets(0, 0, 0, 15));
 
-            inputStack.getChildren().add(leftIconView); // Thêm icon trái
+                inputStack.getChildren().add(leftIconView); // Thêm icon trái
+            } else {
+                System.err.println("⚠️ Không tìm thấy icon trái: " + iconPath);
+            }
 
         } catch (Exception e) {
-            System.err.println("Không tải được icon trái: " + iconPath);
+            System.err.println("❌ Lỗi tải icon trái: " + iconPath);
         }
 
         // ⭐️ Xử lý thêm icon mắt (bên phải) NẾU là password
         if (isPassword) {
             try {
-                Image eyeClosedImg = new Image(getClass().getResource(EYE_CLOSED_PATH).toExternalForm());
-                Image eyeOpenImg = new Image(getClass().getResource(EYE_OPEN_PATH).toExternalForm());
-                ImageView eyeIconView = new ImageView(eyeClosedImg); // Ban đầu là nhắm mắt
-                eyeIconView.setFitWidth(18);
-                eyeIconView.setFitHeight(18);
-                eyeIconView.setCursor(Cursor.HAND);
+                java.net.URL closedUrl = getClass().getResource(EYE_CLOSED_PATH);
+                java.net.URL openUrl = getClass().getResource(EYE_OPEN_PATH);
 
-                // ⭐️ Căn lề phải
-                StackPane.setAlignment(eyeIconView, Pos.CENTER_RIGHT);
-                StackPane.setMargin(eyeIconView, new Insets(0, 15, 0, 0));
+                if (closedUrl != null && openUrl != null) {
+                    Image eyeClosedImg = new Image(closedUrl.toExternalForm());
+                    Image eyeOpenImg = new Image(openUrl.toExternalForm());
+                    ImageView eyeIconView = new ImageView(eyeClosedImg); // Ban đầu là nhắm mắt
+                    eyeIconView.setFitWidth(18);
+                    eyeIconView.setFitHeight(18);
+                    eyeIconView.setCursor(Cursor.HAND);
 
-                // ⭐️ Logic bấm vào mắt
-                // Cần khai báo final để dùng trong lambda
-                final Control finalInputControl = inputControl;
-                final TextField finalVisiblePasswordField = visiblePasswordField;
+                    // ⭐️ Căn lề phải
+                    StackPane.setAlignment(eyeIconView, Pos.CENTER_RIGHT);
+                    StackPane.setMargin(eyeIconView, new Insets(0, 15, 0, 0));
 
-                eyeIconView.setOnMouseClicked(e -> {
-                    if (finalVisiblePasswordField.isVisible()) {
-                        // Đang hiện -> Giấu đi
-                        finalVisiblePasswordField.setVisible(false);
-                        finalInputControl.setVisible(true); // Hiện PasswordField
-                        eyeIconView.setImage(eyeClosedImg);
-                    } else {
-                        // Đang giấu -> Hiện lên
-                        finalVisiblePasswordField.setVisible(true);
-                        finalInputControl.setVisible(false); // Giấu PasswordField
-                        eyeIconView.setImage(eyeOpenImg);
-                    }
-                });
+                    // ⭐️ Logic bấm vào mắt
+                    // Cần khai báo final để dùng trong lambda
+                    final Control finalInputControl = inputControl;
+                    final TextField finalVisiblePasswordField = visiblePasswordField;
 
-                // ⭐️ Thêm icon mắt vào stack
-                inputStack.getChildren().add(eyeIconView);
+                    eyeIconView.setOnMouseClicked(e -> {
+                        if (finalVisiblePasswordField.isVisible()) {
+                            // Đang hiện -> Giấu đi
+                            finalVisiblePasswordField.setVisible(false);
+                            finalInputControl.setVisible(true); // Hiện PasswordField
+                            eyeIconView.setImage(eyeClosedImg);
+                        } else {
+                            // Đang giấu -> Hiện lên
+                            finalVisiblePasswordField.setVisible(true);
+                            finalInputControl.setVisible(false); // Giấu PasswordField
+                            eyeIconView.setImage(eyeOpenImg);
+                        }
+                    });
+
+                    // ⭐️ Thêm icon mắt vào stack
+                    inputStack.getChildren().add(eyeIconView);
+                } else {
+                    System.err.println("⚠️ Không tìm thấy icon mắt.");
+                }
 
             } catch (Exception e) {
-                System.err.println("Không thể tải icon mắt: " + e.getMessage());
+                System.err.println("❌ Không thể tải icon mắt: " + e.getMessage());
             }
         }
 
@@ -171,9 +183,14 @@ public class Gui_DangNhap extends Application {
             Scene scene = new Scene(root);
 
             try {
-                scene.getStylesheets().add(getClass().getResource("/client/application/application.css").toExternalForm());
+                java.net.URL cssUrl = getClass().getResource("/client/application/application.css");
+                if (cssUrl != null) {
+                    scene.getStylesheets().add(cssUrl.toExternalForm());
+                } else {
+                    System.err.println("⚠️ Không tìm thấy file CSS: /client/application/application.css");
+                }
             } catch (Exception e) {
-                throw new Exception(e.getMessage());
+                System.err.println("⚠️ Lỗi khi load CSS: " + e.getMessage());
             }
 
             mainStage.setTitle("Quản Lý Nhà Hàng - Xin chào: " + currentUsername);
@@ -661,13 +678,6 @@ public class Gui_DangNhap extends Application {
         return currentIsAdmin;
     }
 
-    private void showAlert(Alert.AlertType type, String title, String message) {
-        Alert alert = new Alert(type);
-        alert.setTitle(title);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
-    }
     public static void main(String[] args) {
         launch();
     }

@@ -5,7 +5,7 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoDatabase;
 
 public final class ConnectDB {
-    private static final String DEFAULT_URI = "mongodb://localhost:27017";
+    private static final String DEFAULT_URI = "mongodb+srv://bao927471_db_user:2oyOwLxpNs5mfiqL@cluster0.e2esjex.mongodb.net/?appName=Cluster0";
     private static final String DEFAULT_DATABASE = "QLNhaHang2BTCHECK";
 
     private static MongoClient client;

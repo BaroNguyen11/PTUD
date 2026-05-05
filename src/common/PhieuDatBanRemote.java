@@ -13,7 +13,9 @@ public interface PhieuDatBanRemote extends Remote {
     String getMaPhieuCuoiCung(LocalDate ngayCanTim) throws RemoteException;
     String taoMaPhieuMoi(LocalDate ngayDat) throws RemoteException;
     boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau) throws RemoteException;
+    boolean kiemTraBanDaDatTrongNgay(String maBan, LocalDateTime thoiGianBatDau, LocalDateTime thoiGianKetThuc) throws RemoteException;
     PhieuDatBan getPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) throws RemoteException;
+    List<PhieuDatBan> getDanhSachPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngayDat) throws RemoteException;
     boolean huyPhieuDatBanByMaBanVaNgay(String maBan, LocalDate ngay) throws RemoteException;
     boolean huyTatCaPhieuByMaHoaDon(String maHoaDon) throws RemoteException;
     List<PhieuDatBan> getByMaHoaDon(String maHoaDon) throws RemoteException;

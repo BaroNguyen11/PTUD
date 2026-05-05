@@ -316,10 +316,8 @@
 package client.gui;
 
 import client.service.CaClient;
-import client.service.QLHDClient;
 import common.entity.Ca;
 import javafx.animation.FadeTransition;
-import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
@@ -601,7 +599,7 @@ public class Gui_KetCa extends VBox {
 
     // ✅ Format tiền
     private String formatMoney(double amount) {
-        DecimalFormatSymbols symbols = new DecimalFormatSymbols(new Locale("vi", "VN"));
+        DecimalFormatSymbols symbols = new DecimalFormatSymbols(Locale.of("vi", "VN"));
         symbols.setGroupingSeparator('.');
         DecimalFormat formatter = new DecimalFormat("###,###,###", symbols);
         return formatter.format(amount);

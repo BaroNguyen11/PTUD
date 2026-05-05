@@ -1,11 +1,6 @@
 package client.ctrl;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
 import client.service.CheckInClient;
-import common.entity.PhieuDatBan;
 import common.entity.TrangThai;
 
 public class CheckIn_Ctrl {

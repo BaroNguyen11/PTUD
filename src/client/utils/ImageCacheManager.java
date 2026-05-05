@@ -1,6 +1,7 @@
 package client.utils;
 
 import java.io.*;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.*;
 
@@ -32,7 +33,7 @@ public class ImageCacheManager {
         try {
             String fullUrl = supabaseUrl + relativePath;
 
-            URL url = new URL(fullUrl);
+            URL url = URI.create(fullUrl).toURL();
             try (InputStream in = url.openStream()) {
                 Files.copy(in, Paths.get(localPath), StandardCopyOption.REPLACE_EXISTING);
                 return localFile.toURI().toString();

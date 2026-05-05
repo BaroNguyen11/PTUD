@@ -75,12 +75,15 @@ public class Gui_DatBan extends BorderPane {
     private DatePicker dpNgayDen;
     private Spinner<Integer> spGio;
     private Spinner<Integer> spPhut;
+    private Spinner<Integer> spGioKT;  // Giờ kết thúc
+    private Spinner<Integer> spPhutKT; // Phút kết thúc
     private LocalDate ngayDatBan;
     private TextField txtSoNguoi;
     private RadioButton radioDungNgay;
     private RadioButton radioDatTruoc;
     private TextField txtGhiChu;
     private TextField txtTimMonAn; // Ô tìm kiếm món
+    private TextField txtTienCoc; // Ô nhập tiền cọc
     private TableView<ChiTietHoaDon> tblGioHang;
     private Map<String, Double> cacheGiaKhuyenMai = new HashMap<>();
 
@@ -377,6 +380,23 @@ public class Gui_DatBan extends BorderPane {
         Label lblColon = new Label(":");
         lblColon.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
 
+        spGioKT = new Spinner<>();
+        SpinnerValueFactory<Integer> gioKTFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 23, 20);
+        spGioKT.setValueFactory(gioKTFactory);
+        spGioKT.setEditable(true);
+        spGioKT.setPrefWidth(70);
+
+        spPhutKT = new Spinner<>();
+        SpinnerValueFactory<Integer> phutKTFactory =
+                new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 59, 0);
+        spPhutKT.setValueFactory(phutKTFactory);
+        spPhutKT.setEditable(true);
+        spPhutKT.setPrefWidth(70);
+
+        Label lblColonKT = new Label(":");
+        lblColonKT.setStyle("-fx-font-size: 16px; -fx-font-weight: bold;");
+
         dpNgayDen = new DatePicker(ngayDatBan);
         dpNgayDen.setPrefWidth(140);
         dpNgayDen.setDayCellFactory(picker -> new DateCell() {
@@ -438,8 +458,14 @@ public class Gui_DatBan extends BorderPane {
         txtGhiChu = new TextField();
         txtGhiChu.setPromptText("Ghi chú...");
         styleTextField(txtGhiChu);
-        Label lblThoiGian = new Label("Thời gian:");
+        Label lblThoiGian = new Label("Bắt đầu:");
         lblThoiGian.setTextFill(Color.web("#2d3436"));
+        Label lblThoiGianKT = new Label("Kết thúc:");
+        lblThoiGianKT.setTextFill(Color.web("#2d3436"));
+
+        HBox boxTimeKT = new HBox(8, spGioKT, lblColonKT, spPhutKT);
+        boxTimeKT.setAlignment(Pos.CENTER_LEFT);
+
         Label lblSoNguoi = new Label("Số người:");
         lblSoNguoi.setTextFill(Color.web("#2d3436"));
         Label lblLoaiDat = new Label("Loại đặt:");
@@ -448,12 +474,34 @@ public class Gui_DatBan extends BorderPane {
         lblGhiChu.setTextFill(Color.web("#2d3436"));
         grid.add(lblThoiGian, 0, 0);
         grid.add(boxTime, 1, 0);
-        grid.add(lblSoNguoi, 0, 1);
-        grid.add(txtSoNguoi, 1, 1);
-        grid.add(lblLoaiDat, 0, 2);
-        grid.add(boxRadio, 1, 2);
-        grid.add(lblGhiChu, 0, 3);
-        grid.add(txtGhiChu, 1, 3);
+        grid.add(lblThoiGianKT, 0, 1);
+        grid.add(boxTimeKT, 1, 1);
+        grid.add(lblSoNguoi, 0, 2);
+        grid.add(txtSoNguoi, 1, 2);
+        grid.add(lblLoaiDat, 0, 3);
+        grid.add(boxRadio, 1, 3);
+        grid.add(lblGhiChu, 0, 4);
+        grid.add(txtGhiChu, 1, 4);
+
+        Label lblCoc = new Label("Tiền cọc:");
+        lblCoc.setTextFill(Color.web("#2d3436"));
+        txtTienCoc = new TextField("0");
+        styleTextField(txtTienCoc);
+        grid.add(lblCoc, 0, 5);
+        grid.add(txtTienCoc, 1, 5);
+        
+        // Ngăn nhập chữ vào tiền cọc và cập nhật label tổng
+        txtTienCoc.textProperty().addListener((obs, oldV, newV) -> {
+            if (!newV.matches("\\d*")) {
+                txtTienCoc.setText(newV.replaceAll("[^\\d]", ""));
+            } else {
+                try {
+                    double val = Double.parseDouble(newV.isEmpty() ? "0" : newV);
+                    lblTongCoc.setText(df.format(val));
+                } catch (Exception e) {}
+            }
+        });
+
         return grid;
     }
 
@@ -812,8 +860,11 @@ public class Gui_DatBan extends BorderPane {
         int tongNguoi = 0;
         for (BanAn b : dsBanDaChon) {
             boolean isVip = b.getLoai().getTenLoai().equalsIgnoreCase("VIP");
-            tongCoc += isVip ? 450000 : 300000;
+            tongCoc += isVip ? 500000 : 350000; // Dùng mức 500k/350k như user đề xuất
             tongNguoi += isVip ? 6 : 4;
+        }
+        if (txtTienCoc != null) {
+            txtTienCoc.setText(String.format("%.0f", tongCoc));
         }
         lblTongCoc.setText(df.format(tongCoc));
         if (txtSoNguoi != null) txtSoNguoi.setText(String.valueOf(tongNguoi));
@@ -933,27 +984,66 @@ private void xuLyXacNhanDatBan() {
             return;
         }
 
-        // 2. Xử lý Khách Hàng
-        KhachHang kh = new KhachHang();
-        if (txtMaKh.getText().equals("000")) {
-            // Khách vãng lai/Mới -> Kiểm tra xem SĐT đã có chưa
-            if (khachHangClient.getKhachHangBySdt(sdt) != null) {
-                showAlert(AlertType.ERROR, "Lỗi", "SĐT này đã tồn tại trong hệ thống.");
-                return;
+        // 2. Xử lý Thời gian đặt & Kiểm tra trùng lịch (Làm TRƯỚC khi lưu khách/hóa đơn)
+        LocalDateTime time = dpNgayDen.getValue().atStartOfDay()
+                .withHour(spGio.getValue())
+                .withMinute(spPhut.getValue());
+
+        LocalDateTime timeKetThuc = dpNgayDen.getValue().atStartOfDay()
+                .withHour(spGioKT.getValue())
+                .withMinute(spPhutKT.getValue());
+
+        if (time.isBefore(LocalDateTime.now().minusMinutes(15))) {
+            showAlert(AlertType.ERROR, "Lỗi", "Thời gian đặt không hợp lệ (quá khứ).");
+            return;
+        }
+        if (!timeKetThuc.isAfter(time)) {
+            showAlert(AlertType.ERROR, "Lỗi", "Thời gian kết thúc phải sau thời gian bắt đầu!");
+            return;
+        }
+
+        // Kiểm tra trùng lịch (time-slot overlap)
+        List<String> trung = new ArrayList<>();
+        for (BanAn b : cacBanDuocChon) {
+            if (phieuDatBanClient.kiemTraBanDaDatTrongNgay(b.getMaBan(), time, timeKetThuc)) {
+                trung.add(b.getMaBan());
             }
-            kh.setTenKhachHang(ten);
-            kh.setSoDienThoai(sdt);
-            kh.setDiemTichLuy(0.0);
-            if (!khachHangClient.themKhachHangMoi(kh)) {
-                showAlert(AlertType.ERROR, "Lỗi", "Không thêm được Khách hàng mới.");
-                return;
+        }
+        if (!trung.isEmpty()) {
+            showAlert(AlertType.ERROR, "Trùng lịch",
+                    "Các bàn sau đã được đặt trong khung giờ này:\n" + String.join(", ", trung) +
+                    "\nĐể đặt bàn này, vui lòng chọn khung giờ khác.");
+            return;
+        }
+
+        // 3. Xử lý Khách Hàng
+        KhachHang kh = null;
+        if (txtMaKh.getText().equals("000")) {
+            // Kiểm tra xem SĐT đã có chưa
+            kh = khachHangClient.getKhachHangBySdt(sdt);
+            if (kh == null) {
+                // Khách mới hoàn toàn -> Thêm mới
+                kh = new KhachHang();
+                kh.setTenKhachHang(ten);
+                kh.setSoDienThoai(sdt);
+                kh.setDiemTichLuy(0.0);
+                if (!khachHangClient.themKhachHangMoi(kh)) {
+                    showAlert(AlertType.ERROR, "Lỗi", "Không thêm được Khách hàng mới.");
+                    return;
+                }
+                // Lấy lại khách vừa thêm để có Mã KH
+                kh = khachHangClient.getKhachHangBySdt(sdt);
+            } else {
+                // SĐT đã tồn tại -> Tự động dùng khách này luôn, không báo lỗi nữa
+                // (Optional: Cập nhật tên nếu cần)
             }
         } else {
-            // Khách quen
+            // Khách đã chọn từ danh sách
+            kh = new KhachHang();
             kh.setMaKhachHang(txtMaKh.getText());
         }
 
-        // 3. Xử lý Nhân Viên
+        // 4. Xử lý Nhân Viên
         String maNVHT = Gui_DangNhap.getCurrentMaNhanVien();
         if (maNVHT == null || maNVHT.isEmpty()) {
             showAlert(AlertType.ERROR, "Lỗi xác thực", "Không tìm thấy thông tin đăng nhập!\nVui lòng đăng xuất và đăng nhập lại.");
@@ -961,28 +1051,6 @@ private void xuLyXacNhanDatBan() {
         }
         NhanVien nv = new NhanVien();
         nv.setMaNhanVien(maNVHT);
-
-        // 4. Xử lý Thời gian đặt
-        LocalDateTime time = dpNgayDen.getValue().atStartOfDay()
-                .withHour(spGio.getValue())
-                .withMinute(spPhut.getValue());
-
-        if (time.isBefore(LocalDateTime.now().minusMinutes(15))) { // Cho phép trễ 1 chút
-            showAlert(AlertType.ERROR, "Lỗi", "Thời gian đặt không hợp lệ (quá khứ).");
-            return;
-        }
-
-        // 5. Kiểm tra trùng lịch lần cuối (an toàn)
-        List<String> trung = new ArrayList<>();
-        for (BanAn b : cacBanDuocChon) {
-            if (phieuDatBanClient.kiemTraBanDaDatTrongNgay(b.getMaBan(), time)) {
-                trung.add(b.getMaBan());
-            }
-        }
-        if (!trung.isEmpty()) {
-            showAlert(AlertType.ERROR, "Trùng lịch", "Các bàn sau đã bị đặt trong khung giờ này: " + String.join(", ", trung));
-            return;
-        }
 
         // 6. TẠO HÓA ĐƠN (Dùng chung cho tất cả các bàn)
         HoaDon hd = new HoaDon();
@@ -999,6 +1067,14 @@ private void xuLyXacNhanDatBan() {
 
         // 7. TẠO PHIẾU ĐẶT BÀN (Vòng lặp)
         boolean ok = true;
+        double tongCoc = 0;
+        try {
+            tongCoc = Double.parseDouble(txtTienCoc.getText().replaceAll("[^\\d]", ""));
+        } catch (Exception e) {
+            tongCoc = 0;
+        }
+        
+        double cocMoiBan = tongCoc / cacBanDuocChon.size();
 
         for (BanAn b : cacBanDuocChon) {
             // A. Cập nhật trạng thái bàn -> Đã đặt (hoặc Đang dùng)
@@ -1010,6 +1086,7 @@ private void xuLyXacNhanDatBan() {
             // B. Tạo đối tượng Phiếu
             PhieuDatBan p = new PhieuDatBan();
             p.setThoiGianBatDau(time);
+            p.setThoiGianKetThuc(timeKetThuc);
             p.setTrangThai(radioDatTruoc.isSelected() ? "Đã đặt" : "Đang dùng");
 
             try {
@@ -1023,6 +1100,7 @@ private void xuLyXacNhanDatBan() {
             p.setBan(b);
             p.setNhanVien(nv);
             p.setHoaDon(hd); // Gán hóa đơn vừa tạo
+            p.setTienCoc(cocMoiBan); // Gán tiền cọc cho từng bàn
 
             // C. Lưu phiếu xuống CSDL
             if (!phieuDatBanClient.themPhieuDatBan(p, p.getTrangThai())) {
