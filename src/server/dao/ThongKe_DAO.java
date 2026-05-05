@@ -470,7 +470,4 @@ public class ThongKe_DAO extends MongoDaoSupport {
         return result == null ? 0 : ((Number) result.get("total")).doubleValue();
     }
 
-    private static Date toDate(LocalDate date) {
-        return date == null ? null : Date.from(date.atStartOfDay(ZoneId.systemDefault()).toInstant());
-    }
 }

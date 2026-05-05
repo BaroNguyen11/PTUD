@@ -1,12 +1,16 @@
 package server.dao;
 
+import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.Sorts;
 import common.entity.MonAn;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 
 public class MonAn_DAO extends MongoDaoSupport {
@@ -23,14 +27,23 @@ public class MonAn_DAO extends MongoDaoSupport {
         return list;
     }
 
+    /**
+     * Lấy giá sau khuyến mãi sử dụng Aggregation Pipeline.
+     * Pipeline: ChiTietKMMonAn → $match maMonAn → $lookup KhuyenMai → $match ngày hợp lệ
+     */
     public double layGiaSauKhuyenMai(String maMonAn, LocalDate ngayDat, double giaMacDinh) {
-        for (Document ct : docs("ChiTietKMMonAn", Filters.eq("maMonAn", maMonAn))) {
-            Document km = one("KhuyenMai", "maKhuyenMai", s(ct, "maKhuyenMai"));
-            if (km != null && inRange(toDate(ngayDat), toLocalDate(km.get("ngayBatDau")), toLocalDate(km.get("ngayKetThuc")))) {
-                return dbl(ct, "giaSauKhuyenMai");
-            }
-        }
-        return giaMacDinh;
+        Date ngay = toDate(ngayDat);
+        List<Bson> pipeline = Arrays.asList(
+                Aggregates.match(Filters.eq("maMonAn", maMonAn)),
+                Aggregates.lookup("KhuyenMai", "maKhuyenMai", "maKhuyenMai", "kmInfo"),
+                Aggregates.unwind("$kmInfo"),
+                Aggregates.match(Filters.and(
+                        Filters.lte("kmInfo.ngayBatDau", ngay),
+                        Filters.gte("kmInfo.ngayKetThuc", ngay)
+                ))
+        );
+        Document result = col("ChiTietKMMonAn").aggregate(pipeline).first();
+        return result != null ? dbl(result, "giaSauKhuyenMai") : giaMacDinh;
     }
 
     public static MonAn getMonAnByMa(String maMonAn) {

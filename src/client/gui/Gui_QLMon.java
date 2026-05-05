@@ -114,7 +114,7 @@ public class Gui_QLMon extends BorderPane {
         try {
             common.DataChangeNotifierRemote notifier = client.RmiClientProvider.get("DataChangeNotifierRemote", common.DataChangeNotifierRemote.class);
             if (notifier != null) {
-                dataChangeListener = new java.rmi.server.UnicastRemoteObject() {
+                dataChangeListener = new common.DataChangeListener() {
                     @Override
                     public void onDataChanged(String collection, String action, String documentId) throws java.rmi.RemoteException {
                         if ("MonAn".equals(collection)) {
@@ -126,6 +126,7 @@ public class Gui_QLMon extends BorderPane {
                         }
                     }
                 };
+                java.rmi.server.UnicastRemoteObject.exportObject(dataChangeListener, 0);
                 notifier.registerListener((common.DataChangeListener) dataChangeListener);
             }
         } catch (Exception e) {

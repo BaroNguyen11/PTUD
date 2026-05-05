@@ -473,45 +473,21 @@ public class Gui_DanhSachBan extends BorderPane {
         HBox iconBox = new HBox();
         iconBox.setAlignment(Pos.CENTER);
         if (ban.getTrangThai() == TrangThai.DANG_SU_DUNG || ban.getTrangThai() == TrangThai.DA_DAT) {
-            PhieuDatBan pdb = phieuDatBanClient.getPhieuDatBanMoiNhat(ban.getMaBan());
-            if (pdb != null && pdb.getHoaDon() != null) {
-                String maHD = pdb.getHoaDon().getMaHoaDon();
-
-                // 2. Đếm xem hóa đơn này thực tế đang "gánh" bao nhiêu bàn (chỉ tính Đang dùng/Đã đặt)
-                // (Hàm này bạn cũng vừa thêm vào service)
-                int soLuongBanDangGhep = phieuDatBanClient.demSoBanDangSuDungCuaHoaDon(maHD);
-
-                // 3. Chỉ hiện icon nếu hóa đơn này đang dùng cho > 1 bàn
-                if (soLuongBanDangGhep > 1) {
-                    try {
-                        ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
-                        iconLink.setFitWidth(18);
-                        iconLink.setFitHeight(18);
-
-                        Label lblMerged = new Label(" Bàn ghép");
-                        lblMerged.setTextFill(Color.web("#3182ce"));
-                        lblMerged.setFont(Font.font("Segoe UI", 11));
-
-                        iconBox.getChildren().addAll(iconLink, lblMerged);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+// Removed redundant logic
+            String maHDGop = banAnClient.getMaHoaDonTuBan(ban.getMaBan());
+            boolean isMerged = (maHDGop != null && banAnClient.getDanhSachBanCungHoaDon(maHDGop).size() > 1);
+            if (isMerged) {
+                try {
+                    ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
+                    iconLink.setFitWidth(18);
+                    iconLink.setFitHeight(18);
+                    Label lblMerged = new Label(" Bàn ghép");
+                    lblMerged.setTextFill(Color.web("#3182ce"));
+                    lblMerged.setFont(Font.font("Segoe UI", 11));
+                    iconBox.getChildren().addAll(iconLink, lblMerged);
+                } catch (Exception e) {
                 }
             }
-//            String maHDGop = banAnClient.getMaHoaDonTuBan(ban.getMaBan());
-//            boolean isMerged = (maHDGop != null && banAnClient.getDanhSachBanCungHoaDon(maHDGop).size() > 1);
-//            if (isMerged) {
-//                try {
-//                    ImageView iconLink = new ImageView(new Image(getClass().getResource("/img/link.png").toExternalForm()));
-//                    iconLink.setFitWidth(18);
-//                    iconLink.setFitHeight(18);
-//                    Label lblMerged = new Label(" Bàn ghép");
-//                    lblMerged.setTextFill(Color.web("#3182ce"));
-//                    lblMerged.setFont(Font.font("Segoe UI", 11));
-//                    iconBox.getChildren().addAll(iconLink, lblMerged);
-//                } catch (Exception e) {
-//                }
-//            }
         }
 
         Button btnDetail = new Button("Xem chi tiết");
@@ -652,7 +628,7 @@ public class Gui_DanhSachBan extends BorderPane {
 
                     pMoi.setKhachHang(phieuGoc.getKhachHang());
                     pMoi.setNhanVien(phieuGoc.getNhanVien()); // Hoặc nhân viên đang login
-                    pMoi.setThoiGianBatDau(java.time.LocalDateTime.now());
+                    pMoi.setThoiGianBatDau(phieuGoc.getThoiGianBatDau());
 
                     pMoi.setTrangThai(trangThaiPhieu);
                     pMoi.setSoNguoi(0); // Số người có thể để 0 hoặc nhập thêm logic hỏi user
@@ -795,9 +771,11 @@ public class Gui_DanhSachBan extends BorderPane {
             if (pdbInfo != null) {
                 contentBox.getChildren().add(new Separator());
                 contentBox.getChildren().add(createLabel("Thông tin khách hàng:", "#4A5568", 14, true));
+                String tenKhach = (pdbInfo.getKhachHang() != null && pdbInfo.getKhachHang().getTenKhachHang() != null) ? pdbInfo.getKhachHang().getTenKhachHang() : "Không có thông tin";
+                String sdtKhach = (pdbInfo.getKhachHang() != null && pdbInfo.getKhachHang().getSoDienThoai() != null) ? pdbInfo.getKhachHang().getSoDienThoai() : "Không có thông tin";
                 contentBox.getChildren().addAll(
-                        createDetailRow("Tên khách:", pdbInfo.getKhachHang().getTenKhachHang()),
-                        createDetailRow("SĐT:", pdbInfo.getKhachHang().getSoDienThoai()),
+                        createDetailRow("Tên khách:", tenKhach),
+                        createDetailRow("SĐT:", sdtKhach),
                         createDetailRow("Ghi chú:", (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) ? pdbInfo.getGhiChu() : "---")
                 );
             }
@@ -1027,8 +1005,12 @@ public class Gui_DanhSachBan extends BorderPane {
     private void xuLyCheckIn(BanAn ban, Dialog<Void> dialog) {
         String maHDGop = banAnClient.getMaHoaDonTuBan(ban.getMaBan());
         List<PhieuDatBan> dsPhieuDatBan = new CheckInClient().getPhieuDatBanTheoHoaDonVaNgay(maHDGop, ngayChon);
-        KhachHang kh = new KhachHangClient().getKhachHangById(dsPhieuDatBan.get(0).getKhachHang().getMaKhachHang());
-        Alert alert = new Alert(AlertType.CONFIRMATION, "Check-in cho " + kh.getTenKhachHang() + "?", ButtonType.YES, ButtonType.NO);
+        KhachHang kh = null;
+        if (dsPhieuDatBan != null && !dsPhieuDatBan.isEmpty() && dsPhieuDatBan.get(0).getKhachHang() != null) {
+            kh = new KhachHangClient().getKhachHangById(dsPhieuDatBan.get(0).getKhachHang().getMaKhachHang());
+        }
+        String tenKhach = (kh != null && kh.getTenKhachHang() != null) ? kh.getTenKhachHang() : "Khách hàng";
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION, "Check-in cho " + tenKhach + "?", ButtonType.YES, ButtonType.NO);
         alert.showAndWait().ifPresent(res -> {
             if (res == ButtonType.YES) {
                 for (PhieuDatBan pdb : dsPhieuDatBan) {

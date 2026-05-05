@@ -12,6 +12,10 @@ public class HoaDon_DAO extends MongoDaoSupport {
 
     public String themHoaDon(HoaDon hd) {
         if (hd.getMaHoaDon() == null || hd.getMaHoaDon().isEmpty()) hd.setMaHoaDon(taoMaHoaDonMoi(LocalDate.now()));
+        // Set giá trị mặc định cho các trường null (MongoDB schema yêu cầu trangThai là string)
+        if (hd.getTrangThai() == null) hd.setTrangThai("Đang phục vụ");
+        if (hd.getPhuongThuc() == null) hd.setPhuongThuc("");
+        if (hd.getGhiChu() == null) hd.setGhiChu("");
         col("HoaDon").insertOne(hoaDonDoc(hd));
         return hd.getMaHoaDon();
     }

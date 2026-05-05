@@ -25,7 +25,7 @@ public class CheckIn_Ctrl {
     			return false;
     		}
     		
-    		String trangThaiString = trangThai.getThongTin();
+    		String trangThaiString = trangThai.name();
     		
     		return dao.capNhatTrangThaiBan(maBan, trangThaiString);
     	

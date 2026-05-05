@@ -97,6 +97,16 @@ abstract class MongoDaoSupport {
         return actual != null && actual.equals(day);
     }
 
+    /**
+     * Tạo Bson filter để lọc document theo ngày (MongoDB-native, thay thế sameDay Java-side).
+     * Dùng khoảng [startOfDay, startOfNextDay) để match chính xác 1 ngày.
+     */
+    static Bson sameDayFilter(String field, LocalDate date) {
+        Date start = toDate(date);
+        Date end = toDate(date.plusDays(1));
+        return Filters.and(Filters.gte(field, start), Filters.lt(field, end));
+    }
+
     static boolean inRange(Object value, LocalDate from, LocalDate to) {
         LocalDate actual = toLocalDate(value);
         if (actual == null) return false;

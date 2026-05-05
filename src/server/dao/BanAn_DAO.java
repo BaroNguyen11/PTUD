@@ -3,6 +3,7 @@ package server.dao;
 import com.mongodb.client.model.Filters;
 import common.entity.*;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -26,6 +27,10 @@ public class BanAn_DAO extends MongoDaoSupport {
 
     public List<BanAn> getTrangThaiBanTheoNgayVaViTri(ViTri viTri, LocalDate ngay) {
         List<BanAn> list = getBanAnTheoViTri(viTri);
+        // Reset tất cả bàn về TRONG trước khi áp dụng trạng thái theo phiếu đặt
+        for (BanAn ban : list) {
+            ban.setTrangThai(TrangThai.TRONG);
+        }
         Map<String, PhieuDatBan> phieuByBan = getPhieuDatBanMapByNgay(ngay);
         for (BanAn ban : list) {
             PhieuDatBan p = phieuByBan.get(ban.getMaBan());
@@ -40,21 +45,28 @@ public class BanAn_DAO extends MongoDaoSupport {
         return list;
     }
 
+    /**
+     * Lấy map PhieuDatBan theo ngày sử dụng MongoDB Query filter.
+     * Filter: thoiGianBatDau trong ngày + trạng thái NOT IN ["Đã hủy", "Đã dùng"].
+     */
     public Map<String, PhieuDatBan> getPhieuDatBanMapByNgay(LocalDate ngay) {
         Map<String, PhieuDatBan> map = new HashMap<>();
-        for (Document d : docs("PhieuDatBan")) {
-            if (!sameDay(d.get("thoiGianBatDau"), ngay))
-                continue;
-            String tt = s(d, "trangThai");
-            if ("Đã hủy".equalsIgnoreCase(tt) || "Đã dùng".equalsIgnoreCase(tt))
-                continue;
+        Bson filter = Filters.and(
+                sameDayFilter("thoiGianBatDau", ngay),
+                Filters.nin("trangThai", Arrays.asList("Đã hủy", "Đã dùng"))
+        );
+        for (Document d : docs("PhieuDatBan", filter)) {
             map.put(s(d, "maBan"), phieuDatBan(d));
         }
         return map;
     }
 
     public boolean updateTrangThaiBan(BanAn ban, TrangThai trangThaiMoi) {
-        return update("BanAn", Filters.eq("maBan", ban.getMaBan()), new Document("trangThai", trangThaiMoi.name()));
+        com.mongodb.client.result.UpdateResult result = col("BanAn").updateOne(
+                Filters.eq("maBan", ban.getMaBan()),
+                new Document("$set", new Document("trangThai", trangThaiMoi.name()))
+        );
+        return result.getMatchedCount() > 0;
     }
 
     public boolean isBanDangSuDungHienTai(String maBan) {
@@ -73,9 +85,14 @@ public class BanAn_DAO extends MongoDaoSupport {
         return list;
     }
 
+    /**
+     * Lấy mã hóa đơn từ bàn, chỉ lấy phiếu đang hoạt động (loại trừ đã hủy/đã dùng).
+     */
     public String getMaHoaDonTuBan(String maBan) {
-        Document d = col("PhieuDatBan").find(Filters.eq("maBan", maBan))
-                .sort(new Document("thoiGianBatDau", -1)).first();
+        Document d = col("PhieuDatBan").find(Filters.and(
+                Filters.eq("maBan", maBan),
+                Filters.nin("trangThai", Arrays.asList("Đã hủy", "Đã dùng"))
+        )).sort(new Document("thoiGianBatDau", -1)).first();
         return d == null ? null : s(d, "maHoaDon");
     }
 }
