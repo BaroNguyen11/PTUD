@@ -63,12 +63,32 @@ public class ServerMain {
 
         String configuredHost = System.getProperty("rmi.host");
         if (configuredHost == null || configuredHost.isBlank()) {
-            configuredHost = "localhost";
             try {
-                InetAddress.getByName(configuredHost);
-            } catch (Exception ignored) {
-                configuredHost = "127.0.0.1";
+                // Thử tìm IP thực tế trong các card mạng đang active
+                java.util.Enumeration<java.net.NetworkInterface> interfaces = java.net.NetworkInterface.getNetworkInterfaces();
+                while (interfaces.hasMoreElements()) {
+                    java.net.NetworkInterface iface = interfaces.nextElement();
+                    if (iface.isLoopback() || !iface.isUp()) continue;
+                    
+                    java.util.Enumeration<java.net.InetAddress> addresses = iface.getInetAddresses();
+                    while (addresses.hasMoreElements()) {
+                        java.net.InetAddress addr = addresses.nextElement();
+                        if (addr instanceof java.net.Inet4Address) {
+                            String ip = addr.getHostAddress();
+                            // Ưu tiên các dải IP thông dụng của Wi-Fi/LAN
+                            if (ip.startsWith("172.") || ip.startsWith("192.168.") || ip.startsWith("10.")) {
+                                configuredHost = ip;
+                                break;
+                            }
+                        }
+                    }
+                    if (configuredHost != null) break;
+                }
+            } catch (Exception e) {
+                configuredHost = "localhost";
             }
+            
+            if (configuredHost == null) configuredHost = "localhost";
         }
         System.setProperty("java.rmi.server.hostname", configuredHost);
         System.out.println("RMI hostname: " + configuredHost);

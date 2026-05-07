@@ -79,17 +79,20 @@ public class NetworkDiscovery {
      */
     private static String getLocalIpAddress() {
         try {
-            Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+            java.util.Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
             while (interfaces.hasMoreElements()) {
                 NetworkInterface iface = interfaces.nextElement();
                 if (iface.isLoopback() || !iface.isUp()) continue;
 
-                Enumeration<InetAddress> addresses = iface.getInetAddresses();
+                java.util.Enumeration<InetAddress> addresses = iface.getInetAddresses();
                 while (addresses.hasMoreElements()) {
                     InetAddress addr = addresses.nextElement();
-                    // Lấy IPv4
                     if (addr instanceof Inet4Address) {
-                        return addr.getHostAddress();
+                        String ip = addr.getHostAddress();
+                        // Đồng bộ logic lọc IP LAN với ServerMain
+                        if (ip.startsWith("192.168.") || ip.startsWith("172.") || ip.startsWith("10.")) {
+                            return ip;
+                        }
                     }
                 }
             }
