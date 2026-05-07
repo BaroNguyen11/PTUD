@@ -22,4 +22,5 @@ public class PhieuDatBanClient {
     public boolean chuyenBanNhieuSangNhieu(List<String> dsMaBanCu, List<String> dsMaBanMoi, String maHoaDon, String trangThaiMoi, LocalDate ngayChuyen) { try { return RemoteServices.phieuDatBan().chuyenBanNhieuSangNhieu(dsMaBanCu, dsMaBanMoi, maHoaDon, trangThaiMoi, ngayChuyen); } catch (Exception e) { throw new RuntimeException(e); } }
     public PhieuDatBan getPhieuDatBanMoiNhat(String maBan) { try { return RemoteServices.phieuDatBan().getPhieuDatBanMoiNhat(maBan); } catch (Exception e) { throw new RuntimeException(e); } }
     public int demSoBanDangSuDungCuaHoaDon(String maHoaDon) { try { return RemoteServices.phieuDatBan().demSoBanDangSuDungCuaHoaDon(maHoaDon); } catch (Exception e) { throw new RuntimeException(e); } }
+    public boolean huyPhieuDatBanByMaPhieu(String maPhieu) { try { return RemoteServices.phieuDatBan().huyPhieuDatBanByMaPhieu(maPhieu); } catch (Exception e) { throw new RuntimeException(e); } }
 }

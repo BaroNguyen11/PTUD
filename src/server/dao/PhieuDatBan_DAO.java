@@ -178,4 +178,9 @@ public class PhieuDatBan_DAO extends MongoDaoSupport {
     public int demSoBanDangSuDungCuaHoaDon(String maHoaDon) {
         return (int) col("PhieuDatBan").countDocuments(Filters.and(Filters.eq("maHoaDon", maHoaDon), Filters.in("trangThai", java.util.Arrays.asList("Đang dùng", "Đã đặt"))));
     }
+
+    public boolean huyPhieuDatBanByMaPhieu(String maPhieu) {
+        return col("PhieuDatBan").updateOne(Filters.eq("maPhieu", maPhieu),
+                Updates.set("trangThai", "Đã hủy")).getModifiedCount() > 0;
+    }
 }

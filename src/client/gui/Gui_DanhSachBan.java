@@ -43,6 +43,9 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import client.utils.ImageCacheManager;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
 
 public class Gui_DanhSachBan extends BorderPane {
     private GridPane luoiBan;
@@ -63,6 +66,7 @@ public class Gui_DanhSachBan extends BorderPane {
     private Label lblTongTien;
     private VBox topContainer;
     private HBox footer;
+    private Timeline pollingTimeline;
 
     public Gui_DanhSachBan(Gui_TrangChu trangChu) {
         this.trangChu = trangChu;
@@ -90,6 +94,46 @@ public class Gui_DanhSachBan extends BorderPane {
         this.setBottom(footer);
 
         loadDataToGrid();
+        setupAutoPolling();
+    }
+
+    private void setupAutoPolling() {
+        // Tự động bắt đầu/dừng polling dựa trên việc giao diện có đang được hiển thị hay không
+        this.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                startPolling();
+            } else {
+                stopPolling();
+            }
+        });
+        
+        // Nếu đã có scene ngay từ đầu (hiếm gặp nhưng vẫn check)
+        if (this.getScene() != null) {
+            startPolling();
+        }
+    }
+
+    private void startPolling() {
+        if (pollingTimeline != null) pollingTimeline.stop();
+
+        pollingTimeline = new Timeline(
+            new KeyFrame(Duration.seconds(5), e -> {
+                // Chỉ làm mới nếu cửa sổ vẫn đang mở và không bị ẩn
+                if (this.getScene() != null && this.isVisible()) {
+                    loadDataToGrid();
+                }
+            })
+        );
+        pollingTimeline.setCycleCount(Timeline.INDEFINITE);
+        pollingTimeline.play();
+        System.out.println("[Polling] Đã bắt đầu cập nhật dữ liệu 5s/lần");
+    }
+
+    private void stopPolling() {
+        if (pollingTimeline != null) {
+            pollingTimeline.stop();
+            System.out.println("[Polling] Đã dừng cập nhật dữ liệu");
+        }
     }
 
 
@@ -798,17 +842,60 @@ public class Gui_DanhSachBan extends BorderPane {
                     
                     rowInfo.getChildren().addAll(lblInfo, spacerRow);
 
-                    // Chỉ hiện nút Check-in nếu phiếu đang ở trạng thái "Đã đặt"
+                    // Logic hiển thị nút bấm cho từng phiên
+                    HBox rowActions = new HBox(5);
+                    
                     if (pdbInfo.getTrangThai().equalsIgnoreCase("Đã đặt")) {
-                        Button btnCi = createStyledButton("Check-in", "#2563EB", "#DBEAFE", ev -> {
-                            xuLyCheckIn(pdbInfo, dialog);
-                        });
-                        btnCi.setScaleX(0.8); btnCi.setScaleY(0.8); // Nhỏ lại cho vừa
-                        rowInfo.getChildren().add(btnCi);
+                        // Ràng buộc: Chỉ cho check-in trước giờ bắt đầu tối đa 30 phút
+                        LocalDateTime bayGio = LocalDateTime.now();
+                        LocalDateTime gioBatDau = pdbInfo.getThoiGianBatDau();
+                        
+                        // Nếu ngày được chọn là hôm nay và cách giờ bắt đầu <= 30 phút
+                        if (datePicker.getValue().equals(LocalDate.now()) && 
+                            bayGio.isAfter(gioBatDau.minusMinutes(30)) && 
+                            bayGio.isBefore(gioBatDau.plusHours(2))) { // Giả định phiếu hết hạn sau 2h nếu ko tới
+                            
+                            Button btnCi = createStyledButton("Check-in", "#2563EB", "#DBEAFE", ev -> {
+                                xuLyCheckIn(pdbInfo, dialog);
+                            });
+                            btnCi.setScaleX(0.8); btnCi.setScaleY(0.8);
+                            
+                            // Nút Hủy đặt bàn (MỚI)
+                            Button btnHuyPdb = createStyledButton("Hủy phiếu", "#DC2626", "#FEE2E2", ev -> {
+                                xuLyHuyPhieu(pdbInfo, dialog);
+                            });
+                            btnHuyPdb.setScaleX(0.8); btnHuyPdb.setScaleY(0.8);
+                            
+                            rowActions.getChildren().addAll(btnCi, btnHuyPdb);
+                        } else {
+                            // Vẫn cho phép Hủy kể cả khi chưa đến giờ Check-in
+                            Button btnHuyPdb = createStyledButton("Hủy phiếu", "#DC2626", "#FEE2E2", ev -> {
+                                xuLyHuyPhieu(pdbInfo, dialog);
+                            });
+                            btnHuyPdb.setScaleX(0.8); btnHuyPdb.setScaleY(0.8);
+                            
+                            Label lblWait = new Label("(Chờ giờ)");
+                            lblWait.setStyle("-fx-text-fill: #6B7280; -fx-font-style: italic;");
+                            rowActions.getChildren().addAll(lblWait, btnHuyPdb);
+                        }
                     }
                     
-                    // MỚI: Hiện nút Thanh toán trực tiếp nếu phiếu đang "Đang dùng"
                     if (pdbInfo.getTrangThai().equalsIgnoreCase("Đang dùng")) {
+                        // Nút Gọi món cho phiên này
+                        Button btnGoiMon = createStyledButton("Gọi món", "#7C3AED", "#EDE9FE", ev -> {
+                            xuLyGoiMon(ban); // Ở đây cần truyền thêm mã hóa đơn/phiếu nếu cần phân biệt
+                            dialog.close();
+                        });
+                        btnGoiMon.setScaleX(0.8); btnGoiMon.setScaleY(0.8);
+                        
+                        // Nút Đổi bàn cho phiên này
+                        Button btnDoiBan = createStyledButton("Đổi bàn", "#D97706", "#FEF3C7", ev -> {
+                            xuLyDoiBan(ban);
+                            dialog.close();
+                        });
+                        btnDoiBan.setScaleX(0.8); btnDoiBan.setScaleY(0.8);
+
+                        // Nút Thanh toán cho phiên này
                         Button btnPay = createStyledButton("Thanh toán", "#059669", "#D1FAE5", ev -> {
                             if (pdbInfo.getHoaDon() != null) {
                                 xuLyThanhToan(pdbInfo.getHoaDon().getMaHoaDon());
@@ -818,9 +905,11 @@ public class Gui_DanhSachBan extends BorderPane {
                             }
                         });
                         btnPay.setScaleX(0.8); btnPay.setScaleY(0.8);
-                        rowInfo.getChildren().add(btnPay);
+                        
+                        rowActions.getChildren().addAll(btnGoiMon, btnDoiBan, btnPay);
                     }
                     
+                    rowInfo.getChildren().add(rowActions);
                     item.getChildren().add(rowInfo);
                     if (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) {
                         Label lblNote = new Label("📝 " + pdbInfo.getGhiChu());
@@ -872,18 +961,6 @@ public class Gui_DanhSachBan extends BorderPane {
         switch (ban.getTrangThai()) {
             case DANG_SU_DUNG:
                 actionBox.getChildren().addAll(
-                        createStyledButton("Đổi bàn", "#D97706", "#FEF3C7", e -> {
-                            xuLyDoiBan(ban);
-                            dialog.close();
-                        }),
-                        createStyledButton("Thanh toán", "#059669", "#D1FAE5", e -> {
-                            xuLyThanhToan(banAnClient.getMaHoaDonTuBan(ban.getMaBan()));
-                            dialog.close();
-                        }),
-                        createStyledButton("Gọi món", "#7C3AED", "#EDE9FE", e -> {
-                            xuLyGoiMon(ban);
-                            dialog.close();
-                        }),
                         createStyledButton("➕ Đặt bàn", "#2563EB", "#DBEAFE", e -> {
                             dialog.close(); 
                             List<BanAn> listBanChon = new ArrayList<>();
@@ -899,14 +976,6 @@ public class Gui_DanhSachBan extends BorderPane {
                 break;
             case DA_DAT:
                 actionBox.getChildren().addAll(
-                        createStyledButton("Đổi bàn", "#D97706", "#FEF3C7", e -> {
-                            xuLyDoiBan(ban);
-                            dialog.close();
-                        }),
-                        createStyledButton("Hủy bàn", "#DC2626", "#FEE2E2", e -> {
-                            xuLyHuyBan(ban);
-                            dialog.close();
-                        }),
                         createStyledButton("➕ Đặt bàn", "#2563EB", "#DBEAFE", e -> {
                             dialog.close(); 
                             List<BanAn> listBanChon = new ArrayList<>();
@@ -1016,6 +1085,21 @@ public class Gui_DanhSachBan extends BorderPane {
         dialog.showAndWait().ifPresent(result -> {
             if (result == ButtonType.OK) loadDataToGrid();
         });
+    }
+
+    private void xuLyHuyPhieu(PhieuDatBan pdb, javafx.scene.control.Dialog dialog) {
+        Alert alert = new Alert(AlertType.CONFIRMATION, "Bạn có chắc chắn muốn hủy phiếu đặt bàn này?", ButtonType.YES, ButtonType.NO);
+        alert.setTitle("Xác nhận hủy");
+        alert.setHeaderText(null);
+        if (alert.showAndWait().orElse(ButtonType.NO) == ButtonType.YES) {
+            if (phieuDatBanClient.huyPhieuDatBanByMaPhieu(pdb.getMaPhieu())) {
+                showAlert(AlertType.INFORMATION, "Thành công", "Đã hủy phiếu đặt bàn thành công!");
+                dialog.close();
+                loadDataToGrid();
+            } else {
+                showAlert(AlertType.ERROR, "Lỗi", "Không thể hủy phiếu đặt bàn này.");
+            }
+        }
     }
 
     private void xuLyHuyBan(BanAn ban) {
@@ -1578,10 +1662,16 @@ private VBox taoTheMonAn(MonAn mon, ObservableList<Object[]> gioHang, DecimalFor
     private void loadImgTo(ImageView imgView, String path) {
         if (path != null && !path.isEmpty()) {
             String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
-            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, path);
+            String imagePath;
+            if (path.startsWith("http")) {
+                imagePath = path;
+            } else {
+                imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, path);
+            }
+            
             if (imagePath != null) {
                 try {
-                    Image img = new Image(imagePath);
+                    Image img = new Image(imagePath, true);
                     imgView.setImage(img);
                     imgView.setPreserveRatio(false);
                     imgView.setFitHeight(90);

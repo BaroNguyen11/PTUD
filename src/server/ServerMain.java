@@ -12,6 +12,10 @@ public class ServerMain {
     public static final int DEFAULT_PORT = 1099;
 
     public static void main(String[] args) {
+        // Tắt log debug của MongoDB và SLF4J để sạch console
+        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "error");
+        java.util.logging.Logger.getLogger("org.mongodb.driver").setLevel(java.util.logging.Level.OFF);
+        
         System.setProperty("app.role", "server");
         int port = args.length > 0 ? Integer.parseInt(args[0]) : DEFAULT_PORT;
 

@@ -448,13 +448,13 @@ public class Gui_DatBan extends BorderPane {
         txtSoNguoi.setPromptText("Số khách");
         radioDatTruoc = new RadioButton("Đặt trước");
         radioDatTruoc.setTextFill(Color.web("#2d3436"));
-        radioDungNgay = new RadioButton("Dùng ngay");
-        radioDungNgay.setTextFill(Color.web("#2d3436"));
+
+
         ToggleGroup group = new ToggleGroup();
         radioDatTruoc.setToggleGroup(group);
-        radioDungNgay.setToggleGroup(group);
+
         radioDatTruoc.setSelected(true);
-        HBox boxRadio = new HBox(15, radioDatTruoc, radioDungNgay);
+        HBox boxRadio = new HBox(15, radioDatTruoc);
         txtGhiChu = new TextField();
         txtGhiChu.setPromptText("Ghi chú...");
         styleTextField(txtGhiChu);
@@ -712,10 +712,16 @@ public class Gui_DatBan extends BorderPane {
         imgView.setPreserveRatio(true);
         if (mon.getHinhAnh() != null && !mon.getHinhAnh().isEmpty()) {
             String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
-            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
+            String imagePath;
+            if (mon.getHinhAnh().startsWith("http")) {
+                imagePath = mon.getHinhAnh();
+            } else {
+                imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
+            }
+            
             if (imagePath != null) {
                 try {
-                    imgView.setImage(new Image(imagePath));
+                    imgView.setImage(new Image(imagePath, true));
                     imgView.setPreserveRatio(false);
                     imgView.setFitHeight(90);
                 } catch (Exception e) {

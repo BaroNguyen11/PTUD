@@ -23,4 +23,5 @@ public interface PhieuDatBanRemote extends Remote {
     boolean chuyenBanNhieuSangNhieu(List<String> dsMaBanCu, List<String> dsMaBanMoi, String maHoaDon, String trangThaiMoi, LocalDate ngayChuyen) throws RemoteException;
     PhieuDatBan getPhieuDatBanMoiNhat(String maBan) throws RemoteException;
     int demSoBanDangSuDungCuaHoaDon(String maHoaDon) throws RemoteException;
+    boolean huyPhieuDatBanByMaPhieu(String maPhieu) throws RemoteException;
 }

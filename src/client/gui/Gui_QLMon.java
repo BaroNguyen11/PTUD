@@ -281,10 +281,18 @@ public class Gui_QLMon extends BorderPane {
         // Load Ảnh
         if (mon.getHinhAnh() != null && !mon.getHinhAnh().isEmpty()) {
             String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
-            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
+            String imagePath;
+            
+            // MỚI: Nếu là link trực tiếp (http/https) thì dùng luôn, không nối chuỗi Supabase
+            if (mon.getHinhAnh().startsWith("http")) {
+                imagePath = mon.getHinhAnh();
+            } else {
+                imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
+            }
+
             if (imagePath != null) {
                 try {
-                    imgMonAn.setImage(new Image(imagePath));
+                    imgMonAn.setImage(new Image(imagePath, true)); // true để nạp background không làm treo UI
                 } catch (Exception e) {
                     loadDefaultImage(imgMonAn);
                 }
@@ -428,10 +436,17 @@ public class Gui_QLMon extends BorderPane {
         // Load ảnh chi tiết
         if (mon.getHinhAnh() != null && !mon.getHinhAnh().isEmpty()) {
             String SUPABASE_BASE_URL = "https://yxemxycygkhxygaydgcl.supabase.co/storage/v1/object/public/image/";
-            String imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
+            String imagePath;
+            
+            if (mon.getHinhAnh().startsWith("http")) {
+                imagePath = mon.getHinhAnh();
+            } else {
+                imagePath = ImageCacheManager.getImagePath(SUPABASE_BASE_URL, mon.getHinhAnh());
+            }
+
             if (imagePath != null) {
                 try {
-                    imgMonAn.setImage(new Image(imagePath));
+                    imgMonAn.setImage(new Image(imagePath, true));
                 } catch (Exception e) {
                     loadDefaultImage(imgMonAn);
                 }

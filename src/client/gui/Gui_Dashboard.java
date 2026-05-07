@@ -334,7 +334,7 @@ public class Gui_Dashboard extends BorderPane {
                 legendItem.setAlignment(Pos.CENTER_LEFT);
                 Rectangle colorRect = new Rectangle(12, 12, Color.web(color));
                 colorRect.setArcWidth(4); colorRect.setArcHeight(4);
-                Label lblInfo = new Label(e.getKey() + ": " + String.format("%.1f%%", percent) + "%");
+                Label lblInfo = new Label(e.getKey() + ": " + String.format("%.1f", percent) + "%");
                 lblInfo.setStyle("-fx-text-fill: #2d3436;");
                 lblInfo.setFont(Font.font("Segoe UI", 12));
                 legendItem.getChildren().addAll(colorRect, lblInfo);
