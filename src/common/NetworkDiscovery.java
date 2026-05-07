@@ -89,8 +89,8 @@ public class NetworkDiscovery {
                     InetAddress addr = addresses.nextElement();
                     if (addr instanceof Inet4Address) {
                         String ip = addr.getHostAddress();
-                        // Đồng bộ logic lọc IP LAN với ServerMain
-                        if (ip.startsWith("192.168.") || ip.startsWith("172.") || ip.startsWith("10.")) {
+                        // Đồng bộ logic lọc IP LAN với ServerMain (Hỗ trợ cả dải 26. của Radmin VPN)
+                        if (ip.startsWith("192.168.") || ip.startsWith("172.") || ip.startsWith("10.") || ip.startsWith("26.")) {
                             return ip;
                         }
                     }

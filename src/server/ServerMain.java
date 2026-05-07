@@ -76,7 +76,7 @@ public class ServerMain {
                         if (addr instanceof java.net.Inet4Address) {
                             String ip = addr.getHostAddress();
                             // Ưu tiên các dải IP thông dụng của Wi-Fi/LAN
-                            if (ip.startsWith("172.") || ip.startsWith("192.168.") || ip.startsWith("10.")) {
+                            if (ip.startsWith("172.") || ip.startsWith("192.168.") || ip.startsWith("10.") || ip.startsWith("26.")) {
                                 configuredHost = ip;
                                 break;
                             }

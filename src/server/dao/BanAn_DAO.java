@@ -55,7 +55,21 @@ public class BanAn_DAO extends MongoDaoSupport {
                 sameDayFilter("thoiGianBatDau", ngay),
                 Filters.nin("trangThai", Arrays.asList("Đã hủy", "Đã dùng"))
         );
-        for (Document d : docs("PhieuDatBan", filter)) {
+        
+        // Lấy danh sách và sắp xếp: Đã đặt trước, Đang dùng sau để "Đang dùng" ghi đè lên trong Map
+        List<Document> docs = new ArrayList<>();
+        col("PhieuDatBan").find(filter).forEach(docs::add);
+        
+        // Sắp xếp thủ công: Đã đặt -> Đang dùng
+        docs.sort((d1, d2) -> {
+            String t1 = s(d1, "trangThai");
+            String t2 = s(d2, "trangThai");
+            if (t1.equals(t2)) return 0;
+            if (t1.equalsIgnoreCase("Đang dùng")) return 1;
+            return -1;
+        });
+
+        for (Document d : docs) {
             map.put(s(d, "maBan"), phieuDatBan(d));
         }
         return map;
@@ -89,10 +103,19 @@ public class BanAn_DAO extends MongoDaoSupport {
      * Lấy mã hóa đơn từ bàn, chỉ lấy phiếu đang hoạt động (loại trừ đã hủy/đã dùng).
      */
     public String getMaHoaDonTuBan(String maBan) {
-        Document d = col("PhieuDatBan").find(Filters.and(
+        Bson filter = Filters.and(
                 Filters.eq("maBan", maBan),
                 Filters.nin("trangThai", Arrays.asList("Đã hủy", "Đã dùng"))
-        )).sort(new Document("thoiGianBatDau", -1)).first();
+        );
+        
+        // Ưu tiên tìm phiếu "Đang dùng" trước
+        Document d = col("PhieuDatBan").find(Filters.and(filter, Filters.eq("trangThai", "Đang dùng"))).first();
+        
+        if (d == null) {
+            // Nếu không có, lấy phiếu "Đã đặt" gần nhất
+            d = col("PhieuDatBan").find(filter).sort(new Document("thoiGianBatDau", -1)).first();
+        }
+        
         return d == null ? null : s(d, "maHoaDon");
     }
 }

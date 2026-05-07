@@ -807,6 +807,20 @@ public class Gui_DanhSachBan extends BorderPane {
                         rowInfo.getChildren().add(btnCi);
                     }
                     
+                    // MỚI: Hiện nút Thanh toán trực tiếp nếu phiếu đang "Đang dùng"
+                    if (pdbInfo.getTrangThai().equalsIgnoreCase("Đang dùng")) {
+                        Button btnPay = createStyledButton("Thanh toán", "#059669", "#D1FAE5", ev -> {
+                            if (pdbInfo.getHoaDon() != null) {
+                                xuLyThanhToan(pdbInfo.getHoaDon().getMaHoaDon());
+                                dialog.close();
+                            } else {
+                                showAlert(AlertType.ERROR, "Lỗi", "Phiếu này không có mã hóa đơn!");
+                            }
+                        });
+                        btnPay.setScaleX(0.8); btnPay.setScaleY(0.8);
+                        rowInfo.getChildren().add(btnPay);
+                    }
+                    
                     item.getChildren().add(rowInfo);
                     if (pdbInfo.getGhiChu() != null && !pdbInfo.getGhiChu().isEmpty()) {
                         Label lblNote = new Label("📝 " + pdbInfo.getGhiChu());
